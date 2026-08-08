@@ -74,8 +74,10 @@ will fail, and that is not something to work around.
 
 1. Roll your dice. **Fifty rolls for twelve words, ninety-nine for twenty-four.** Roll them
    one at a time and write each result down as you go.
-2. Type the log into the app. Spaces and line breaks are ignored, so type it in whatever
-   grouping you wrote it in.
+2. Record each roll in the app by pressing the button showing the face you rolled. The keys 1
+   to 6 do the same thing, Backspace undoes the last roll, and there is an Undo and a Clear.
+   There is no text box: nothing but a die face can go in, so a stray keystroke cannot end up
+   in your log. Nothing in the app ever picks a value; every roll comes off your dice.
 3. Watch the roll counter. It is the largest thing on the page because miscounting the log is
    the most common error in the whole ceremony, and a log one roll short still produces a
    perfectly plausible seed phrase.

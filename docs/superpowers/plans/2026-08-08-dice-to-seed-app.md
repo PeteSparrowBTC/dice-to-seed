@@ -231,7 +231,7 @@ One page. No routing beyond it, no navigation menu, no settings.
 1. **An offline warning at the top**, prominent, in the manner of the sibling `slip39-backup`
    README. If `window.location.hostname` is neither `127.0.0.1` nor `localhost`, escalate it:
    this build is being served from somewhere, and the user must be told plainly, above the
-   text area, not to type a real roll log into it. The roll log is the seed in plaintext,
+   dice buttons, not to record a real roll log in it. The roll log is the seed in plaintext,
    before any hashing, so a hosted build of this app carries more risk than a hosted build of
    a tool that splits a seed the user already holds.
 
@@ -240,7 +240,25 @@ One page. No routing beyond it, no navigation menu, no settings.
    path and invites someone to "fix" the app so it works there.
 2. **Word count**: 12 (default) and 24.
 3. **No separator control.** All three d6 vendors hash the bare digit string; see section 5.
-4. **Roll entry**: a text area accepting digits, tolerant of spaces and newlines.
+4. **Roll entry: six dice-face buttons, one per face, clicked once per physical roll.** The
+   original design here was a text area, and building it showed why that was the wrong shape.
+   A free-text box must then answer: what happens to a `7`, to a pasted file, to a keystroke
+   filtered out from the middle of a log. Every answer trades one silent failure for another,
+   and the page spent more code defending the box than doing the conversion.
+
+   Six buttons remove the whole class rather than guarding it: no character outside 1 to 6 can
+   exist, nothing needs filtering, there is no caret to lose, no paste to guard, and the count
+   is exactly what was pressed. It also matches the ceremony, which is one physical roll at a
+   time. Keys 1 to 6 do the same thing for anyone who would rather not use a mouse, Backspace
+   undoes the last roll, and there is an explicit Undo and Clear.
+
+   **The buttons record a roll; they never make one.** A button bearing a die face is exactly
+   what a later reader might wire to a random pick, and that one change would turn a verifier
+   into a browser key generator. The code carries that warning at the button markup, and
+   CLAUDE.md rule 1 is enforced by a test.
+
+   The pips are plain elements on a 3x3 grid, not a dice glyph font, so the faces render the
+   same on a system with minimal fonts installed.
 5. **A live roll counter, rendered large: `37 / 50`.** Miscounting the log is the most common
    error in the whole ceremony, so make the count impossible to miss. Show clearly when the
    count is under, exactly at, or over the minimum.

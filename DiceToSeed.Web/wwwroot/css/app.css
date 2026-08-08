@@ -104,19 +104,107 @@ label.field-label {
     color: var(--accent);
 }
 
-textarea {
-    width: 100%;
-    min-height: 7rem;
-    font-family: var(--mono);
-    font-size: 1.05rem;
-    letter-spacing: .12em;
-    padding: .75rem;
-    border-radius: .4rem;
+/* The six faces. Pips are laid out on a 3x3 grid in the patterns a real die uses, so the
+   button can be recognised at a glance without reading the numeral, and the numeral is there
+   for anyone who would rather read it. No dice glyph font is used: the pips are plain
+   elements, so they render identically everywhere, including on a system with minimal fonts
+   installed. */
+.dice {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr));
+    gap: .6rem;
+    outline: none;
+}
+
+.dice:focus-visible { outline: 2px solid var(--accent); outline-offset: .35rem; border-radius: .5rem; }
+
+button.die {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .45rem;
+    padding: .7rem .5rem .5rem;
+    border-radius: .55rem;
     border: 1px solid var(--panel-edge);
     background: #0f1115;
     color: var(--ink);
-    resize: vertical;
+    cursor: pointer;
+    font: inherit;
 }
+
+button.die:hover { border-color: var(--accent); }
+button.die:active { background: #1a1d24; transform: translateY(1px); }
+
+.pips {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    width: 3rem;
+    height: 3rem;
+    gap: .15rem;
+}
+
+.pip {
+    width: .62rem;
+    height: .62rem;
+    border-radius: 50%;
+    background: var(--ink);
+    align-self: center;
+    justify-self: center;
+}
+
+/* One rule per face, placing that face's pips in the positions a real die uses. */
+.pips-1 .pip:nth-child(1) { grid-area: 2 / 2; }
+
+.pips-2 .pip:nth-child(1) { grid-area: 1 / 1; }
+.pips-2 .pip:nth-child(2) { grid-area: 3 / 3; }
+
+.pips-3 .pip:nth-child(1) { grid-area: 1 / 1; }
+.pips-3 .pip:nth-child(2) { grid-area: 2 / 2; }
+.pips-3 .pip:nth-child(3) { grid-area: 3 / 3; }
+
+.pips-4 .pip:nth-child(1) { grid-area: 1 / 1; }
+.pips-4 .pip:nth-child(2) { grid-area: 1 / 3; }
+.pips-4 .pip:nth-child(3) { grid-area: 3 / 1; }
+.pips-4 .pip:nth-child(4) { grid-area: 3 / 3; }
+
+.pips-5 .pip:nth-child(1) { grid-area: 1 / 1; }
+.pips-5 .pip:nth-child(2) { grid-area: 1 / 3; }
+.pips-5 .pip:nth-child(3) { grid-area: 2 / 2; }
+.pips-5 .pip:nth-child(4) { grid-area: 3 / 1; }
+.pips-5 .pip:nth-child(5) { grid-area: 3 / 3; }
+
+.pips-6 .pip:nth-child(1) { grid-area: 1 / 1; }
+.pips-6 .pip:nth-child(2) { grid-area: 1 / 3; }
+.pips-6 .pip:nth-child(3) { grid-area: 2 / 1; }
+.pips-6 .pip:nth-child(4) { grid-area: 2 / 3; }
+.pips-6 .pip:nth-child(5) { grid-area: 3 / 1; }
+.pips-6 .pip:nth-child(6) { grid-area: 3 / 3; }
+
+.face-number {
+    font-family: var(--mono);
+    font-size: .95rem;
+    color: var(--ink-dim);
+}
+
+.dice-actions {
+    display: flex;
+    gap: .5rem;
+    margin-top: .7rem;
+}
+
+button.secondary {
+    font: inherit;
+    padding: .45rem 1rem;
+    border-radius: .4rem;
+    border: 1px solid var(--panel-edge);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+}
+
+button.secondary:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+button.secondary:disabled { color: var(--ink-dim); cursor: not-allowed; }
 
 /* Miscounting the log is the most common mistake in the whole ceremony, so the count is the
    largest thing on the page. */

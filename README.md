@@ -38,6 +38,15 @@ mistakes still produce twelve plausible words, which is why the test suite pins 
 Minimums are the vendors': **50 rolls for 12 words, 99 for 24.** A short log does not become
 stronger by producing more words.
 
+## Entering a log
+
+Six dice-face buttons, one press per physical roll. There is no text box, so no character
+other than a die face can enter the log: nothing to filter, nothing to paste by accident, and
+the count is exactly what you pressed. Keys 1 to 6 do the same thing and Backspace undoes the
+last roll.
+
+The buttons **record** a roll. Nothing in this app ever picks one.
+
 ## What it deliberately does not do
 
 No BIP-32, no addresses, no master fingerprints, no SLIP-39 splitting, no saving or exporting,

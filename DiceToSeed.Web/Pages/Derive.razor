@@ -1,5 +1,6 @@
 @page "/"
 @using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
 @inject NavigationManager Navigation
 
 @* The single page. There is no routing beyond it, no navigation, no settings, and no
@@ -7,10 +8,11 @@
 
 <PageTitle>dice to seed</PageTitle>
 
+
 @if (servedFromElsewhere)
 {
     <div class="banner banner-loud">
-        <strong>This copy is being served from @host. Do not type a real roll log into it.</strong>
+        <strong>This copy is being served from @host. Do not record a real roll log in it.</strong>
         A roll log is the seed itself, in plain text, before any hashing. Anyone who learns it
         holds the wallet. Download the release, copy it to a USB stick, and run it from an
         offline Tails session instead.
@@ -48,27 +50,51 @@ else
         </div>
     </div>
 
-    <div class="field">
-        <label class="field-label" for="rolls">Roll log</label>
-        @* Bound through a property rather than the field so that any edit clears a result
-           already on screen. Leaving the previous words visible while the log underneath them
-           has changed is the one way this page could actively mislead: a user glancing down
-           after a correction would read words belonging to a log they no longer have. *@
-        @* No maxlength attribute, and no filtering of keystrokes. Both would silently discard
-           what the user typed, and a log that quietly differs from the one on their paper is
-           the failure this whole page is arranged to prevent. A character outside 1 to 6 is
-           rejected loudly, with its position, by DiceRolls.Read.
+    @* THESE BUTTONS RECORD A ROLL. THEY DO NOT MAKE ONE.
+       ==================================================
+       Each one appends the face the user physically rolled and read off a real die. There is
+       no handler here that picks a value, and there must never be one: a button showing a die
+       face is exactly what a future reader might wire to a random pick, and that single change
+       would turn this app from a verifier into a browser-based key generator. See CLAUDE.md
+       rule 1, which is enforced by a test that fails the build.
 
-           inputmode is a keyboard hint on touch devices. It filters nothing. *@
-        <textarea id="rolls" spellcheck="false" autocomplete="off" autocorrect="off"
-                  inputmode="numeric"
-                  placeholder="Type each roll as a digit 1 to 6. Spaces and line breaks are ignored."
-                  @bind="RawRolls" @bind:event="oninput"></textarea>
+       Replacing a text box with six buttons removes a whole class of failure rather than
+       guarding against it: no character outside 1 to 6 can exist, nothing needs filtering,
+       there is no caret to lose, and the count is exactly what was clicked. *@
+    <div class="field">
+        <span class="field-label">Record each roll</span>
+        @* Keyboard entry for anyone who would rather not reach for the mouse fifty times:
+           1 to 6 record a roll, Backspace undoes the last. The handler sits on the group so it
+           catches keys whether focus is on the group itself or on one of the buttons, which is
+           where focus lands as soon as anything is clicked. *@
+        <div class="dice" role="group" tabindex="0" autofocus
+             aria-label="Record the face you rolled" @onkeydown="HandleKey">
+            @foreach (var face in Faces)
+            {
+                <button type="button" class="die" @onclick="() => RecordRoll(face)"
+                        aria-label="@($"Record a roll of {face}")">
+                    <span class="pips pips-@face" aria-hidden="true">
+                        @for (var pip = 0; pip < face; pip++)
+                        {
+                            <span class="pip"></span>
+                        }
+                    </span>
+                    <span class="face-number">@face</span>
+                </button>
+            }
+        </div>
+        <div class="dice-actions">
+            <button type="button" class="secondary" @onclick="UndoLastRoll" disabled="@(rolls.Length == 0)">
+                Undo last roll
+            </button>
+            <button type="button" class="secondary" @onclick="ClearRolls" disabled="@(rolls.Length == 0)">
+                Clear all
+            </button>
+        </div>
         <p class="hint">
-            Digits 1 to 6 only. Group them however you recorded them; whitespace is stripped
-            before anything is hashed. There is no upper limit on rolls: more rolls is never
-            weaker, and a cap could make this app disagree with your device for a reason of its
-            own invention.
+            Roll a real die, read the face, press the matching button. The keys 1 to 6 do the
+            same thing, and Backspace undoes the last roll. Nothing here rolls for you: every
+            value comes off your dice, which is the entire point of the app.
         </p>
     </div>
 
@@ -78,7 +104,7 @@ else
     <div class="field">
         <span class="field-label">Rolls</span>
         <div class="counter @CounterClass">
-            @CounterValue<span class="of"> / @DiceRolls.MinimumRollsFor(wordCount)</span>
+            @RollCount<span class="of"> / @DiceRolls.MinimumRollsFor(wordCount)</span>
         </div>
         <div class="counter-note">@CounterNote</div>
     </div>
@@ -184,10 +210,13 @@ printf '%s' "$ROLLS" | openssl sha256</pre>
 </footer>
 
 @code {
-    string rawRolls = string.Empty;
+    // The whole roll log: one character per roll, appended only by RecordRoll. It lives here
+    // and dies with the tab; nothing is stored anywhere.
+    string rolls = string.Empty;
     WordCount wordCount = WordCount.Twelve;
     SeedDerivation? derivation;
     string? error;
+
 
     string host = string.Empty;
     bool servedFromElsewhere;
@@ -212,63 +241,69 @@ printf '%s' "$ROLLS" | openssl sha256</pre>
             error = wordList.Error;
     }
 
+    static readonly IReadOnlyList<int> Faces = [1, 2, 3, 4, 5, 6];
+
     /// <summary>
-    /// Any edit to the log invalidates a result already on screen, so the result is dropped
-    /// the moment the text changes rather than when Derive is pressed again.
+    /// Appends one roll. The value comes from the button the user pressed after reading a
+    /// physical die; nothing here chooses it.
+    ///
+    /// Every mutation of the log also drops any result on screen. Leaving previous words
+    /// visible above a log that has since changed is the one way this page could actively
+    /// mislead: a glance down after a correction would read words belonging to a log that no
+    /// longer exists.
     /// </summary>
-    string RawRolls
+    void RecordRoll(int face)
     {
-        get => rawRolls;
-        set
-        {
-            rawRolls = value;
-            derivation = null;
-            error = null;
-        }
+        rolls += face.ToString();
+        derivation = null;
+        error = null;
     }
 
-    // Everything below is derived from the raw text on every keystroke. Nothing is cached and
-    // nothing is stored: the roll log lives in this field and dies with the tab.
-    Result<DiceRollLog> ParsedLog => BeyondPasteGuard
-        ? Result.Failure<DiceRollLog>(
-            $"That is {rawRolls.Length:N0} characters, past the {PasteGuardCharacters:N0} this page will process. " +
-            "Nothing has been truncated and nothing has been hashed. This is a guard against pasting a file by " +
-            "accident, not a limit on rolls: paste the roll log alone.")
-        : DiceRolls.Read(rawRolls);
+    void UndoLastRoll()
+    {
+        rolls = rolls.Length == 0 ? rolls : rolls[..^1];
+        derivation = null;
+        error = null;
+    }
 
-    int RollCount => ParsedLog.IsSuccess ? ParsedLog.Value.Count : 0;
+    void ClearRolls()
+    {
+        rolls = string.Empty;
+        derivation = null;
+        error = null;
+    }
+
+    /// <summary>
+    /// 1 to 6 record a roll, Backspace undoes the last. Nothing else does anything: there is
+    /// no text field on this page, so there is no keystroke to interpret as text.
+    /// </summary>
+    void HandleKey(KeyboardEventArgs args)
+    {
+        if (args.Key.Length == 1 && args.Key[0] is >= '1' and <= '6')
+            RecordRoll(args.Key[0] - '0');
+        else if (args.Key == "Backspace")
+            UndoLastRoll();
+    }
+
+    // The log can only ever hold digits 1 to 6, because those are the only values the buttons
+    // append. Core is still asked to validate it: this page is one caller of a library that
+    // must refuse bad input on its own account, and the check costs nothing.
+    Result<DiceRollLog> ParsedLog => DiceRolls.Read(rolls);
+
+    int RollCount => rolls.Length;
 
     string LivePreimage => ParsedLog.IsSuccess ? ParsedLog.Value.Preimage : string.Empty;
 
     bool CanDerive => wordListOk && ParsedLog.IsSuccess && ParsedLog.Value.MeetsMinimumFor(wordCount).IsSuccess;
 
-    // An empty box is where everyone starts, not a mistake, so it reads 0 with an instruction
+    // An empty log is where everyone starts, not a mistake, so it reads 0 with an instruction
     // rather than an error. Core still returns a failure for empty input, which is right for a
     // caller asking to derive; the difference is only in how a page that has just loaded
     // presents it.
-    bool NothingTypedYet => rawRolls.All(char.IsWhiteSpace);
-
-    // A guard against an accidental paste of a large file, not a limit on rolls. Everything
-    // on this page recomputes on every keystroke, so a multi-megabyte paste would make the
-    // live preimage crawl. The threshold is about a hundred times the largest real ceremony
-    // (99 rolls), it lives in the page rather than in Core because it is a rendering concern
-    // rather than a cryptographic one, and it refuses loudly instead of truncating: silent
-    // truncation of a pasted log is precisely the failure this page exists to prevent.
-    const int PasteGuardCharacters = 10_000;
-
-    bool BeyondPasteGuard => rawRolls.Length > PasteGuardCharacters;
-
-    // A log holding a character that is not a die face has no roll count: reporting one would
-    // mean either counting a non-roll or silently dropping it, and both are the kind of quiet
-    // arithmetic this app exists to avoid. It shows a question mark and names the offender.
-    string CounterValue =>
-        NothingTypedYet ? "0"
-        : ParsedLog.IsSuccess ? RollCount.ToString()
-        : "?";
+    bool NothingRecordedYet => rolls.Length == 0;
 
     string CounterClass =>
-        NothingTypedYet ? "counter-under"
-        : ParsedLog.IsFailure ? "counter-invalid"
+        NothingRecordedYet ? "counter-under"
         : RollCount == DiceRolls.MinimumRollsFor(wordCount) ? "counter-exact"
         : RollCount > DiceRolls.MinimumRollsFor(wordCount) ? "counter-over"
         : "counter-under";
@@ -279,13 +314,8 @@ printf '%s' "$ROLLS" | openssl sha256</pre>
         {
             var minimum = DiceRolls.MinimumRollsFor(wordCount);
 
-            if (NothingTypedYet)
-                return $"Roll your dice and type the log: {minimum} rolls for {(int)wordCount} words.";
-
-            if (ParsedLog.IsFailure)
-                return ParsedLog.Error;
-
-            return RollCount == minimum ? "Exactly the minimum. This is what the device expects."
+            return NothingRecordedYet ? $"Roll a real die and press the face you rolled: {minimum} rolls for {(int)wordCount} words."
+                : RollCount == minimum ? "Exactly the minimum. This is what the device expects."
                 : RollCount > minimum ? $"{RollCount - minimum} above the minimum. Every roll is hashed; nothing is discarded."
                 : $"{minimum - RollCount} more to go.";
         }
@@ -300,7 +330,7 @@ printf '%s' "$ROLLS" | openssl sha256</pre>
 
     void RunDerivation()
     {
-        var result = DiceSeed.Derive(rawRolls, wordCount);
+        var result = DiceSeed.Derive(rolls, wordCount);
 
         derivation = result.IsSuccess ? result.Value : null;
         error = result.IsFailure ? result.Error : null;
