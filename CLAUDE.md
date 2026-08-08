@@ -111,21 +111,34 @@ These are not style preferences. Each one exists because this code generates pri
    making it more correct.
 3. **No BIP-32, no secp256k1, no addresses, no fingerprints.** Explicit non-goals. See the
    plan for the reasoning.
-4. **Both dialects are first-class, and both carry vectors.** Identical physical rolls
-   produce different seeds under different vendors' conventions, and no device announces
-   which one it uses. Coldcard, SeedSigner and Ian Coleman set to Base 10 hash `15634`;
-   Krux hashes `1-5-6-3-4`. A tool that supports one dialect silently tells a user of the
-   other that their device is wrong, which is precisely the failure this app exists to
-   distinguish from a real one.
+4. **There is no d6 dialect choice, and the reason is checked into the tests.** An earlier
+   draft of this file said Krux hashes `1-5-6-3-4` where Coldcard hashes `15634`, and
+   required both dialects to be selectable. Reading the three vendors' source showed that is
+   wrong for d6:
 
-   Therefore: the separator is a visible choice labelled with the devices it matches, the
-   exact preimage is always rendered character for character, and the test suite carries
-   vectors for **both** conventions. A dialect whose vectors have not been confirmed against
-   that vendor's own published output is not offered as a selectable option; see the open
-   verification items in the plan.
-5. **Every algorithmic change re-runs the published vectors.** The official BIP-39 English
-   vectors and the dice vectors for both dialects are in the test suite. A change that moves
-   any of them is wrong until proven otherwise.
+   | vendor | what it hashes |
+   | --- | --- |
+   | Coldcard, `docs/rolls12.py` | `sha256(r.encode()).digest()[:16]`, `r` the bare digits |
+   | SeedSigner, `helpers/mnemonic_generation.py` | `hashlib.sha256(roll_data.encode()).digest()`, then `[:16]` |
+   | Krux, `pages/new_mnemonic/dice_rolls.py` | `"".join(self.rolls) if self.num_sides < 10 else "-".join(self.rolls)` |
+
+   Krux's dash is its **d20** convention, needed because a face value there can run to two
+   digits and `1` then `2` would otherwise be indistinguishable from `12`. For d6 all three
+   vendors hash the bare digit string, and Krux has done so since v22.08.2. Coldcard's
+   `rolls12.py` reproduces SeedSigner's published 50-roll example word for word.
+
+   So the app offers no separator control. In a d6-only tool a dash setting would produce a
+   seed no vendor reproduces, which is the exact failure this app exists to detect. If d20
+   is ever added, the separator returns with it and with its own published vectors.
+
+   What survives from the original concern, and still binds: the exact preimage is always
+   rendered character for character, and a convention that has not been confirmed against a
+   vendor's own published output is never offered under that vendor's name.
+5. **Every algorithmic change re-runs the published vectors.** In the suite: the complete
+   official BIP-39 English vector set (upstream's file, byte for byte, with its SHA-256
+   asserted so it cannot be quietly edited), Coldcard's published dice example, and
+   SeedSigner's published 50-roll and 99-roll examples. A change that moves any of them is
+   wrong until proven otherwise.
 6. **No persistence, no network, no telemetry, no clipboard writes of seed material.** The
    app must work with the network cable out, and must leave nothing behind. No
    `localStorage`, no `sessionStorage`, no cookies, no analytics, no external fonts or CDNs.

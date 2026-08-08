@@ -90,7 +90,8 @@ Given a roll string `R` of ASCII digits `1` to `6` and a target word count `W` i
 
 1. `entropyBits = 32 * W / 3`. That is 128 for 12 words, 256 for 24.
 2. `H = SHA-256(preimage)`, where `preimage` is the ASCII bytes of the roll digits joined by
-   the chosen separator, with **nothing appended**. No trailing newline.
+   nothing at all, with **nothing appended**. No separator, no trailing newline. See section 5:
+   all three d6 vendors hash the bare digit string.
 3. `entropy = the first (entropyBits / 8) bytes of H`. **Truncate the hash. Do not hash it
    again.** For 24 words this is all 32 bytes; for 12 words it is the first 16.
 4. `checksumBits = entropyBits / 32`, which is 8 for 256-bit entropy and 4 for 128-bit.
@@ -108,32 +109,41 @@ the twelfth.
 
 ## 5. Dialects, and why the app must show the preimage
 
-Identical physical rolls produce different seeds under different vendors' conventions, and
-nothing on any device's screen announces which one is in use:
+**Resolved during implementation, and the answer reverses this section's original premise.**
+The draft claimed Krux hashes `1-2-3-4-5-6` where Coldcard hashes `123456`, and required a
+separator control to cover both. Reading all three vendors' source shows there is no d6
+dialect split:
 
-| convention | preimage for rolls 1,2,3,4,5,6 |
-| --- | --- |
-| Coldcard, SeedSigner, Ian Coleman set to Base 10 | `123456` |
-| Krux | `1-2-3-4-5-6` |
+| vendor | source | what it hashes for d6 |
+| --- | --- | --- |
+| Coldcard | `docs/rolls12.py` | `sha256(r.encode()).digest()[:16]`, `r` the bare digits |
+| SeedSigner | `src/seedsigner/helpers/mnemonic_generation.py` | `hashlib.sha256(roll_data.encode()).digest()`, then `[:16]` |
+| Krux | `src/krux/pages/new_mnemonic/dice_rolls.py` | `"".join(self.rolls) if self.num_sides < 10 else "-".join(self.rolls)` |
 
-Those two strings hash to values with nothing in common (see vectors 5 and 6). A verification
-that fails because the preimage was assembled the other way looks exactly like a verification
-that fails because the device ignored the rolls, and the second is the failure being checked
-for.
+Krux's dash is its **d20** convention. With twenty faces a value can be two digits, so `1`
+followed by `2` has to be distinguishable from `12`; with six faces it cannot happen and Krux
+joins with nothing. That line has read the same way since v22.08.2 in 2022. Krux's d6 minimums
+are also the same as Coldcard's: 50 rolls for 12 words, 99 for 24.
 
-Therefore:
+Confirmed the other way round as well: Coldcard's `rolls12.py`, run against SeedSigner's own
+published 50-roll example, prints SeedSigner's published twelve words.
 
-- The app offers a separator choice: **none** (default) and **dash**, each labelled with the
-  devices it matches, not with the punctuation. A user knows which wallet they hold; they do
-  not know which string it hashes.
+**Consequence: the app has no separator control.** In a d6-only tool the dash setting would
+produce a seed that no vendor reproduces, which is the exact failure the app exists to detect.
+A control whose only non-default position is wrong is a footgun, not a feature. If d20 is ever
+added, the separator returns with it and with its own vectors.
+
+What the original concern got right, and what still holds:
+
 - The app always renders the exact preimage it hashed, in a monospace block, character for
   character. This is the single most important element on the screen. A user comparing against
-  another tool must be able to see precisely what was fed to SHA-256.
-- Each dialect carries its own vectors, at word level, not only at hash level. A dialect
-  whose vectors have not been confirmed against that vendor's own published output is not
-  shipped as a selectable option: an unverified second dialect is worse than a single
-  verified one, because a wrong dialect and a device that ignored the rolls look identical
-  from the user's chair. The Krux confirmation is an open item; see section 8.
+  another tool must be able to see precisely what was fed to SHA-256. That requirement is
+  unchanged and is now the only defence against a preimage disagreement, since there is no
+  control to point at when one occurs.
+- Vectors are taken from vendors' own published output, at word level, not at hash level, and
+  from more than one vendor. A convention that has not been confirmed against a vendor's
+  published output is never offered under that vendor's name: an unverified dialect and a
+  device that ignored the rolls look identical from the user's chair.
 
 ## 6. Architecture
 
@@ -173,8 +183,6 @@ Keep it this small. Records, immutable, read-only collections.
 
 ```csharp
 public enum WordCount { Twelve = 12, TwentyFour = 24 }
-public enum RollSeparator { None, Dash }
-
 public sealed record SeedDerivation(
     string Preimage,
     string Sha256Hex,
@@ -183,10 +191,13 @@ public sealed record SeedDerivation(
 
 public static class DiceSeed
 {
-    public static Result<SeedDerivation> Derive(
-        string rolls, WordCount words, RollSeparator separator);
+    public static Result<SeedDerivation> Derive(string rolls, WordCount words);
 }
 ```
+
+There is no `RollSeparator`. Section 5 records why it was removed rather than kept unused: an
+enum on the public surface of a key-generation library is an invitation to put a control in
+front of it, and the only value it could carry produces a seed no d6 vendor reproduces.
 
 `Derive` returns a failed `Result` with a specific message, never an exception, for: an empty
 log, any character outside `1`-`6`, and a log shorter than the minimum for the requested word
@@ -228,7 +239,7 @@ One page. No routing beyond it, no navigation menu, no settings.
    at all, so the branch can never run; a condition that cannot be true reads as a supported
    path and invites someone to "fix" the app so it works there.
 2. **Word count**: 12 (default) and 24.
-3. **Separator**: none (default) and dash, labelled with the devices each matches.
+3. **No separator control.** All three d6 vendors hash the bare digit string; see section 5.
 4. **Roll entry**: a text area accepting digits, tolerant of spaces and newlines.
 5. **A live roll counter, rendered large: `37 / 50`.** Miscounting the log is the most common
    error in the whole ceremony, so make the count impossible to miss. Show clearly when the
@@ -263,7 +274,7 @@ the dice step; they test `Bip39.cs` alone).
 | `7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f` | legal winner thank year wave sausage worth useful legal winner thank yellow |
 | `80808080808080808080808080808080` | letter advice cage absurd amount doctor acoustic avoid letter advice cage above |
 
-**Vector 4: Coldcard's own published example, 24 words.** Rolls `123456`, separator none. This
+**Vector 4: Coldcard's own published example, 24 words.** Rolls `123456`. This
 is the value in Coldcard's verification documentation, so agreement here means agreement with
 the vendor.
 
@@ -285,30 +296,12 @@ entropy   8d969eef6ecad3c29a3a629280e686cf
 words     mirror reject rookie talk pudding throw happy era myth already payment owner
 ```
 
-**Vector 6: the Krux dialect.** Same physical rolls, dash separator. Proves the separator is
-actually reaching the preimage.
-
-```
-preimage  1-2-3-4-5-6
-sha256    b76c3b0194c3c3b0e31e358d76ea00414bdacb2024c976c8d7963d896017f851
-```
-
-This vector is weaker than it looks, and it is the second open item. The hash was computed
-here, from the assumption that Krux joins the digits with `-`; it is not a value published by
-Krux. It also stops at the hash, so it proves the separator reached the preimage and proves
-nothing about the words a Krux device would show. Before the dash option ships as a
-selectable dialect:
-
-1. Confirm from Krux's own source or documentation how the roll string is assembled, at 50
-   rolls rather than 6, including whether Krux hashes once or twice and whether it accepts a
-   50-roll minimum for 12 words at all.
-2. Add a word-level Krux vector, at the real minimum roll count, taken from Krux's published
-   output or from a device, in the form of vectors 7 and 8.
-
-If step 1 disagrees with the dash assumption, this vector is wrong and section 5 is wrong
-with it. Until both steps are done, build the separator as a parameter of Core with its
-vectors marked provisional, and do not present the dash option in the UI as "Krux": an
-unverified dialect label is a confident wrong answer given to the user whose device it names.
+**Vector 6: withdrawn.** It asserted that `1-2-3-4-5-6` is the Krux preimage for those rolls.
+The hash was correct for that string (`b76c3b01...f851`, recomputed) but the premise was not:
+Krux joins d6 rolls with nothing, as section 5 now records, and reserves the dash for d20. No
+d6 vendor hashes a dashed string, so the vector tested a convention that does not exist. What
+replaced it is a test that records the finding, with the Krux source line quoted, so the
+question is not reopened from memory.
 
 **Vector 7: the primary 12-word case, 50 rolls.** `123456` repeated and cut to 50 digits.
 
@@ -330,17 +323,44 @@ words     few educate sugar bless boring random strategy waste mutual cargo type
           prefer denial scan abstract filter extend dignity balcony dust unusual correct bubble
 ```
 
+**Vectors 9 and 10: SeedSigner's published examples**, from `docs/dice_verification.md` in the
+SeedSigner repository. These are the vectors that make the app's premise checkable, because
+they come from a second vendor rather than from this plan's own arithmetic.
+
+```
+rolls   65515223131652132161133154444123616466443112153441            (50 rolls, 12 words)
+sha256  6cb09af855050dcde6fe2adc3181c250982011e2cf17821cbed56a908ec527c3
+words   hole luggage safe present express tragic orbit shed switch metal identify path
+
+rolls   655152231316521321611331544441236164664431121534415633526456254462245546236542
+        364246312613322234612                                          (99 rolls, 24 words)
+sha256  51531761ec7a738946e0b9f46bb11320a695495430e345c14f01ad8b3b898a6d
+words   eyebrow obvious such suggest poet seven breeze blame virtual frown dynamic donor
+        harsh pigeon express broccoli easy apology scatter force recipe shadow claim radio
+```
+
 Vectors 4 to 8 use roll strings far below the minimum, or exactly at it. Expose an internal
 entry point for the tests that bypasses the minimum-length check, or make the minimum a
 parameter with a default. Do not weaken the check that the UI uses.
 
-**One item to verify during implementation, not yet confirmed at the source:** the 12-word
-truncation rule was
-confirmed by reading Ian Coleman's `index.js` (`bits.substring(0, 32 * length / 3)`) and from
-SeedSigner's documentation ("truncated to 16 bytes for 12 words"). Coldcard's `rolls12.py` was
-not read directly. Before relying on vector 5, download `rolls12.py` from Coldcard's
-verification page and confirm it prints `... payment owner` for input `123456`, or confirm the
-same on the Mk4 itself. If it disagrees, Coldcard's behaviour wins and this plan is wrong.
+**The verification item is closed.** Coldcard's `rolls12.py` was downloaded from
+`https://coldcard.com/docs/rolls12.py` and run. It prints, for input `123456`:
+
+```
+8d969eef6ecad3c29a3a629280e686cf
+   1: mirror ... 11: payment  12: owner
+```
+
+which is vector 5, and its source states the rule directly:
+
+```python
+h = sha256(r.encode()).digest()[:16]          # truncate, do not re-hash
+indexes[-1] += sha256(entropy).digest()[0] >> 4   # checksum from the TRUNCATION
+```
+
+The same script, run against SeedSigner's published 50-roll example, prints SeedSigner's
+published twelve words. Coldcard and SeedSigner therefore agree with each other, and this
+app's suite asserts both vendors' published outputs.
 
 ## 9. Cross-verification, the runbook the app must reproduce
 
@@ -475,11 +495,12 @@ Work test-first. Each step should end with a passing suite and a commit on a fea
    all returning `Result`. Test the three failure modes and their messages.
 5. Implement `DiceSeed.Derive`, the five steps of section 4. Drive it with vectors 4 to 8.
    Vector 5 is the one that catches a wrong truncation, so make sure it is present and passing.
-6. Download Coldcard's `rolls12.py` and confirm vector 5 against it, per the first flag in
-   section 8. If it disagrees, stop and report before changing anything.
-6a. Resolve the Krux dialect, per the second flag in section 8: confirm how Krux assembles the
-   roll string, then add a word-level Krux vector at Krux's own minimum roll count. Until this
-   passes, the dash option stays a Core parameter and is not labelled as Krux in the UI.
+6. **Done.** Coldcard's `rolls12.py` downloaded and run: it prints vector 5, and its source
+   states the truncation and checksum rules outright. See section 8.
+6a. **Done, and it changed the design.** Krux joins d6 rolls with nothing and uses the dash
+   only for d20, unchanged since v22.08.2. There is no d6 dialect split, so the separator
+   control is gone from both the UI and the Core API. SeedSigner's two published examples
+   were added as vectors 9 and 10 in its place. See section 5.
 7. Build the single Blazor page against the Core API. Start with the roll counter and the live
    preimage, because those are the elements that carry the verification value.
 8. Add the offline warning and the served-from-elsewhere escalation.

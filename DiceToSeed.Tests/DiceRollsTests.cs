@@ -75,11 +75,16 @@ public class DiceRollsTests
     public void The_count_is_the_number_of_rolls() =>
         Assert.Equal(50, DiceRolls.Read(new string('1', 50)).Value.Count);
 
+    /// <summary>
+    /// The preimage is the bare digit string: no separator, no prefix, no padding. Coldcard,
+    /// SeedSigner and Krux all hash exactly this for d6. See DiceRollLog.Preimage for the
+    /// three source references and for why Krux's dash belongs to d20 rather than to d6.
+    /// </summary>
     [Theory]
-    [InlineData(RollSeparator.None, "123456")]
-    [InlineData(RollSeparator.Dash, "1-2-3-4-5-6")]
-    public void The_preimage_is_assembled_from_the_separator(RollSeparator separator, string expected) =>
-        Assert.Equal(expected, DiceRolls.Read("123456").Value.Preimage(separator));
+    [InlineData("123456", "123456")]
+    [InlineData("12 34 56", "123456")]
+    public void The_preimage_is_the_bare_digit_string(string raw, string expected) =>
+        Assert.Equal(expected, DiceRolls.Read(raw).Value.Preimage);
 
     [Theory]
     [InlineData(WordCount.Twelve, 50)]

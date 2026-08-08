@@ -21,7 +21,7 @@ public class DiceSeedTests
     [Fact]
     public void Vector_4_coldcard_published_example_at_24_words()
     {
-        var derivation = DiceSeed.DeriveIgnoringMinimum("123456", WordCount.TwentyFour, RollSeparator.None).Value;
+        var derivation = DiceSeed.DeriveIgnoringMinimum("123456", WordCount.TwentyFour).Value;
 
         Assert.Equal("123456", derivation.Preimage);
         Assert.Equal("8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92", derivation.Sha256Hex);
@@ -42,7 +42,7 @@ public class DiceSeedTests
     [Fact]
     public void Vector_5_the_same_rolls_at_12_words_truncate_rather_than_rehash()
     {
-        var derivation = DiceSeed.DeriveIgnoringMinimum("123456", WordCount.Twelve, RollSeparator.None).Value;
+        var derivation = DiceSeed.DeriveIgnoringMinimum("123456", WordCount.Twelve).Value;
 
         Assert.Equal("8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92", derivation.Sha256Hex);
         Assert.Equal("8d969eef6ecad3c29a3a629280e686cf", derivation.EntropyHex);
@@ -61,39 +61,79 @@ public class DiceSeedTests
     [Fact]
     public void Twelve_and_twentyfour_words_share_eleven_words_and_differ_at_the_twelfth()
     {
-        var twelve = DiceSeed.DeriveIgnoringMinimum("123456", WordCount.Twelve, RollSeparator.None).Value.Words;
-        var twentyFour = DiceSeed.DeriveIgnoringMinimum("123456", WordCount.TwentyFour, RollSeparator.None).Value.Words;
+        var twelve = DiceSeed.DeriveIgnoringMinimum("123456", WordCount.Twelve).Value.Words;
+        var twentyFour = DiceSeed.DeriveIgnoringMinimum("123456", WordCount.TwentyFour).Value.Words;
 
         Assert.Equal(twentyFour.Take(11), twelve.Take(11));
         Assert.NotEqual(twentyFour[11], twelve[11]);
     }
 
     /// <summary>
-    /// Vector 6: the Krux dialect. Proves the separator reaches the preimage and changes
-    /// everything downstream.
+    /// Vector 9: SeedSigner's own published 50-roll example, from docs/dice_verification.md.
     ///
-    /// This vector stops at the hash on purpose. The dash convention has not yet been
-    /// confirmed against Krux's own published output, so no word-level expectation is
-    /// asserted and the UI does not offer this separator under a vendor's name. See the plan,
-    /// section 8, second open item.
+    /// This is the vector that makes the app's premise checkable. It comes from a different
+    /// vendor than vectors 4 and 5, and Coldcard's rolls12.py was run against this same roll
+    /// string and printed these same twelve words. Two vendors, one result, and this app
+    /// agrees with both.
     /// </summary>
     [Fact]
-    public void Vector_6_the_dash_separator_changes_the_preimage_and_the_hash()
+    public void Vector_9_seedsigner_published_example_at_12_words()
     {
-        var dashed = DiceSeed.DeriveIgnoringMinimum("123456", WordCount.Twelve, RollSeparator.Dash).Value;
-        var joined = DiceSeed.DeriveIgnoringMinimum("123456", WordCount.Twelve, RollSeparator.None).Value;
+        const string rolls = "65515223131652132161133154444123616466443112153441";
 
-        Assert.Equal("1-2-3-4-5-6", dashed.Preimage);
-        Assert.Equal("b76c3b0194c3c3b0e31e358d76ea00414bdacb2024c976c8d7963d896017f851", dashed.Sha256Hex);
-        Assert.NotEqual(joined.Sha256Hex, dashed.Sha256Hex);
-        Assert.Empty(dashed.Words.Intersect(joined.Words.Take(1)));
+        var derivation = DiceSeed.Derive(rolls, WordCount.Twelve).Value;
+
+        Assert.Equal(rolls, derivation.Preimage);
+        Assert.Equal("6cb09af855050dcde6fe2adc3181c250982011e2cf17821cbed56a908ec527c3", derivation.Sha256Hex);
+        Assert.Equal(
+            "hole luggage safe present express tragic orbit shed switch metal identify path",
+            string.Join(' ', derivation.Words));
+    }
+
+    /// <summary>Vector 10: SeedSigner's published 99-roll example, same document.</summary>
+    [Fact]
+    public void Vector_10_seedsigner_published_example_at_24_words()
+    {
+        const string rolls = "655152231316521321611331544441236164664431121534415633526456254462245546236542364246312613322234612";
+
+        var derivation = DiceSeed.Derive(rolls, WordCount.TwentyFour).Value;
+
+        Assert.Equal("51531761ec7a738946e0b9f46bb11320a695495430e345c14f01ad8b3b898a6d", derivation.Sha256Hex);
+        Assert.Equal(
+            "eyebrow obvious such suggest poet seven breeze blame virtual frown dynamic donor " +
+            "harsh pigeon express broccoli easy apology scatter force recipe shadow claim radio",
+            string.Join(' ', derivation.Words));
+    }
+
+    /// <summary>
+    /// There is no separator option, and this test records why, because "add a dialect
+    /// selector" is the obvious thing for a future reader to want.
+    ///
+    /// Krux joins d6 rolls with nothing and reserves "-" for d20, where a face value can run
+    /// to two digits and "1" then "2" would otherwise be indistinguishable from "12":
+    ///
+    ///     "".join(self.rolls) if self.num_sides &lt; 10 else "-".join(self.rolls)
+    ///         -- src/krux/pages/new_mnemonic/dice_rolls.py, unchanged since v22.08.2
+    ///
+    /// So for d6 there is no dialect split to support: Coldcard, SeedSigner and Krux agree.
+    /// A dash separator in a d6-only app would produce a seed that no vendor reproduces, which
+    /// is the exact failure this app exists to detect. Vectors 5 and 9 come from two different
+    /// vendors and agree, which is the positive form of the same statement.
+    /// </summary>
+    [Fact]
+    public void The_preimage_carries_no_separator_because_no_d6_vendor_uses_one()
+    {
+        var derivation = DiceSeed.Derive(Rolls50, WordCount.Twelve).Value;
+
+        Assert.DoesNotContain("-", derivation.Preimage, StringComparison.Ordinal);
+        Assert.Equal(50, derivation.Preimage.Length);
     }
 
     /// <summary>Vector 7: the primary case. 50 rolls, 12 words, minimum enforced.</summary>
     [Fact]
     public void Vector_7_fifty_rolls_at_12_words()
     {
-        var derivation = DiceSeed.Derive(Rolls50, WordCount.Twelve, RollSeparator.None).Value;
+        var derivation = DiceSeed.Derive(Rolls50, WordCount.Twelve).Value;
 
         Assert.Equal(Rolls50, derivation.Preimage);
         Assert.Equal("ee72ae915a4e6ea7ccbeb8e5e5eecef29a1d0d90f053183726a424b6d3b07325", derivation.Sha256Hex);
@@ -107,7 +147,7 @@ public class DiceSeedTests
     [Fact]
     public void Vector_8_ninetynine_rolls_at_24_words()
     {
-        var derivation = DiceSeed.Derive(Rolls99, WordCount.TwentyFour, RollSeparator.None).Value;
+        var derivation = DiceSeed.Derive(Rolls99, WordCount.TwentyFour).Value;
 
         Assert.Equal("5588d3630bd19f6375b7bd922457af34ea9c74f00807566a1cf808e445dc8c20", derivation.Sha256Hex);
         Assert.Equal("5588d3630bd19f6375b7bd922457af34ea9c74f00807566a1cf808e445dc8c20", derivation.EntropyHex);
@@ -124,7 +164,7 @@ public class DiceSeedTests
     [Fact]
     public void Nothing_is_appended_to_the_preimage()
     {
-        var derivation = DiceSeed.Derive(Rolls50 + "\n", WordCount.Twelve, RollSeparator.None).Value;
+        var derivation = DiceSeed.Derive(Rolls50 + "\n", WordCount.Twelve).Value;
 
         Assert.Equal(Rolls50, derivation.Preimage);
         Assert.Equal("ee72ae915a4e6ea7ccbeb8e5e5eecef29a1d0d90f053183726a424b6d3b07325", derivation.Sha256Hex);
@@ -133,7 +173,7 @@ public class DiceSeedTests
     [Fact]
     public void The_public_entry_point_enforces_the_minimum()
     {
-        var result = DiceSeed.Derive("123456", WordCount.Twelve, RollSeparator.None);
+        var result = DiceSeed.Derive("123456", WordCount.Twelve);
 
         Assert.True(result.IsFailure);
         Assert.Contains("50", result.Error, StringComparison.Ordinal);
@@ -142,7 +182,7 @@ public class DiceSeedTests
     [Fact]
     public void A_bad_character_fails_before_anything_is_hashed()
     {
-        var result = DiceSeed.Derive(Rolls50.Remove(10, 1).Insert(10, "7"), WordCount.Twelve, RollSeparator.None);
+        var result = DiceSeed.Derive(Rolls50.Remove(10, 1).Insert(10, "7"), WordCount.Twelve);
 
         Assert.True(result.IsFailure);
         Assert.Contains("'7'", result.Error, StringComparison.Ordinal);
@@ -153,7 +193,7 @@ public class DiceSeedTests
     [InlineData(WordCount.TwentyFour, 24, 64)]
     public void Word_count_selects_the_entropy_length(WordCount words, int expectedWords, int expectedEntropyHexLength)
     {
-        var derivation = DiceSeed.Derive(Rolls99, words, RollSeparator.None).Value;
+        var derivation = DiceSeed.Derive(Rolls99, words).Value;
 
         Assert.Equal(expectedWords, derivation.Words.Count);
         Assert.Equal(expectedEntropyHexLength, derivation.EntropyHex.Length);
@@ -169,7 +209,7 @@ public class DiceSeedTests
     [InlineData(WordCount.TwentyFour)]
     public void The_entropy_is_a_prefix_of_the_displayed_hash(WordCount words)
     {
-        var derivation = DiceSeed.Derive(Rolls99, words, RollSeparator.None).Value;
+        var derivation = DiceSeed.Derive(Rolls99, words).Value;
 
         Assert.StartsWith(derivation.EntropyHex, derivation.Sha256Hex, StringComparison.Ordinal);
     }

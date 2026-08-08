@@ -10,20 +10,6 @@ public enum WordCount
 }
 
 /// <summary>
-/// How the roll digits are joined before hashing. This is the dialect choice, and it changes
-/// the seed: identical physical rolls hashed as "15634" and as "1-5-6-3-4" have nothing in
-/// common. See the plan, section 5.
-/// </summary>
-public enum RollSeparator
-{
-    /// <summary>Coldcard, SeedSigner, and Ian Coleman's page set to Base 10.</summary>
-    None,
-
-    /// <summary>Digits joined with "-".</summary>
-    Dash,
-}
-
-/// <summary>
 /// Reading a roll log. Character validation and length validation are deliberately separate:
 /// the UI shows a live roll counter and a live preimage while the user is still typing, so it
 /// needs a log that is well formed but not yet long enough.
@@ -75,11 +61,26 @@ public sealed record DiceRollLog
     public int Count => Digits.Length;
 
     /// <summary>
-    /// The exact string that goes into SHA-256. The UI renders this character for character,
-    /// because it is what another tool has to be compared against.
+    /// The exact string that goes into SHA-256: the roll digits, joined by nothing at all. The
+    /// UI renders this character for character, because it is what another tool gets compared
+    /// against.
+    ///
+    /// There is no separator option, and that is a finding rather than an omission. For d6,
+    /// Coldcard, SeedSigner and Krux all hash the bare digit string:
+    ///
+    ///   Coldcard  docs/rolls12.py:            sha256(r.encode()).digest()[:16]
+    ///   SeedSigner mnemonic_generation.py:    hashlib.sha256(roll_data.encode()).digest()
+    ///   Krux      new_mnemonic/dice_rolls.py: "".join(self.rolls) if self.num_sides &lt; 10
+    ///                                          else "-".join(self.rolls)
+    ///
+    /// Krux's dash applies when a face value can exceed one digit, which is d20, where "1"
+    /// then "2" and "12" would otherwise be the same string. This app takes d6 only, so the
+    /// dash branch is unreachable for every device it verifies against. A separator control
+    /// here would have exactly one setting that no vendor reproduces, in an app whose purpose
+    /// is agreeing with vendors. If d20 is ever added, the separator returns with it and with
+    /// its own published vectors.
     /// </summary>
-    public string Preimage(RollSeparator separator) =>
-        separator == RollSeparator.Dash ? string.Join('-', Digits.AsEnumerable()) : Digits;
+    public string Preimage => Digits;
 
     /// <summary>
     /// The length rule. The message says why a longer word count does not rescue a short log,

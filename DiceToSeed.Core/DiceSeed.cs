@@ -19,8 +19,9 @@ public sealed record SeedDerivation(
 /// The dice convention, exactly as Coldcard and SeedSigner use it.
 ///
 ///   1. entropy bits = 32 * words / 3, so 128 for 12 words and 256 for 24
-///   2. H = SHA-256(the roll digits joined by the separator), with NOTHING appended: no
-///      trailing newline, no length prefix, no salt
+///   2. H = SHA-256(the roll digits, joined by nothing), with NOTHING appended: no trailing
+///      newline, no length prefix, no salt. Coldcard, SeedSigner and Krux all hash the bare
+///      digit string for d6; see DiceRollLog.Preimage for the three source references
 ///   3. entropy = the FIRST (entropy bits / 8) bytes of H. The hash is truncated. It is not
 ///      hashed again
 ///   4. checksum = the top (entropy bits / 32) bits of SHA-256(entropy), computed from the
@@ -40,24 +41,24 @@ public static class DiceSeed
     /// Derives from a raw roll log, enforcing the vendor minimum of 50 rolls for 12 words and
     /// 99 for 24. This is the entry point the UI uses.
     /// </summary>
-    public static Result<SeedDerivation> Derive(string rolls, WordCount words, RollSeparator separator) =>
+    public static Result<SeedDerivation> Derive(string rolls, WordCount words) =>
         DiceRolls.Read(rolls)
             .Bind(log => log.MeetsMinimumFor(words).Map(() => log))
-            .Bind(log => Derive(log, words, separator));
+            .Bind(log => Derive(log, words));
 
     /// <summary>
     /// The same derivation with the length rule skipped, for the published vectors, which use
     /// roll strings far below any minimum. Deliberately internal: the check the UI uses is not
     /// weakened, and no caller outside this assembly can reach past it.
     /// </summary>
-    internal static Result<SeedDerivation> DeriveIgnoringMinimum(string rolls, WordCount words, RollSeparator separator) =>
-        DiceRolls.Read(rolls).Bind(log => Derive(log, words, separator));
+    internal static Result<SeedDerivation> DeriveIgnoringMinimum(string rolls, WordCount words) =>
+        DiceRolls.Read(rolls).Bind(log => Derive(log, words));
 
-    static Result<SeedDerivation> Derive(DiceRollLog log, WordCount words, RollSeparator separator) =>
+    static Result<SeedDerivation> Derive(DiceRollLog log, WordCount words) =>
         Bip39WordList.Load()
             .Bind(wordList =>
             {
-                var preimage = log.Preimage(separator);
+                var preimage = log.Preimage;
 
                 // ASCII by construction: the log is digits 1 to 6 and the separator is "-".
                 // UTF-8 is stated rather than assumed so the encoding is visible at the point

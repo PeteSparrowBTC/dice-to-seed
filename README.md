@@ -38,8 +38,8 @@ reference on generating one is
 
 Read [CLAUDE.md](CLAUDE.md) first. In short: `main` moves only through a pull request, the app
 is never a source of entropy, the conversion takes no cryptographic dependency beyond SHA-256,
-both dice dialects carry vectors, and every algorithmic change re-runs the published test
-vectors.
+the vectors come from the vendors' own published output, and every algorithmic change re-runs
+them.
 
 After cloning:
 
