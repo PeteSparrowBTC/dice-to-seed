@@ -314,9 +314,19 @@ printf '%s' "$ROLLS" | openssl sha256</pre>
         {
             var minimum = DiceRolls.MinimumRollsFor(wordCount);
 
+            var entropyBits = (int)wordCount == 12 ? 128 : 256;
+
             return NothingRecordedYet ? $"Roll a real die and press the face you rolled: {minimum} rolls for {(int)wordCount} words."
                 : RollCount == minimum ? "Exactly the minimum. This is what the device expects."
-                : RollCount > minimum ? $"{RollCount - minimum} above the minimum. Every roll is hashed; nothing is discarded."
+                // Being above the minimum is fine and nothing is discarded, but it does not
+                // buy a stronger seed: the entropy is a truncation of SHA-256, so the result
+                // is fixed at 128 or 256 bits however long the log is. What extra rolls do buy
+                // is margin against dice that are not perfectly fair, since the vendor minimum
+                // clears the target by very little (50 fair rolls is 129.25 bits against 128).
+                // The device warning matters more than the arithmetic: a log that differs from
+                // the one entered on the hardware wallet produces a completely different seed,
+                // which looks exactly like the device ignoring the dice.
+                : RollCount > minimum ? $"{RollCount - minimum} above the minimum. All {RollCount} rolls are hashed. This does not make the seed stronger, which is fixed at {entropyBits} bits; it covers you if your dice are not perfectly fair. Enter these same {RollCount} rolls on your device, or the seeds will not match."
                 : $"{minimum - RollCount} more to go.";
         }
     }
