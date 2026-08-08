@@ -72,8 +72,15 @@ will fail, and that is not something to work around.
 
 ## Using it
 
+0. If you want to know whether your dice are fair, test them **before** you start, with a few
+   hundred rolls that you then throw away. Do not test the rolls you are about to use: at 50
+   rolls the test barely works, and re-rolling a log because it failed means your seed is
+   chosen from a smaller set than the dice offered, which weakens it. The chi-squared
+   worksheet in the `seed-generation` repository is built for this.
 1. Roll your dice. **Fifty rolls for twelve words, ninety-nine for twenty-four.** Roll them
-   one at a time and write each result down as you go.
+   one at a time and write each result down as you go. Whatever comes up is your log: never
+   re-roll it because it looks too orderly. Six 6s in a row is exactly as likely as any other
+   six rolls.
 2. Record each roll in the app by pressing the button showing the face you rolled. The keys 1
    to 6 do the same thing, Backspace undoes the last roll, and there is an Undo and a Clear.
    There is no text box: nothing but a die face can go in, so a stray keystroke cannot end up

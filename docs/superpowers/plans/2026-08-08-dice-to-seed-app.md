@@ -55,7 +55,7 @@ oversight.
 | SLIP-39 splitting | Belongs to the sibling `slip39-backup` app. Keeping generation and splitting in separate artifacts means a defect in one cannot silently validate the other. |
 | Coin flips, cards, d20, d16 tables | The immediate need is d6. Adding sources multiplies the vector surface for no current benefit. Revisit only when asked. |
 | Saving, exporting, printing or copying the seed | Every one of those is a path off the airgap. The user writes the words on paper. |
-| Dice fairness testing | Covered by the `seed-generation` repository's chi-squared worksheet. Not this app's concern. |
+| Dice fairness testing | Covered by the `seed-generation` repository's chi-squared worksheet, and harmful here. At 50 rolls the test has almost no power (5 degrees of freedom, 8.33 expected per face, roughly one honest session in twenty exceeding the 0.05 critical value), and worse, a test on the rolls about to be used invites re-rolling on failure, which conditions the seed on passing a statistical test and removes part of the output space. Fairness is checked before the ceremony, on rolls that are then discarded. The app instead warns against re-rolling a log for looking non-random. |
 | A "generate for me" button, a simulated die, or any other random value | The app must never be a source of entropy. It converts entropy the user brought on physical dice. This is not a preference to be traded off later: see section 3a, and CLAUDE.md rule 1, which is enforced by a test that fails the build. |
 | Serving the app from `file://` | Blazor WebAssembly does not load over `file://`. A local HTTP server is not an inconvenience to be engineered away, it is the only way the app runs. See section 10. |
 

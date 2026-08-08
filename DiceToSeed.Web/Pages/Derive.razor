@@ -153,6 +153,35 @@ else
     </div>
 }
 
+@* Deliberately not a feature of this app: a fairness test on the rolls being used. Two
+   reasons, and the second is why it would be harmful rather than merely useless.
+
+   At 50 rolls a chi-squared test has almost no power: 6 categories, 5 degrees of freedom, an
+   expected 8.33 per face, so roughly one in twenty honest sessions exceeds the 0.05 critical
+   value while a real bias of p=0.20 on one face goes undetected most of the time.
+
+   And a test applied to the rolls about to be used invites re-rolling when it fails, which
+   conditions the seed on passing a statistical test and so removes part of the output space.
+   That reduces entropy. Testing belongs before the ceremony, on rolls that are then thrown
+   away; the rolls that become a seed are used unconditionally. *@
+<h2>Before you start: your dice</h2>
+<div class="panel">
+    <p class="hint">
+        A die that is not fair costs you entropy, and the vendor minimums leave little margin:
+        50 fair rolls carry 129.25 bits against the 128 a 12-word seed holds. Worth checking,
+        but check it <strong>before</strong> the ceremony, with a few hundred rolls you then
+        throw away. The chi-squared worksheet in the <code>seed-generation</code> repository is
+        built for exactly that.
+    </p>
+    <p class="hint">
+        <strong>Never re-roll a log because it looks wrong.</strong> If a sequence looks too
+        orderly, that is not evidence of a bad die: every sequence is equally improbable, and
+        six 6s in a row is exactly as likely as any other six rolls. Discarding a log for
+        looking non-random means your seed is chosen from a smaller set than the dice offered,
+        which is the one thing that genuinely weakens it. Record what you rolled and use it.
+    </p>
+</div>
+
 <h2>Checking this against another tool</h2>
 <details class="runbook">
     <summary>The verification runbook</summary>
