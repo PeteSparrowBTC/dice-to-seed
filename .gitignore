@@ -1,0 +1,24 @@
+# .NET build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+publish/
+*.user
+project.lock.json
+artifacts/
+
+# IDE
+.idea/
+.vs/
+.vscode/
+
+# Python (the wordlist verification helper, if one is added)
+__pycache__/
+*.pyc
+
+# Never commit anything that could hold a real roll log or a real seed. These names are
+# reserved so an accidental "save my working notes here" cannot reach a public repository.
+*.rolls
+*.seed
+scratch/
