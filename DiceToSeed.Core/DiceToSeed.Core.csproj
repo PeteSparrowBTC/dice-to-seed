@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The only NuGet dependency in the whole solution's production code. It supplies Result
+         and nothing else: no cryptography, no I/O, no network, and it sits outside the
+         derivation path. See CLAUDE.md rule 2 for why this one is carved out and nothing
+         else is. -->
+    <PackageReference Include="CSharpFunctionalExtensions" Version="3.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Embedded, not copied to disk: the published app must carry the wordlist inside the
+         assembly so there is no separate file to go missing or be edited on the USB stick.
+         Bip39WordList verifies its SHA-256 on every load. -->
+    <EmbeddedResource Include="WordList.english.txt" />
+  </ItemGroup>
+
+</Project>
