@@ -15,6 +15,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The published vectors use roll strings far below any real minimum (Coldcard's own
+         example is six rolls), so the test project reaches DiceSeed.DeriveIgnoringMinimum.
+         That entry point is internal rather than public so the length rule the UI enforces
+         cannot be bypassed from outside this assembly. -->
+    <InternalsVisibleTo Include="DiceToSeed.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Embedded, not copied to disk: the published app must carry the wordlist inside the
          assembly so there is no separate file to go missing or be edited on the USB stick.
          Bip39WordList verifies its SHA-256 on every load. -->
