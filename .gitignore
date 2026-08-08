@@ -22,3 +22,9 @@ __pycache__/
 *.rolls
 *.seed
 scratch/
+
+# Browser-driven UI checks write screenshots and page snapshots here. They are throwaway
+# evidence for a single session, and a screenshot of this app can contain a roll log.
+.playwright-mcp/
+*.png
+!DiceToSeed.Web/wwwroot/*.png

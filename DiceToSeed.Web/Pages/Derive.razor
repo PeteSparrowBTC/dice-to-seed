@@ -1,7 +1,308 @@
-﻿@page "/"
+@page "/"
+@using Microsoft.AspNetCore.Components.Routing
+@inject NavigationManager Navigation
 
-<PageTitle>Home</PageTitle>
+@* The single page. There is no routing beyond it, no navigation, no settings, and no
+   clipboard button anywhere: the user writes the words on paper. See CLAUDE.md rule 6. *@
 
-<h1>Hello, world!</h1>
+<PageTitle>dice to seed</PageTitle>
 
-Welcome to your new app.
+@if (servedFromElsewhere)
+{
+    <div class="banner banner-loud">
+        <strong>This copy is being served from @host. Do not type a real roll log into it.</strong>
+        A roll log is the seed itself, in plain text, before any hashing. Anyone who learns it
+        holds the wallet. Download the release, copy it to a USB stick, and run it from an
+        offline Tails session instead.
+    </div>
+}
+else
+{
+    <div class="banner">
+        <strong>Served from @host.</strong>
+        Intended use is an offline Tails session with the network disconnected. Nothing is
+        stored, sent or copied: no local storage, no cookies, no network call of any kind.
+    </div>
+}
+
+<h1>dice to seed</h1>
+<p class="subtitle">
+    Converts a log of six-sided dice rolls into a BIP-39 seed phrase, using the convention
+    Coldcard, SeedSigner and Krux all use for d6. This is a second implementation to check a
+    device against, not a recommended place to make a seed. It has no random number generator
+    and never rolls anything for you.
+</p>
+
+<div class="panel">
+    <div class="field">
+        <span class="field-label">Words</span>
+        <div class="choice">
+            @foreach (var option in new[] { WordCount.Twelve, WordCount.TwentyFour })
+            {
+                <button type="button"
+                        class="@(wordCount == option ? "selected" : null)"
+                        @onclick="() => SelectWordCount(option)">
+                    @((int)option) words (@DiceRolls.MinimumRollsFor(option) rolls)
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="field-label" for="rolls">Roll log</label>
+        @* Bound through a property rather than the field so that any edit clears a result
+           already on screen. Leaving the previous words visible while the log underneath them
+           has changed is the one way this page could actively mislead: a user glancing down
+           after a correction would read words belonging to a log they no longer have. *@
+        @* No maxlength attribute, and no filtering of keystrokes. Both would silently discard
+           what the user typed, and a log that quietly differs from the one on their paper is
+           the failure this whole page is arranged to prevent. A character outside 1 to 6 is
+           rejected loudly, with its position, by DiceRolls.Read.
+
+           inputmode is a keyboard hint on touch devices. It filters nothing. *@
+        <textarea id="rolls" spellcheck="false" autocomplete="off" autocorrect="off"
+                  inputmode="numeric"
+                  placeholder="Type each roll as a digit 1 to 6. Spaces and line breaks are ignored."
+                  @bind="RawRolls" @bind:event="oninput"></textarea>
+        <p class="hint">
+            Digits 1 to 6 only. Group them however you recorded them; whitespace is stripped
+            before anything is hashed. There is no upper limit on rolls: more rolls is never
+            weaker, and a cap could make this app disagree with your device for a reason of its
+            own invention.
+        </p>
+    </div>
+
+    @* The roll counter is the largest element on the page on purpose: miscounting the log is
+       the most common error in the whole ceremony, and a log one roll short still produces a
+       perfectly plausible seed. *@
+    <div class="field">
+        <span class="field-label">Rolls</span>
+        <div class="counter @CounterClass">
+            @CounterValue<span class="of"> / @DiceRolls.MinimumRollsFor(wordCount)</span>
+        </div>
+        <div class="counter-note">@CounterNote</div>
+    </div>
+
+    <div class="field">
+        <span class="field-label">Preimage, exactly as it will be hashed</span>
+        <pre class="mono-block @(LivePreimage.Length == 0 ? "empty" : null)">@(LivePreimage.Length == 0 ? "(nothing yet)" : LivePreimage)</pre>
+        <p class="hint">
+            No separator, no trailing newline, nothing appended. Compare this string character
+            for character with what any other tool is hashing.
+        </p>
+    </div>
+
+    <button class="derive" disabled="@(!CanDerive)" @onclick="RunDerivation">Derive</button>
+
+    @if (error is not null)
+    {
+        <p class="error">@error</p>
+    }
+</div>
+
+@if (derivation is not null)
+{
+    <h2>Result</h2>
+    <div class="panel">
+        <div class="step-label">1. Preimage (the rolls, hashed as-is)</div>
+        <pre class="mono-block">@derivation.Preimage</pre>
+
+        <div class="step-label">2. SHA-256 of the preimage</div>
+        <pre class="mono-block">@derivation.Sha256Hex</pre>
+
+        <div class="step-label">3. Entropy: the first @(derivation.EntropyHex.Length / 2) bytes of that hash, truncated, not re-hashed</div>
+        <pre class="mono-block">@derivation.EntropyHex</pre>
+
+        <div class="step-label">4. BIP-39 words</div>
+        <ol class="words">
+            @foreach (var word in derivation.Words)
+            {
+                <li>@word</li>
+            }
+        </ol>
+        <p class="hint">
+            Write these on paper. There is no copy button, and that is deliberate: the app
+            cannot tell whether this machine is the amnesic offline one you meant to use.
+        </p>
+    </div>
+}
+
+<h2>Checking this against another tool</h2>
+<details class="runbook">
+    <summary>The verification runbook</summary>
+
+    <div class="step-label">The hash, with two independent programs</div>
+    <pre class="mono-block">printf '%s' "$ROLLS" | sha256sum
+printf '%s' "$ROLLS" | openssl sha256</pre>
+    <p class="hint">
+        <code>printf '%s'</code>, never <code>echo</code>. A plain echo appends a newline,
+        hashes a different string, and yields a different wallet.
+    </p>
+
+    <div class="step-label">Coldcard's own script</div>
+    <pre class="mono-block">echo "$ROLLS" | python3 rolls12.py</pre>
+    <p class="hint">
+        From Coldcard's verification docs. It prints the truncated hash and the twelve words.
+    </p>
+
+    <div class="step-label">Ian Coleman's offline page (bip39-standalone.html)</div>
+    <p class="hint">
+        Two settings, both silent footguns. Set <strong>Mnemonic Length to 12 or 24, never
+        "raw"</strong>: only the numeric lengths take the SHA-256 path, and "raw" uses a lossy
+        base-6 mapping worth about 1.67 bits per roll instead of 2.585. Set entropy type to
+        <strong>Base 10, not "Dice"</strong>: the Dice type rewrites every 6 to 0 before
+        hashing, so identical digits give a different seed.
+    </p>
+
+    <div class="step-label">Coldcard Mk4</div>
+    <p class="hint">
+        Firmware 5.6.0 or later. Choose <strong>12 Word Dice Roll</strong> and
+        <strong>Dice Only</strong>, not TRNG plus Dice: the mixed mode blends device entropy
+        that cannot be reproduced, so this app will legitimately disagree and it will look like
+        a bug. Enter exactly the minimum number of rolls; below it the device tops up from its
+        own generator without making that obvious. The zero-roll screen shows
+        <code>e3b0c442...b855</code>, the SHA-256 of the empty string, which confirms the hash
+        display works before any real digit is entered.
+    </p>
+
+    <div class="step-label">Do not do this on a networked machine</div>
+    <p class="hint">
+        Coldcard's own documentation states that entering a real roll log on a networked
+        general-purpose computer completely compromises the device's security.
+    </p>
+</details>
+
+<footer>
+    <p>
+        BIP-39 English wordlist, 2048 words, SHA-256
+        <code>@wordListHash</code>@(wordListOk ? " (verified at startup)" : " (CHECK FAILED)")
+    </p>
+    <p>
+        No storage, no network, no telemetry, no clipboard writes. No random number generator:
+        every bit of entropy here came off your dice.
+    </p>
+</footer>
+
+@code {
+    string rawRolls = string.Empty;
+    WordCount wordCount = WordCount.Twelve;
+    SeedDerivation? derivation;
+    string? error;
+
+    string host = string.Empty;
+    bool servedFromElsewhere;
+    string wordListHash = string.Empty;
+    bool wordListOk;
+
+    protected override void OnInitialized()
+    {
+        // Read the host from the navigation URI rather than through JS interop: one less
+        // moving part, and no JavaScript file to review.
+        var uri = new Uri(Navigation.Uri);
+        host = uri.IsDefaultPort ? uri.Host : $"{uri.Host}:{uri.Port}";
+        servedFromElsewhere = uri.Host is not ("127.0.0.1" or "localhost" or "[::1]");
+
+        // The wordlist check runs once, at startup, and its outcome is on screen either way.
+        // A failure here disables derivation entirely: see CanDerive.
+        var wordList = Bip39WordList.Load();
+        wordListOk = wordList.IsSuccess;
+        wordListHash = wordListOk ? wordList.Value.Sha256Hex : "unavailable";
+
+        if (wordList.IsFailure)
+            error = wordList.Error;
+    }
+
+    /// <summary>
+    /// Any edit to the log invalidates a result already on screen, so the result is dropped
+    /// the moment the text changes rather than when Derive is pressed again.
+    /// </summary>
+    string RawRolls
+    {
+        get => rawRolls;
+        set
+        {
+            rawRolls = value;
+            derivation = null;
+            error = null;
+        }
+    }
+
+    // Everything below is derived from the raw text on every keystroke. Nothing is cached and
+    // nothing is stored: the roll log lives in this field and dies with the tab.
+    Result<DiceRollLog> ParsedLog => BeyondPasteGuard
+        ? Result.Failure<DiceRollLog>(
+            $"That is {rawRolls.Length:N0} characters, past the {PasteGuardCharacters:N0} this page will process. " +
+            "Nothing has been truncated and nothing has been hashed. This is a guard against pasting a file by " +
+            "accident, not a limit on rolls: paste the roll log alone.")
+        : DiceRolls.Read(rawRolls);
+
+    int RollCount => ParsedLog.IsSuccess ? ParsedLog.Value.Count : 0;
+
+    string LivePreimage => ParsedLog.IsSuccess ? ParsedLog.Value.Preimage : string.Empty;
+
+    bool CanDerive => wordListOk && ParsedLog.IsSuccess && ParsedLog.Value.MeetsMinimumFor(wordCount).IsSuccess;
+
+    // An empty box is where everyone starts, not a mistake, so it reads 0 with an instruction
+    // rather than an error. Core still returns a failure for empty input, which is right for a
+    // caller asking to derive; the difference is only in how a page that has just loaded
+    // presents it.
+    bool NothingTypedYet => rawRolls.All(char.IsWhiteSpace);
+
+    // A guard against an accidental paste of a large file, not a limit on rolls. Everything
+    // on this page recomputes on every keystroke, so a multi-megabyte paste would make the
+    // live preimage crawl. The threshold is about a hundred times the largest real ceremony
+    // (99 rolls), it lives in the page rather than in Core because it is a rendering concern
+    // rather than a cryptographic one, and it refuses loudly instead of truncating: silent
+    // truncation of a pasted log is precisely the failure this page exists to prevent.
+    const int PasteGuardCharacters = 10_000;
+
+    bool BeyondPasteGuard => rawRolls.Length > PasteGuardCharacters;
+
+    // A log holding a character that is not a die face has no roll count: reporting one would
+    // mean either counting a non-roll or silently dropping it, and both are the kind of quiet
+    // arithmetic this app exists to avoid. It shows a question mark and names the offender.
+    string CounterValue =>
+        NothingTypedYet ? "0"
+        : ParsedLog.IsSuccess ? RollCount.ToString()
+        : "?";
+
+    string CounterClass =>
+        NothingTypedYet ? "counter-under"
+        : ParsedLog.IsFailure ? "counter-invalid"
+        : RollCount == DiceRolls.MinimumRollsFor(wordCount) ? "counter-exact"
+        : RollCount > DiceRolls.MinimumRollsFor(wordCount) ? "counter-over"
+        : "counter-under";
+
+    string CounterNote
+    {
+        get
+        {
+            var minimum = DiceRolls.MinimumRollsFor(wordCount);
+
+            if (NothingTypedYet)
+                return $"Roll your dice and type the log: {minimum} rolls for {(int)wordCount} words.";
+
+            if (ParsedLog.IsFailure)
+                return ParsedLog.Error;
+
+            return RollCount == minimum ? "Exactly the minimum. This is what the device expects."
+                : RollCount > minimum ? $"{RollCount - minimum} above the minimum. Every roll is hashed; nothing is discarded."
+                : $"{minimum - RollCount} more to go.";
+        }
+    }
+
+    void SelectWordCount(WordCount selected)
+    {
+        wordCount = selected;
+        derivation = null;
+        error = null;
+    }
+
+    void RunDerivation()
+    {
+        var result = DiceSeed.Derive(rawRolls, wordCount);
+
+        derivation = result.IsSuccess ? result.Value : null;
+        error = result.IsFailure ? result.Error : null;
+    }
+}

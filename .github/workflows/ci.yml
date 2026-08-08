@@ -1,0 +1,88 @@
+# Continuous integration for dice-to-seed.
+#
+# This repository generates private keys, so CI has two jobs, not one: prove the conversion
+# still agrees with the published vectors, and prove the thing a person would actually put on
+# a USB stick is free of outside references.
+#
+# Deliberately NOT here: an `on: push` workflow that tries to block direct pushes to main.
+# Such a workflow runs after the server has already accepted the push, so it can only report,
+# never block, and it turns every legitimate merge into a red check. Branch protection is the
+# real enforcement; see CLAUDE.md.
+
+name: ci
+
+on:
+  # Pull requests into main. This is the gate that matters, because main only ever moves
+  # through a pull request.
+  pull_request:
+    branches: [main]
+  # Manual runs, so a maintainer can produce the publishable artifact on demand without
+  # opening a pull request first.
+  workflow_dispatch:
+
+# Read-only token. Nothing in this workflow writes to the repository, publishes a package or
+# creates a release, so nothing needs write access.
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The whole solution targets net10.0, the current LTS. global.json is absent on purpose:
+      # there is nothing here that needs a pinned patch version, and a stale pin fails builds
+      # for reasons unrelated to the code.
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      # The suite carries the complete published BIP-39 English vector set, Coldcard's
+      # published dice example, SeedSigner's published 50-roll and 99-roll examples, the
+      # wordlist integrity check, and the guard that fails if any source of randomness ever
+      # appears in first-party source. A failure here is never "flaky": it means the
+      # conversion moved.
+      - name: Test
+        run: dotnet test --configuration Release --no-build --verbosity normal
+
+      - name: Publish the static app
+        run: dotnet publish DiceToSeed.Web --configuration Release --output publish
+
+      # The app must load with the network cable out, so nothing this repository wrote may
+      # point at an outside origin.
+      #
+      # _framework is excluded because it is the .NET WebAssembly runtime, not our code. It
+      # contains three strings that look like URLs and are never fetched: aka.ms inside
+      # exception text, www.w3.org as XML namespace identifiers, and dotnet.generated.invalid,
+      # which uses a reserved TLD that cannot resolve. Scanning it would produce a permanently
+      # red check, and a permanently red check gets ignored rather than fixed.
+      #
+      # Loopback addresses are allowed: the app's own instructions tell the user to serve it
+      # on 127.0.0.1, and that instruction is the point.
+      - name: Check the published app for external references
+        run: |
+          echo "Scanning publish/wwwroot, excluding the .NET runtime in _framework"
+          if grep -rIEn "https?://" publish/wwwroot --exclude-dir=_framework \
+               | grep -vE "127\.0\.0\.1|localhost"; then
+            echo "::error::The published app references an external origin. It must load with the network disconnected."
+            exit 1
+          fi
+          echo "No external references."
+
+      # Uploaded so a reviewer can download exactly what would go on a USB stick and check it
+      # themselves, rather than taking the build's word for it.
+      - name: Upload the publishable output
+        uses: actions/upload-artifact@v4
+        with:
+          name: dice-to-seed-wwwroot
+          path: publish/wwwroot
+          if-no-files-found: error
