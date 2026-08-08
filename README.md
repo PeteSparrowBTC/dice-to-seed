@@ -6,6 +6,13 @@ phrase, using the same convention Coldcard and SeedSigner use.
 **Status: planned, not yet built.** Read
 [the implementation plan](docs/superpowers/plans/2026-08-08-dice-to-seed-app.md) first.
 
+**Physical dice only, and Tails first.** The app has no random number generator and never
+will: no "roll for me" button, no simulated die, nothing random anywhere in the derivation.
+It converts rolls you made with real dice, and a test fails the build if a random source ever
+appears in the source. The intended way to run it is from a USB stick on an offline Tails
+session, served on `127.0.0.1` by a local web server, which is required because Blazor
+WebAssembly does not load over `file://`.
+
 ## What this is for
 
 This app is a **second implementation**, not a recommended primary generator. Its purpose is
@@ -29,9 +36,10 @@ reference on generating one is
 
 ## Working here
 
-Read [CLAUDE.md](CLAUDE.md) first. In short: `main` moves only through a pull request, the
-conversion takes no cryptographic dependency beyond SHA-256, and every algorithmic change
-re-runs the published test vectors.
+Read [CLAUDE.md](CLAUDE.md) first. In short: `main` moves only through a pull request, the app
+is never a source of entropy, the conversion takes no cryptographic dependency beyond SHA-256,
+both dice dialects carry vectors, and every algorithmic change re-runs the published test
+vectors.
 
 After cloning:
 

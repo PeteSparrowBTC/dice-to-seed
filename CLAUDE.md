@@ -10,6 +10,10 @@ acquire a dependency whose behaviour cannot be verified from the repository itse
 The app derives keys that will hold real money. Treat every change as a change to
 key-generation code.
 
+The app converts entropy the user brought on physical dice. It never produces entropy of
+its own, and it is built to be run from a USB stick on an offline Tails session. Rules 1
+and 8 below are the two that carry those properties, and neither is negotiable.
+
 ## CRITICAL: main moves only through a pull request
 
 - **Never push to main.** Not `git push origin main`, not a bare `git push` while main
@@ -73,22 +77,74 @@ git config core.hooksPath .githooks
 
 These are not style preferences. Each one exists because this code generates private keys.
 
-1. **No cryptographic dependency beyond `System.Security.Cryptography.SHA256`.** The
-   conversion is SHA-256, a truncation, a checksum and an 11-bit split. Implement BIP-39
+1. **The app is never a source of entropy, and a test enforces it.** There is no "roll for
+   me" button, no simulated die, no "fill with random rolls" developer convenience, and no
+   random value anywhere in the derivation path. The name invites the feature; the feature
+   turns an audit tool into a browser-based key generator, which is the worst available
+   place to make a key. Physical dice, rolled by the user, are the only accepted input.
+
+   The rule is enforced by a test in `DiceToSeed.Tests` that reads the first-party source
+   files and fails on any occurrence of `RandomNumberGenerator`, `System.Random`, `new
+   Random`, `Guid.NewGuid`, `crypto.getRandomValues`, `Math.random` or
+   `GetNonZeroBytes`. Two scoping details matter, and getting either wrong produces a test
+   that is useless or permanently red:
+
+   - Scan **first-party source only**: the `.cs`, `.razor`, `.js` and `.css` files under
+     `DiceToSeed.Core` and `DiceToSeed.Web`, with `bin`, `obj` and `wwwroot/_framework`
+     excluded. Do **not** scan published output. The .NET WebAssembly runtime calls
+     `crypto.getRandomValues` itself, so a scan over `publish/wwwroot` fails for a reason
+     that is not a defect in this repository.
+   - Exclude the guard test's own file. It necessarily contains every string it searches
+     for.
+
+   A future need for randomness (there is none in scope) does not get an exemption in the
+   test. It gets a discussion first.
+2. **`CSharpFunctionalExtensions` is the only permitted NuGet dependency, and its carve-out
+   is deliberate.** It supplies `Result` and nothing else: no cryptography, no I/O, no
+   network, no reflection over user data, and it is small enough to read. That is why it
+   survives the rule in the opening paragraph. Nothing else does.
+
+   In particular: no cryptographic dependency beyond `System.Security.Cryptography.SHA256`.
+   The conversion is SHA-256, a truncation, a checksum and an 11-bit split. Implement BIP-39
    directly. Do not add NBitcoin or any wallet library: the point of this app is to be
    independent of other implementations, and a large dependency makes it unreadable without
    making it more correct.
-2. **No BIP-32, no secp256k1, no addresses, no fingerprints.** Explicit non-goals. See the
+3. **No BIP-32, no secp256k1, no addresses, no fingerprints.** Explicit non-goals. See the
    plan for the reasoning.
-3. **Every algorithmic change re-runs the published vectors.** The official BIP-39 English
-   vectors and the Coldcard-published dice examples are in the test suite. A change that
-   moves any of them is wrong until proven otherwise.
-4. **No persistence, no network, no telemetry, no clipboard writes of seed material.** The
+4. **Both dialects are first-class, and both carry vectors.** Identical physical rolls
+   produce different seeds under different vendors' conventions, and no device announces
+   which one it uses. Coldcard, SeedSigner and Ian Coleman set to Base 10 hash `15634`;
+   Krux hashes `1-5-6-3-4`. A tool that supports one dialect silently tells a user of the
+   other that their device is wrong, which is precisely the failure this app exists to
+   distinguish from a real one.
+
+   Therefore: the separator is a visible choice labelled with the devices it matches, the
+   exact preimage is always rendered character for character, and the test suite carries
+   vectors for **both** conventions. A dialect whose vectors have not been confirmed against
+   that vendor's own published output is not offered as a selectable option; see the open
+   verification items in the plan.
+5. **Every algorithmic change re-runs the published vectors.** The official BIP-39 English
+   vectors and the dice vectors for both dialects are in the test suite. A change that moves
+   any of them is wrong until proven otherwise.
+6. **No persistence, no network, no telemetry, no clipboard writes of seed material.** The
    app must work with the network cable out, and must leave nothing behind. No
    `localStorage`, no `sessionStorage`, no cookies, no analytics, no external fonts or CDNs.
-5. **The wordlist is verified at runtime** against its known SHA-256, and the app refuses to
+7. **The wordlist is verified at runtime** against its known SHA-256, and the app refuses to
    derive anything if the check fails.
-6. **Validation failures are `Result`, not exceptions.** Use `CSharpFunctionalExtensions`.
+8. **Tails first: the shipped artifact is a download, not a website.** The intended way to
+   run this app is to publish it, copy `wwwroot` to a USB stick, boot Tails with networking
+   off, serve it with `python3 -m http.server 9876 --bind 127.0.0.1`, and open
+   `http://127.0.0.1:9876` in LibreWolf. A local server is required because Blazor
+   WebAssembly will not load over `file://`; there is no file-and-double-click option, and
+   any instruction that implies one is wrong.
+
+   If a build is ever served from anywhere other than `127.0.0.1` or `localhost`, it must
+   say so at the top of the page, before the input, in the manner of the sibling
+   `slip39-backup` README: this build is a demonstration and a real roll log must not be
+   typed into it. A roll log is the seed, in plaintext, before any hashing. Treat a hosted
+   build of this app as more dangerous than a hosted build of a tool that splits a seed the
+   user already holds.
+9. **Validation failures are `Result`, not exceptions.** Use `CSharpFunctionalExtensions`.
    A short roll log or a stray character is an expected input, not an exceptional condition.
    Exceptions are for things that should not happen.
 

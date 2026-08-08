@@ -56,7 +56,33 @@ oversight.
 | Coin flips, cards, d20, d16 tables | The immediate need is d6. Adding sources multiplies the vector surface for no current benefit. Revisit only when asked. |
 | Saving, exporting, printing or copying the seed | Every one of those is a path off the airgap. The user writes the words on paper. |
 | Dice fairness testing | Covered by the `seed-generation` repository's chi-squared worksheet. Not this app's concern. |
-| A "generate for me" button using a browser RNG | The app must never be a source of entropy. It converts entropy the user brought. |
+| A "generate for me" button, a simulated die, or any other random value | The app must never be a source of entropy. It converts entropy the user brought on physical dice. This is not a preference to be traded off later: see section 3a, and CLAUDE.md rule 1, which is enforced by a test that fails the build. |
+| Serving the app from `file://` | Blazor WebAssembly does not load over `file://`. A local HTTP server is not an inconvenience to be engineered away, it is the only way the app runs. See section 10. |
+
+## 3a. The no-entropy rule, and how it is enforced
+
+The name `dice-to-seed` invites a "roll for me" button, and a browser is the worst available
+place to make a key: an unauditable RNG, on a general-purpose machine, in a process that can
+be reached by anything else the page loads. The Coldcard defect in section 1 is the argument.
+A seed from a broken generator is indistinguishable from a good one, which is why the only
+defence is entropy the user produced physically and can account for.
+
+So the app has no RNG, and the rule is enforced rather than documented. `DiceToSeed.Tests`
+carries a guard test that reads the first-party source and fails on any occurrence of:
+
+```
+RandomNumberGenerator   System.Random   new Random   Guid.NewGuid
+crypto.getRandomValues  Math.random     GetNonZeroBytes
+```
+
+Scope it to the `.cs`, `.razor`, `.js` and `.css` files under `DiceToSeed.Core` and
+`DiceToSeed.Web`, excluding `bin`, `obj` and `wwwroot/_framework`, and excluding the guard
+test's own file, which necessarily contains every string it searches for.
+
+Do not point the scan at published output. The .NET WebAssembly runtime calls
+`crypto.getRandomValues` on its own account, so a scan over `publish/wwwroot` goes red for a
+reason that is not a defect here, and a permanently red check gets disabled. The scan covers
+first-party source, which is the thing this repository controls.
 
 ## 4. The algorithm, exactly
 
@@ -97,10 +123,17 @@ for.
 
 Therefore:
 
-- The app offers a separator choice: **none** (default) and **dash**.
+- The app offers a separator choice: **none** (default) and **dash**, each labelled with the
+  devices it matches, not with the punctuation. A user knows which wallet they hold; they do
+  not know which string it hashes.
 - The app always renders the exact preimage it hashed, in a monospace block, character for
   character. This is the single most important element on the screen. A user comparing against
   another tool must be able to see precisely what was fed to SHA-256.
+- Each dialect carries its own vectors, at word level, not only at hash level. A dialect
+  whose vectors have not been confirmed against that vendor's own published output is not
+  shipped as a selectable option: an unverified second dialect is worse than a single
+  verified one, because a wrong dialect and a device that ignored the rolls look identical
+  from the user's chair. The Krux confirmation is an open item; see section 8.
 
 ## 6. Architecture
 
@@ -118,11 +151,21 @@ dice-to-seed/
     Pages/Derive.razor        the single page
     wwwroot/                  no external references of any kind
   DiceToSeed.Tests/           xunit, references Core only
+    NoEntropySourceTests.cs   the section 3a source scan; excluded from its own scan
   .github/workflows/ci.yml
 ```
 
 `DiceToSeed.Core` must not reference `Microsoft.AspNetCore.*`. Its only NuGet dependency is
 `CSharpFunctionalExtensions`, for `Result`.
+
+That dependency is a deliberate carve-out from the rule that this repository takes no
+dependency it cannot verify itself. `CSharpFunctionalExtensions` supplies a `Result` type and
+nothing else: no cryptography, no I/O, no network. It is small enough to read, and it sits
+outside the derivation path. Nothing else earns the same exemption, and in particular no
+library that touches bytes on the way to a key does.
+
+The test project reaches the file system, which Core and Web never do, solely for the section
+3a source scan.
 
 ### Core public surface
 
@@ -175,9 +218,15 @@ Note `.gitattributes` pins `*.txt` to LF for exactly this reason.
 One page. No routing beyond it, no navigation menu, no settings.
 
 1. **An offline warning at the top**, prominent, in the manner of the sibling `slip39-backup`
-   README. If `window.location.hostname` is neither `127.0.0.1` nor `localhost` and the scheme
-   is not `file:`, escalate the warning: this build is being served from somewhere, and the
-   user should be told plainly not to enter a real roll log into it.
+   README. If `window.location.hostname` is neither `127.0.0.1` nor `localhost`, escalate it:
+   this build is being served from somewhere, and the user must be told plainly, above the
+   text area, not to type a real roll log into it. The roll log is the seed in plaintext,
+   before any hashing, so a hosted build of this app carries more risk than a hosted build of
+   a tool that splits a seed the user already holds.
+
+   Do not add a `file:` branch to that check. Blazor WebAssembly does not load over `file://`
+   at all, so the branch can never run; a condition that cannot be true reads as a supported
+   path and invites someone to "fix" the app so it works there.
 2. **Word count**: 12 (default) and 24.
 3. **Separator**: none (default) and dash, labelled with the devices each matches.
 4. **Roll entry**: a text area accepting digits, tolerant of spaces and newlines.
@@ -243,6 +292,23 @@ actually reaching the preimage.
 preimage  1-2-3-4-5-6
 sha256    b76c3b0194c3c3b0e31e358d76ea00414bdacb2024c976c8d7963d896017f851
 ```
+
+This vector is weaker than it looks, and it is the second open item. The hash was computed
+here, from the assumption that Krux joins the digits with `-`; it is not a value published by
+Krux. It also stops at the hash, so it proves the separator reached the preimage and proves
+nothing about the words a Krux device would show. Before the dash option ships as a
+selectable dialect:
+
+1. Confirm from Krux's own source or documentation how the roll string is assembled, at 50
+   rolls rather than 6, including whether Krux hashes once or twice and whether it accepts a
+   50-roll minimum for 12 words at all.
+2. Add a word-level Krux vector, at the real minimum roll count, taken from Krux's published
+   output or from a device, in the form of vectors 7 and 8.
+
+If step 1 disagrees with the dash assumption, this vector is wrong and section 5 is wrong
+with it. Until both steps are done, build the separator as a parameter of Core with its
+vectors marked provisional, and do not present the dash option in the UI as "Krux": an
+unverified dialect label is a confident wrong answer given to the user whose device it names.
 
 **Vector 7: the primary 12-word case, 50 rolls.** `123456` repeated and cut to 50 digits.
 
@@ -318,29 +384,60 @@ silent footguns:
 **Do not enter a real roll log on a networked general-purpose machine.** Coldcard's own
 documentation states that doing so completely compromises the device's security.
 
-## 10. Deployment to Tails
+## 10. Deployment posture: Tails first
 
-Mirror what `slip39-backup` already does, since it is known to work:
+The sibling `slip39-backup` has a two-build posture that is known to work, and this app
+should inherit it, with one deliberate difference.
+
+**What `slip39-backup` does.** A GitHub Pages build carries a red banner at the top of the
+README and of the page: live demo, do not use for real wallets, download a release and run it
+offline on Tails instead. `TAILS_INSTRUCTIONS.md` then covers the whole offline route: publish
+to static files, copy to USB, `python3 -m http.server 9876 --bind 127.0.0.1`, open in
+LibreWolf, and an explicit section on why `file://` cannot work. The Tails route in that
+repository has been run and works.
+
+**The difference here.** `slip39-backup` splits a seed the user already holds, so a demo can
+be exercised with a throwaway seed and still teach the mechanism. This app's input is the
+roll log, which **is** the seed in plaintext before any hashing, and the only way to see the
+app do anything is to type one in. A demo build therefore teaches very little and asks for
+exactly the input that must never be typed on a networked machine. Recommendation: **no
+GitHub Pages demo**. Distribute the published `wwwroot` as a release artifact only, and keep
+the banner logic anyway for the case where someone serves it themselves. Section 13 records
+this as the human's call rather than settling it here.
+
+**Publish, on a machine with the .NET SDK:**
 
 ```bash
 cd DiceToSeed.Web
 dotnet publish -c Release -o publish
-# copy publish/wwwroot to the USB stick
+# copy publish/wwwroot to the USB stick, as a folder named dice-to-seed
 ```
 
-On Tails, with networking off:
+**Run, on Tails, with networking off:**
 
 ```bash
 cd /media/amnesia/<USB>/dice-to-seed
-python3 -m http.server 9876 --bind 127.0.0.1
+./start-server.sh            # or: python3 -m http.server 9876 --bind 127.0.0.1
 ```
 
-Then open `http://127.0.0.1:9876` in LibreWolf. A local web server is required because
-WebAssembly will not load over `file://`. Confirm with `--bind 127.0.0.1` that nothing is
-listening on an external interface.
+Then open `http://127.0.0.1:9876` in LibreWolf. Three points that the README must state
+plainly, because each has cost time in the sibling repository:
 
-Ship a `start-server.sh` alongside the published output, and document the two commands in the
-README.
+- **A local web server is required.** Blazor WebAssembly does not load over `file://`: the
+  MIME types, module loading and streaming compilation all depend on HTTP. There is no
+  double-click route, and this is not a bug to be worked around.
+- **LibreWolf, not Tor Browser.** Tor Browser on Tails sends `127.0.0.1` through the Tor
+  proxy and the local connection is refused. It can be fixed by adding `127.0.0.1, localhost`
+  to "No Proxy for" in `about:preferences`, but the setting does not always survive; carrying
+  the LibreWolf AppImage on the USB stick is the shorter path. Copy it to the stick before
+  booting Tails, since fetching it there means networking on.
+- **`--bind 127.0.0.1` is load-bearing.** Without it Python listens on every interface.
+  `ss -tlnp | grep 9876` should show `127.0.0.1:9876` and nothing else.
+
+Ship `start-server.sh` alongside the published output (LF endings, already pinned by
+`.gitattributes`), and give this repository its own `TAILS_INSTRUCTIONS.md` modelled on the
+sibling's, since the person following it is standing at an offline machine with no other
+documentation available.
 
 ## 11. CI
 
@@ -366,6 +463,9 @@ Work test-first. Each step should end with a passing suite and a commit on a fea
 
 1. Scaffold the three projects and the solution. Add `CSharpFunctionalExtensions` to Core and
    xunit to Tests. Confirm `dotnet test` runs green with zero tests.
+1a. Write `NoEntropySourceTests.cs`, the section 3a source scan, before any production code.
+   Prove it works by temporarily adding `var x = new Random();` to a Core file, watching the
+   test go red, then removing it. A guard test that has never failed is not known to work.
 2. Add `english.txt` as an embedded resource. Write the integrity test first (2048 words, and
    the SHA-256 in section 6), then make it pass.
 3. Implement `Bip39.cs`, entropy bytes to words. Drive it with vectors 1 to 3. This is the part
@@ -375,8 +475,11 @@ Work test-first. Each step should end with a passing suite and a commit on a fea
    all returning `Result`. Test the three failure modes and their messages.
 5. Implement `DiceSeed.Derive`, the five steps of section 4. Drive it with vectors 4 to 8.
    Vector 5 is the one that catches a wrong truncation, so make sure it is present and passing.
-6. Download Coldcard's `rolls12.py` and confirm vector 5 against it, per the flag in section 8.
-   If it disagrees, stop and report before changing anything.
+6. Download Coldcard's `rolls12.py` and confirm vector 5 against it, per the first flag in
+   section 8. If it disagrees, stop and report before changing anything.
+6a. Resolve the Krux dialect, per the second flag in section 8: confirm how Krux assembles the
+   roll string, then add a word-level Krux vector at Krux's own minimum roll count. Until this
+   passes, the dash option stays a Core parameter and is not labelled as Krux in the UI.
 7. Build the single Blazor page against the Core API. Start with the roll counter and the live
    preimage, because those are the elements that carry the verification value.
 8. Add the offline warning and the served-from-elsewhere escalation.
@@ -384,11 +487,14 @@ Work test-first. Each step should end with a passing suite and a commit on a fea
 10. Grep the published output for external references (`http://`, `https://`, `cdn`, font
     URLs) and confirm there are none. Load the published app with networking disabled and
     confirm it works.
-11. Write the README: what it is, the three-way verification procedure, the Tails commands, and
-    an explicit statement that this app is a checker rather than a recommended primary
-    generator.
-12. Add the CI workflow.
-13. Open a pull request. Do not merge it.
+11. Write `start-server.sh` and `TAILS_INSTRUCTIONS.md` per section 10, then run the whole
+    route on a real Tails session: USB, server, LibreWolf, 50 rolls, words on paper. The
+    sibling repository's instructions were written this way and that is why they work.
+12. Write the README: what it is, that it is Tails first and download only, the three-way
+    verification procedure, a pointer to `TAILS_INSTRUCTIONS.md`, and an explicit statement
+    that this app is a checker rather than a recommended primary generator.
+13. Add the CI workflow.
+14. Open a pull request. Do not merge it.
 
 ## 13. Decisions left to the human
 
@@ -401,6 +507,11 @@ Work test-first. Each step should end with a passing suite and a commit on a fea
   deliberate decision rather than a drive-by link.
 - **Whether to support coin flips later.** SeedSigner accepts 128 or 256 coin flips hashed the
   same way, so it would be a small addition to Core with its own vectors. Out of scope here.
+- **Whether to publish a GitHub Pages demo at all.** `slip39-backup` does, behind a red
+  banner, and the banner pattern works. Section 10 recommends against it here: the input to
+  this app is the seed in plaintext, and the demo cannot be exercised without typing one.
+  Release artifact only is the safer default. The banner logic gets built either way, because
+  it costs little and someone may serve the folder themselves.
 
 ---
 
