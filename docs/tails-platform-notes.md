@@ -58,8 +58,11 @@ from the CI dependency report on this repository's own build.
 When the AppImage appears to do nothing on Tails, the cause has so far never been a missing
 dependency. In order of likelihood:
 
-1. **GNOME Files does not launch binaries on double-click.** Modern GNOME removed that
-   behaviour and does it silently. Run it from a terminal instead.
+1. **GNOME Files does not launch binaries on double-click.** It does nothing and says nothing.
+   The GUI route is right-click, **Properties**, turn on **Executable as Program**, then
+   right-click again and choose **Run as a Program**. Both labels verified against Nautilus
+   48.3, which is the version in Tails 7.10.1. Without the permission set, **Run as a Program**
+   is not in the menu at all, which is what makes this look like a broken download.
 2. **The executable bit is gone**, because the file crossed a FAT or exFAT stick, or came from
    Windows. `chmod +x`.
 3. **The USB may be mounted `noexec`.** Copy the AppImage to `~` first; that removes causes 2
