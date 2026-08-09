@@ -1,0 +1,87 @@
+# Publishes the browser build to GitHub Pages as a demonstration.
+#
+# READ THIS BEFORE CHANGING ANYTHING HERE.
+#
+# A hosted copy of this app is more dangerous than a hosted copy of a tool that splits a seed
+# you already hold. The roll log a user types here IS the seed, in plaintext, before any
+# hashing: whoever learns it holds the wallet. Nothing is transmitted (the conversion happens
+# entirely in the browser and the app makes no network call), but "nothing is transmitted"
+# depends on the served files being the ones in this repository, and a visitor cannot know that
+# a server has not swapped them.
+#
+# So this deployment exists to demonstrate and to be read, not to be used. The app itself
+# detects that it is served from something other than 127.0.0.1 or localhost and shows a red
+# banner saying so, above the input, before anything can be entered. That behaviour is tested
+# and must not be removed: it is the only thing standing between a curious visitor and a real
+# roll log typed into a web page.
+#
+# For real use: download the release, verify its checksum, and run it offline on Tails.
+
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; do not cancel a running one, so a half-published site cannot be
+# left in place.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish
+        run: dotnet publish DiceToSeed.Web --configuration Release --output publish
+
+      # Pages serves the site from /<repo>/ rather than /, so the base href has to match or
+      # every asset request 404s and the app never boots.
+      - name: Point the base href at the Pages subpath
+        run: |
+          sed -i 's|<base href="/" />|<base href="/dice-to-seed/" />|' publish/wwwroot/index.html
+          grep -n "base href" publish/wwwroot/index.html
+
+      # Without this, Pages runs the output through Jekyll, which ignores files and folders
+      # beginning with an underscore. Blazor keeps its entire runtime in _framework.
+      - name: Disable Jekyll
+        run: touch publish/wwwroot/.nojekyll
+
+      # The same check the main build runs: nothing served may point at an outside origin.
+      - name: Check for external references
+        run: |
+          if grep -rIEn "https?://" publish/wwwroot --exclude-dir=_framework \
+               | grep -vE "127\.0\.0\.1|localhost"; then
+            echo "::error::The published app references an external origin."
+            exit 1
+          fi
+          echo "No external references."
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: publish/wwwroot
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
