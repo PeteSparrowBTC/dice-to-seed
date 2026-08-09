@@ -3,6 +3,51 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## 1.1.0
+
+A second mode, for the key that encrypts your backup. The seed conversion is untouched: the same
+rolls produce the same words as 1.0.0.
+
+### The backup key mode
+
+- Rolls for `k`, the 32-byte key [slip39-backup](https://github.com/PeteSparrowBTC/slip39-backup)
+  encrypts with and splits into shares. That key otherwise comes from a generator nobody can
+  check, which is the thing this app avoids everywhere else.
+- `k = SHA-256(the bare digit string)`, all 32 bytes. No new convention: it is the value the seed
+  mode already shows at step 2, and `printf '%s' "$ROLLS" | sha256sum` reproduces it.
+- **Renders hex and never words.** That is what makes a mode selector safe to offer here. A mode
+  whose wrong position still produces plausible output is Ian Coleman's "Dice versus Base 10"
+  trap: a different wallet, no warning. Hex and words differ in kind, so a mis-set mode shows.
+- **Switching mode clears the roll log**, with a confirmation that gives the reason. One log must
+  never yield both: on 24 words the BIP-39 entropy is that hash byte for byte, so a reused log
+  makes `k` identical to the wallet it protects and the shares stop protecting anything.
+- Shows a four character check code, because `k` is transcribed by hand and, unlike words and
+  shares, carries no checksum of its own: any string is a valid passphrase, so a mistyped key
+  encrypts cleanly and is discovered at recovery. The code is the first four characters of the
+  hex SHA-256 of the printed hex key, computed over the string on screen so a shell reproduces it
+  without decoding.
+- Optional, and the documentation says what it does not buy: AgeSharp fills the age file key from
+  its own generator and encrypts the payload under that, and `k` only wraps it. Dice give `k` a
+  provenance you can account for, which is a smaller claim than removing every generator. Rolling
+  for the seed remains mandatory, because entropy quality is the one property no later step can
+  check.
+
+### Fixes
+
+- `TAILS_INSTRUCTIONS.md` offered Ian Coleman's page as a cross-check without saying to set the
+  entropy type to Base 10 rather than Dice. The Dice type rewrites every 6 to a 0 before hashing,
+  so a reader following the old text had a coin flip between the right answer and a confident
+  wrong one. It now also says to test the setting with a log containing a 6, since the two types
+  agree on every log without one.
+
+### Under it
+
+- The roll minimum is now stated against an entropy target rather than a word count, which is
+  what always determined it. A test asserts both paths give the same number.
+- Ten new tests, including one that pins the reuse hazard rather than a feature: it asserts that
+  the same log makes `k` identical to the 24-word entropy, so if the derivation ever moves, the
+  warnings built on it get revisited.
+
 ## 1.0.0
 
 First release.
