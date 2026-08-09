@@ -57,6 +57,19 @@ jobs:
           sed -i 's|<base href="/" />|<base href="/dice-to-seed/" />|' publish/wwwroot/index.html
           grep -n "base href" publish/wwwroot/index.html
 
+      # A banner welded into the HTML, on top of the one the app renders for itself.
+      #
+      # The app already detects a non-loopback host and warns, but that warning appears only
+      # once WebAssembly has booted, which is several seconds during which the page looks like a
+      # working tool. This one is in the markup, so it is on screen from the first paint and
+      # survives the runtime failing to load at all. It is not dismissible on purpose: a visitor
+      # who types fifty real rolls into a web page has handed over the wallet, and there is no
+      # undo for that.
+      - name: Weld the demonstration banner into the page
+        run: |
+          sed -i "/<body>/r packaging/pages/demo-banner.html" publish/wwwroot/index.html
+          grep -c "DEMONSTRATION ONLY" publish/wwwroot/index.html
+
       # Without this, Pages runs the output through Jekyll, which ignores files and folders
       # beginning with an underscore. Blazor keeps its entire runtime in _framework.
       - name: Disable Jekyll

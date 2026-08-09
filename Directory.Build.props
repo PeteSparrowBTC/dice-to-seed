@@ -1,0 +1,18 @@
+<Project>
+
+  <!-- One place for the version, so the assemblies, the AppImage and the git tag cannot drift
+       apart. Bump this, the version in src-tauri/Cargo.toml and the one in
+       src-tauri/tauri.conf.json together: a release whose artifacts disagree about what they
+       are is a release nobody can verify. -->
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Authors>Pete Sparrow</Authors>
+    <Product>dice to seed</Product>
+    <Description>Converts a log of six-sided dice rolls into a BIP-39 seed phrase, offline.</Description>
+    <Copyright>Copyright (c) 2026 Bitcoin Self Custody</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+</Project>
