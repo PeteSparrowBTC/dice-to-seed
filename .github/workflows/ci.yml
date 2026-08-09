@@ -138,11 +138,25 @@ jobs:
           echo "Photino.Native.so NEEDED entries:"
           readelf -d AppDir/usr/bin/Photino.Native.so 2>/dev/null | grep NEEDED ||             strings AppDir/usr/bin/Photino.Native.so | grep -E "^lib(webkit|javascriptcore|gtk)" | sort -u
 
+      # appimagetool is the one piece of this build that is neither written here nor produced
+      # by the .NET SDK, so it is pinned to a release and its checksum is verified before it is
+      # allowed to run. It participates in producing the artifact that derives private keys;
+      # fetching an unversioned binary and executing it would contradict everything else this
+      # repository does.
+      #
+      # It comes from AppImage/appimagetool, not AppImage/AppImageKit: the latter's release 13
+      # assets are published with an "obsolete-" prefix upstream, and the maintained tool now
+      # lives in its own repository on semantic versions.
+      #
       # --appimage-extract-and-run because GitHub runners have no FUSE, which appimagetool
       # otherwise requires.
       - name: Build the AppImage
+        env:
+          APPIMAGETOOL_VERSION: '1.9.1'
+          APPIMAGETOOL_SHA256: 'ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0'
         run: |
-          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          wget -q "https://github.com/AppImage/appimagetool/releases/download/${APPIMAGETOOL_VERSION}/appimagetool-x86_64.AppImage"
+          echo "${APPIMAGETOOL_SHA256}  appimagetool-x86_64.AppImage" | sha256sum -c -
           chmod +x appimagetool-x86_64.AppImage
           ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run AppDir dice-to-seed-x86_64.AppImage
           sha256sum dice-to-seed-x86_64.AppImage | tee dice-to-seed-x86_64.AppImage.sha256
