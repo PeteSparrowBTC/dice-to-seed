@@ -71,6 +71,43 @@ jobs:
       - name: Build the AppImage
         run: cargo tauri build --bundles appimage
 
+      # The same binary, packaged our way: no bundled WebKitGTK, because Tails ships it and
+      # bundling a browser engine we know is present triples the size. Built in the same run as
+      # Tauri's own bundle so the two are directly comparable rather than compared across runs.
+      - name: Package a slim AppImage without bundling WebKitGTK
+        env:
+          APPIMAGETOOL_VERSION: '1.9.1'
+          APPIMAGETOOL_SHA256: 'ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0'
+        run: |
+          mkdir -p AppDir/usr/bin
+          cp src-tauri/target/release/dice-to-seed AppDir/usr/bin/dice-to-seed
+          cp packaging/tauri-appimage/AppRun AppDir/AppRun
+          cp packaging/tauri-appimage/dice-to-seed.desktop AppDir/dice-to-seed.desktop
+          cp packaging/tauri-appimage/dice-to-seed.png AppDir/dice-to-seed.png
+          chmod +x AppDir/AppRun AppDir/usr/bin/dice-to-seed
+
+          wget -q "https://github.com/AppImage/appimagetool/releases/download/${APPIMAGETOOL_VERSION}/appimagetool-x86_64.AppImage"
+          echo "${APPIMAGETOOL_SHA256}  appimagetool-x86_64.AppImage" | sha256sum -c -
+          chmod +x appimagetool-x86_64.AppImage
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run AppDir dice-to-seed-slim-x86_64.AppImage
+          sha256sum dice-to-seed-slim-x86_64.AppImage | tee dice-to-seed-slim-x86_64.AppImage.sha256
+
+      - name: Compare the two packagings
+        run: |
+          echo "Tauri's own bundler (bundles WebKitGTK):"
+          ls -lh src-tauri/target/release/bundle/appimage/*.AppImage
+          echo "Ours (bundles nothing):"
+          ls -lh dice-to-seed-slim-x86_64.AppImage
+
+      - name: Upload the slim AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: dice-to-seed-tauri-slim
+          path: |
+            dice-to-seed-slim-x86_64.AppImage
+            dice-to-seed-slim-x86_64.AppImage.sha256
+          if-no-files-found: error
+
       - name: Report what was produced
         run: |
           find src-tauri/target -name "*.AppImage" -exec ls -lh {} \;
