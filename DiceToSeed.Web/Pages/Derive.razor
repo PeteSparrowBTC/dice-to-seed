@@ -194,10 +194,35 @@ printf '%s' "$ROLLS" | openssl sha256</pre>
         hashes a different string, and yields a different wallet.
     </p>
 
-    <div class="step-label">Coldcard's own script</div>
-    <pre class="mono-block">echo "$ROLLS" | python3 rolls12.py</pre>
+    @* Ordering here is deliberate. A user checking a seed wants the most independent tool
+       first, and the one whose maker has not just shipped an entropy defect. *@
+    <div class="step-label">SeedSigner's own verification tool</div>
+    <pre class="mono-block">pip3 install embit
+git clone github.com/SeedSigner/seedsigner &amp;&amp; cd seedsigner
+pip3 install -e .
+cd tools &amp;&amp; python3 mnemonic.py dice "$ROLLS"</pre>
     <p class="hint">
-        From Coldcard's verification docs. It prints the truncated hash and the twelve words.
+        SeedSigner ships this specifically so its dice conversion can be checked against other
+        tools. It uses <code>embit</code>, a BIP-39 implementation written by neither
+        SeedSigner nor this app, so agreement is worth something. Install it before you go
+        offline.
+    </p>
+
+    <div class="step-label">Any BIP-39 library, in five lines</div>
+    <pre class="mono-block">pip3 install mnemonic
+python3 -c "
+import hashlib
+from mnemonic import Mnemonic
+e = hashlib.sha256('$ROLLS'.encode()).digest()[:16]   # 32 for 24 words
+print(e.hex())
+print(Mnemonic('english').to_mnemonic(e))"</pre>
+    <p class="hint">
+        The <code>mnemonic</code> package is Trezor's reference implementation, the one the
+        official BIP-39 test vectors are published alongside. The two lines that matter are
+        visible: SHA-256 of the rolls, truncated to 16 bytes, handed to a library that knows
+        nothing about dice. If this and the app disagree, the app is wrong. Equivalents exist
+        everywhere: <code>bip39</code> on npm and the <code>bip39</code> crate in Rust both
+        take entropy bytes the same way.
     </p>
 
     <div class="step-label">Ian Coleman's offline page (bip39-standalone.html)</div>
@@ -209,15 +234,33 @@ printf '%s' "$ROLLS" | openssl sha256</pre>
         hashing, so identical digits give a different seed.
     </p>
 
-    <div class="step-label">Coldcard Mk4</div>
+    <div class="step-label">On a SeedSigner</div>
     <p class="hint">
-        Firmware 5.6.0 or later. Choose <strong>12 Word Dice Roll</strong> and
-        <strong>Dice Only</strong>, not TRNG plus Dice: the mixed mode blends device entropy
-        that cannot be reproduced, so this app will legitimately disagree and it will look like
-        a bug. Enter exactly the minimum number of rolls; below it the device tops up from its
-        own generator without making that obvious. The zero-roll screen shows
-        <code>e3b0c442...b855</code>, the SHA-256 of the empty string, which confirms the hash
-        display works before any real digit is entered.
+        Tools, New Seed, dice. 50 rolls for 12 words and 99 for 24, the same minimums this app
+        uses. SeedSigner hashes the bare digit string exactly as shown above, so the preimage
+        on this page is the string it hashes.
+    </p>
+
+    <div class="step-label">On a Coldcard</div>
+    <p class="hint">
+        Firmware 5.6.0 or later, and read that requirement as more than housekeeping: firmware
+        before it did not call the hardware random number generator during seed generation for
+        five years, which is the defect this app exists in response to. Dice Only mode never
+        used the RNG, so a dice-derived seed is not affected, but there is no reason to run
+        known-bad firmware.
+    </p>
+    <p class="hint">
+        Choose <strong>12 Word Dice Roll</strong> and <strong>Dice Only</strong>, not TRNG plus
+        Dice: the mixed mode blends device entropy that cannot be reproduced, so this app will
+        legitimately disagree and it will look like a bug. Enter exactly the minimum number of
+        rolls; below it the device tops up from its own generator without making that obvious.
+        The zero-roll screen shows <code>e3b0c442...b855</code>, the SHA-256 of the empty
+        string, which confirms the hash display works before any real digit is entered.
+    </p>
+    <p class="hint">
+        Coldcard's <code>rolls12.py</code>, from its verification docs, is still a useful
+        second opinion despite the above: it is a short script you can read in full, and the
+        defect was in firmware, not in it. <code>echo "$ROLLS" | python3 rolls12.py</code>
     </p>
 
     <div class="step-label">Do not do this on a networked machine</div>
