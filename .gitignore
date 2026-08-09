@@ -28,3 +28,4 @@ scratch/
 .playwright-mcp/
 *.png
 !DiceToSeed.Web/wwwroot/*.png
+!packaging/appimage/*.png
