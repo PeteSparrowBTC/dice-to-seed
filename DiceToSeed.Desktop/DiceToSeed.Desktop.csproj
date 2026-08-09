@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- The AppImage is a single self-contained tree, so the app must carry its own runtime:
+         Tails has no .NET installed, and installing one is not part of an offline ceremony. -->
+    <SelfContained>true</SelfContained>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Photino.Blazor hosts the same Razor components in a native window backed by the system
+         WebView, so there is no HTTP server, no port and no browser to configure.
+
+         This is the second carve-out from the one-dependency rule, and unlike
+         CSharpFunctionalExtensions it is NOT small enough to read: Photino.Native is a
+         compiled binary. It is accepted only because it is a shell. It sits outside the
+         derivation path, which lives in DiceToSeed.Core, is byte for byte the same code the
+         browser build runs, and is pinned by the same published vendor vectors. See CLAUDE.md
+         rule 2. -->
+    <PackageReference Include="Photino.Blazor" Version="4.0.13" />
+
+    <!-- Photino.Blazor 4.0.13 brings Components.WebView 9.0.1 transitively, while everything
+         else here is on .NET 10. A Blazor 10 runtime hosted by a Blazor 9 WebView loads the
+         window and then mounts nothing, so the version is pinned forward to match. -->
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView" Version="10.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DiceToSeed.Ui\DiceToSeed.Ui.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Photino serves the window's content from a real wwwroot folder beside the executable,
+         not from the static web assets manifest the browser build uses, so these have to be
+         copied out. -->
+    <Content Update="wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- The stylesheet has one source of truth, in DiceToSeed.Ui, so the desktop window and the
+       browser page cannot drift into looking like different apps while claiming to be the same
+       tool. It is copied by a target rather than declared as Content because DiceToSeed.Ui
+       already publishes it as a static web asset, and declaring it twice makes the asset
+       pipeline fail on a duplicate key. -->
+  <Target Name="CopySharedStylesheet" AfterTargets="Build;Publish">
+    <Copy SourceFiles="..\DiceToSeed.Ui\wwwroot\css\app.css"
+          DestinationFolder="$(OutDir)wwwroot\css"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="..\DiceToSeed.Ui\wwwroot\css\app.css"
+          DestinationFolder="$(PublishDir)wwwroot\css"
+          SkipUnchangedFiles="true"
+          Condition="'$(PublishDir)' != ''" />
+  </Target>
+
+</Project>

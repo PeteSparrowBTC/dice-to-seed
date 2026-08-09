@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DiceToSeed.Core\DiceToSeed.Core.csproj" />
+    <ProjectReference Include="..\DiceToSeed.Ui\DiceToSeed.Ui.csproj" />
   </ItemGroup>
 
 </Project>

@@ -180,6 +180,33 @@ else
         looking non-random means your seed is chosen from a smaller set than the dice offered,
         which is the one thing that genuinely weakens it. Record what you rolled and use it.
     </p>
+    @* Throwing several dice at once is the fastest way to lose entropy without noticing,
+       because the roll count still looks correct afterwards, and the count is all this page
+       can see. The distinction that matters is not whether the dice are identical but whether
+       the reading order is fixed by something independent of the faces. *@
+    <p class="hint">
+        <strong>Throwing several dice at once: the order you read them in is the whole
+        question.</strong> Four dice thrown together are four independent rolls, worth 1296
+        outcomes and 10.34 bits, but only if the order you write them down in is decided by
+        something that has nothing to do with the faces. Four dice of different colours read
+        red, green, blue, white every time does that. So does a sheet of paper with four
+        numbered boxes and one die thrown into each. What does not is sorting them, or noting
+        which values came up: that records a set rather than a sequence, 126 outcomes instead
+        of 1296, so 6.98 bits a throw with a third of it gone. Thirteen such throws are 52
+        rolls, which clears the 50 minimum and reads as perfectly fine on the counter above,
+        while carrying about 91 bits rather than 134.
+    </p>
+    <p class="hint">
+        With <strong>identical</strong> dice the arithmetic is the same but the discipline is
+        harder, and that is the part worth being honest about. Reading left to right preserves
+        the full entropy in principle, because where a die lands has nothing to do with which
+        face is up. The failure comes when they land clustered or touching and "left to right"
+        stops being obvious: if you settle the ambiguity by glancing at the numbers, the order
+        you record becomes entangled with the values, and how much you lost is not something
+        anyone can work out afterwards. Numbered boxes remove the ambiguity. Rolling one die
+        at a time removes the question. Nothing on this page can detect any of it, because all
+        it ever sees is the digits you pressed.
+    </p>
 </div>
 
 <h2>Checking this against another tool</h2>

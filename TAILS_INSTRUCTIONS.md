@@ -81,6 +81,24 @@ will fail, and that is not something to work around.
    one at a time and write each result down as you go. Whatever comes up is your log: never
    re-roll it because it looks too orderly. Six 6s in a row is exactly as likely as any other
    six rolls.
+
+   **If you throw several dice at once, fix the reading order with something that has nothing
+   to do with the faces.** Four dice thrown together are four independent rolls, 1296 outcomes
+   and 10.34 bits, only if the order you write them down in is decided independently of the
+   values. Four different colours read red, green, blue, white every time does that; so does a
+   sheet of paper with four numbered boxes and one die thrown into each. Sorting them, or just
+   noting which values came up, does not: that records a set rather than a sequence, 126
+   outcomes instead of 1296, 6.98 bits a throw, a third of the entropy gone. Thirteen such
+   throws are 52 rolls, which clears the 50 minimum and looks correct on the counter, while
+   carrying about 91 bits instead of 134.
+
+   **With identical dice this is a discipline problem rather than an arithmetic one.** Reading
+   left to right keeps the full entropy in principle, because where a die lands has nothing to
+   do with which face is up. It breaks when they land clustered or touching and the order stops
+   being obvious: settle that by glancing at the numbers and the order becomes entangled with
+   the values, and nobody can work out afterwards how much was lost. Numbered boxes remove the
+   ambiguity; one die at a time removes the question. The app cannot detect any of this, because
+   all it ever sees is the digits you pressed.
 2. Record each roll in the app by pressing the button showing the face you rolled. The keys 1
    to 6 do the same thing, Backspace undoes the last roll, and there is an Undo and a Clear.
    There is no text box: nothing but a die face can go in, so a stray keystroke cannot end up

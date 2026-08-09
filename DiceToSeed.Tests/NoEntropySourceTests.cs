@@ -116,8 +116,38 @@ public class NoEntropySourceTests
             Environment.NewLine + string.Join(Environment.NewLine, offenders));
     }
 
+    /// <summary>
+    /// Every project that ships. A project missing from this list is a hole in the guard, so
+    /// adding one to the solution means adding it here: see
+    /// <see cref="Every_shipping_project_is_scanned"/>, which fails if the two drift apart.
+    /// </summary>
+    static readonly IReadOnlyList<string> ScannedProjects =
+    [
+        "DiceToSeed.Core",
+        "DiceToSeed.Ui",
+        "DiceToSeed.Web",
+        "DiceToSeed.Desktop",
+    ];
+
+    /// <summary>
+    /// The guard is only as wide as the list above, and the obvious way to defeat it by
+    /// accident is to add a project and forget. This compares the list against the projects
+    /// that actually exist, so a new shell cannot appear unscanned.
+    /// </summary>
+    [Fact]
+    public void Every_shipping_project_is_scanned()
+    {
+        var shipping = RepositoryRoot()
+            .EnumerateDirectories("DiceToSeed.*")
+            .Select(directory => directory.Name)
+            .Where(name => name != "DiceToSeed.Tests")
+            .OrderBy(name => name, StringComparer.Ordinal);
+
+        Assert.Equal(shipping, ScannedProjects.OrderBy(name => name, StringComparer.Ordinal));
+    }
+
     static IEnumerable<string> FirstPartySourceFiles() =>
-        new[] { "DiceToSeed.Core", "DiceToSeed.Web" }
+        ScannedProjects
             .Select(project => Path.Combine(RepositoryRoot().FullName, project))
             .Where(Directory.Exists)
             .SelectMany(dir => Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))

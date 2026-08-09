@@ -1,5 +1,7 @@
 <Solution>
   <Project Path="DiceToSeed.Core/DiceToSeed.Core.csproj" />
+  <Project Path="DiceToSeed.Desktop/DiceToSeed.Desktop.csproj" />
   <Project Path="DiceToSeed.Tests/DiceToSeed.Tests.csproj" />
+  <Project Path="DiceToSeed.Ui/DiceToSeed.Ui.csproj" />
   <Project Path="DiceToSeed.Web/DiceToSeed.Web.csproj" />
 </Solution>

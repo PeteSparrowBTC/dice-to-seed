@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using DiceToSeed.Web;
+using DiceToSeed.Ui;
 
 // Deliberately minimal. The default Blazor WebAssembly template registers an HttpClient
 // pointed at the host; that registration is removed here and must not come back. This app
