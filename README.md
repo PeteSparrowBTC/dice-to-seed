@@ -1,6 +1,7 @@
 # dice to seed
 
-Turns dice rolls into a BIP-39 seed phrase, offline.
+Turns dice rolls into a BIP-39 seed phrase, offline. It can also turn a separate roll log into
+the key that encrypts your backup.
 
 Demo: **https://petesparrowbtc.github.io/dice-to-seed/**
 
@@ -68,6 +69,27 @@ one roll short still produces a valid-looking seed phrase. Write the words on pa
 
 Full instructions, including how to check the result against other tools:
 [TAILS_INSTRUCTIONS.md](TAILS_INSTRUCTIONS.md).
+
+## The backup key
+
+If you back your seed up with
+[slip39-backup](https://github.com/PeteSparrowBTC/slip39-backup), it encrypts the seed with a
+32-byte key and splits only that key into shares. Normally the key comes from the computer's
+random number generator. This app can take it off dice instead.
+
+Switch to **Rolling for a backup key**. It shows 32 bytes of hex and a four-character check code,
+never words, and you type both into the backup tool. The check code is there because a key has no
+checksum of its own: any string is a valid passphrase, so a mistyped one encrypts cleanly and you
+find out at recovery.
+
+**Roll a fresh log.** Never the one behind your seed phrase. The key is the SHA-256 of your rolls,
+and a 24-word seed's entropy is that same hash, so one log used twice makes the key identical to
+the wallet it is meant to protect. Switching mode in the app clears your rolls for this reason.
+Roll the same number as your seed used, 50 or 99.
+
+This is optional, and worth being plain about what it buys. Dice give the key a provenance you can
+account for. They do not remove every generator from the picture: the backup tool still generates
+the age file key itself, and the key you rolled only wraps it.
 
 ## Two mistakes to avoid
 

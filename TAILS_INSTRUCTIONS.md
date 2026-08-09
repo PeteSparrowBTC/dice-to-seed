@@ -25,7 +25,12 @@ run in place, with nothing to install:
   `pip3 download mnemonic --no-deps -d lib && cd lib && unzip mnemonic-*.whl`. Copy the `lib`
   folder to the stick. It is pure Python, so `PYTHONPATH=lib python3 ...` runs it without
   installing anything.
-- **Ian Coleman's `bip39-standalone.html`**, which is one file and opens from `file://`.
+- **Ian Coleman's `bip39-standalone.html`**, which is one file and opens from `file://`. It has
+  two settings traps, and both are silent. Set **Mnemonic Length to 12 or 24, never "raw"**, and
+  set the entropy type to **Base 10, not "Dice"**: the Dice type rewrites every 6 to a 0 before
+  hashing, so it gives a different wallet with no warning. Test your settings on a log that
+  contains at least one 6, because the two types agree on any log without one, and a log of all
+  1s therefore proves nothing about the setting that matters.
 
 SeedSigner's own `tools/mnemonic.py` needs `pip install` of it and of `embit`, so it is a
 check to run before the ceremony on a networked machine, not on Tails.
@@ -150,6 +155,32 @@ will fail, and that is not something to work around.
 5. Press Derive, and write the words on paper. There is no copy button and there will not be
    one: on an amnesic offline system a clipboard is a small risk, and on a machine that turns
    out not to be one it is a large risk, and the app cannot tell the difference.
+
+## If you are also rolling for the backup key
+
+Do this only after the seed is finished and off the screen.
+
+1. Switch the app to **Rolling for a backup key**. If you still have rolls recorded it will ask
+   to clear them, and you should let it: a single roll log must never produce both.
+2. Roll a completely new log, the same length as the one you used for the seed.
+3. Press Derive. You get 32 bytes of hex in numbered groups, and a four-character check code.
+   There are no words here and there never will be: hex cannot be mistaken for a seed phrase.
+4. Type both into `slip39-backup`. It recomputes the check code and refuses if they disagree,
+   which is what catches a mistyped character. Without that, a wrong key encrypts perfectly well
+   and you learn about it at recovery.
+5. Destroy the roll log and any paper you wrote the key on. Both are the key in plain text, and a
+   key that survives on paper defeats the shares entirely.
+
+Verify it the same way as the seed, since the key is just the hash:
+
+```bash
+printf '%s' "$ROLLS" | sha256sum            # the key
+printf '%s' "$K_HEX" | sha256sum | cut -c1-4  # the check code
+```
+
+Rolling for the key is optional. It gives the key a provenance you can account for. It does not
+remove every generator from the picture: `slip39-backup` still generates the age file key itself,
+and the key you rolled only wraps it.
 
 ## Checking the result against something else
 

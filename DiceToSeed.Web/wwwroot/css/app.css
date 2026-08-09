@@ -329,3 +329,120 @@ footer code { font-family: var(--mono); word-break: break-all; }
 }
 
 #blazor-error-ui .dismiss { cursor: pointer; position: absolute; right: .75rem; top: .5rem; }
+
+/* ---------------------------------------------------------------------------------------
+   Mode: seed phrase, or backup key
+   ---------------------------------------------------------------------------------------
+   The mode recolours the whole page by redefining --accent on the wrapper. Every control
+   already draws from that variable, so the counter, the focus rings, the selected buttons
+   and the Derive button follow with no further rules. The point is that the mode is visible
+   from across the room rather than findable by looking for it.
+
+   Colour is never the only encoding. The wording differs, the border style differs (solid for
+   the seed, dashed for the key) and the two result panels differ in shape, so the distinction
+   survives a grayscale photo, a projector, and a reader who cannot separate the hues.
+
+   The key hue is a cool blue on purpose: green, orange and red are already committed to ok,
+   warn and bad, and a mode must not read as a status. */
+.app.for-key {
+    --accent: #5fb3e0;
+}
+
+.modes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: .75rem;
+    margin-bottom: 1.25rem;
+}
+
+button.mode {
+    font: inherit;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+    padding: .8rem 1rem;
+    border-radius: .5rem;
+    background: var(--panel);
+    color: var(--ink-dim);
+    border: 2px solid var(--panel-edge);
+    cursor: pointer;
+}
+
+/* Solid for the seed, dashed for the key: the encoding that survives without colour. */
+button.mode-seed { border-style: solid; }
+button.mode-key { border-style: dashed; }
+
+button.mode:hover { color: var(--ink); }
+
+button.mode-seed.selected {
+    border-color: #ffc53d;
+    color: #ffc53d;
+    background: #241d09;
+}
+
+button.mode-key.selected {
+    border-color: #5fb3e0;
+    color: #5fb3e0;
+    background: #0d2029;
+}
+
+.mode-title { font-weight: 600; font-size: 1.05rem; }
+.mode-detail { font-size: .875rem; }
+
+/* The key result. Dashed to match the mode button that produced it, and shaped nothing like
+   the numbered word list, so the two results cannot be confused at a glance. */
+.panel-key {
+    border: 2px dashed var(--accent);
+}
+
+/* Hex in numbered groups of four. Sixty-four unbroken characters is where people lose their
+   place, and the group number makes it possible to resume after an interruption by counting
+   groups rather than characters. */
+.key-groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem .7rem;
+    background: #0f1115;
+    border: 1px solid var(--panel-edge);
+    border-radius: .4rem;
+    padding: .8rem .9rem;
+}
+
+.key-group {
+    font-family: var(--mono);
+    font-size: 1.25rem;
+    letter-spacing: .06em;
+    color: var(--ink);
+    position: relative;
+    padding-top: .85rem;
+}
+
+.key-group-index {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-family: var(--sans);
+    font-size: .7rem;
+    letter-spacing: 0;
+    color: var(--ink-dim);
+}
+
+.check-code {
+    font-family: var(--mono);
+    font-size: 1.6rem;
+    letter-spacing: .25em;
+    color: var(--accent);
+    background: #0f1115;
+    border: 1px solid var(--panel-edge);
+    border-radius: .4rem;
+    padding: .5rem .9rem;
+    display: inline-block;
+}
+
+/* Used for the one line that has to survive being skim-read: this is not a seed phrase. */
+.hint-loud {
+    color: var(--ink);
+    border-left: 3px solid var(--accent);
+    padding-left: .75rem;
+}

@@ -157,7 +157,32 @@ These are not style preferences. Each one exists because this code generates pri
    typed into it. A roll log is the seed, in plaintext, before any hashing. Treat a hosted
    build of this app as more dangerous than a hosted build of a tool that splits a seed the
    user already holds.
-9. **Validation failures are `Result`, not exceptions.** Use `CSharpFunctionalExtensions`.
+9. **The backup key mode never renders words, and that is what makes it safe to offer.** The app
+   has a second mode that derives `k`, the 32-byte key `slip39-backup` encrypts with and splits
+   into shares. `k = SHA-256(the bare digit string)`, all 32 bytes, which is the value the seed
+   mode already shows at step 2, so nothing new is invented and `printf '%s' "$ROLLS" | sha256sum`
+   still reproduces it.
+
+   Three rules hold it together. Breaking any of them turns a safe control into the exact hazard
+   this app exists to catch.
+
+   - **`k` mode renders hex and never BIP-39 words.** A mode whose wrong position still produces
+     plausible output is Ian Coleman's "Dice versus Base 10" trap: a different wallet, silently.
+     Words and hex differ in kind, so a mis-set mode announces itself. Giving `k` a word
+     rendering, for any reason, removes the only thing making the mode selector safe.
+   - **Switching mode clears the roll log**, with a confirmation that says why. One log must never
+     yield both. On 24 words the BIP-39 entropy **is** that hash byte for byte, and on 12 words it
+     is its first half, so a reused log makes `k` identical to the wallet it protects and the
+     shares protect nothing. `BackupKeyTests` pins this as a test rather than a comment.
+   - **The mode is never claimed to remove trust in a generator.** AgeSharp fills the age file key
+     from its own RNG and encrypts the payload under that; `k` only wraps it. Dice give `k` a
+     provenance you can account for. That is worth having and is a smaller claim.
+
+   Roll counts match the seed they protect, 50 or 99, because the key is 32 bytes at any length
+   and only the entropy behind it changes. `k` is transcribed by hand, so it carries a four
+   character check code: the first four characters of the lowercase hex SHA-256 of the lowercase
+   hex key, computed over the printed string so a shell reproduces it without decoding.
+10. **Validation failures are `Result`, not exceptions.** Use `CSharpFunctionalExtensions`.
    A short roll log or a stray character is an expected input, not an exceptional condition.
    Exceptions are for things that should not happen.
 

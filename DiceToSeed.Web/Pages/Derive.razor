@@ -8,6 +8,11 @@
 
 <PageTitle>dice to seed</PageTitle>
 
+@* Everything is wrapped so the mode can recolour the page by redefining --accent on this one
+   element. Every control already draws from that variable, so the counter, the focus rings, the
+   selected buttons and the Derive button all follow without a second set of rules. The mode is
+   meant to be visible from across the room, not findable by looking for it. *@
+<div class="app @ModeClass">
 
 @if (servedFromElsewhere)
 {
@@ -28,27 +33,115 @@ else
 }
 
 <h1>dice to seed</h1>
+
+@* THE MODE IS NOT A SETTING TUCKED INSIDE A PANEL.
+   ================================================
+   Two things this mode chooser must keep, both learned rather than assumed.
+
+   It is safe to offer at all only because the two results differ in kind: seed mode renders
+   words, key mode renders hex and never words. A mode whose wrong position still produces
+   plausible output is the Ian Coleman "Dice versus Base 10" trap, which silently yields a
+   different wallet and no warning; see the runbook below. If key mode is ever given a word
+   rendering, that safety property is gone and this control becomes the same hazard.
+
+   Colour is one of three encodings, never the only one. The wording differs, the border style
+   differs (solid for the seed, dashed for the key), and the result panels differ in shape. That
+   survives a grayscale photo, a projector and a reader who cannot separate the two hues. *@
+<div class="modes" role="group" aria-label="What are you rolling for">
+    <button type="button" class="mode mode-seed @(mode == DerivationMode.SeedPhrase ? "selected" : null)"
+            aria-pressed="@(mode == DerivationMode.SeedPhrase)"
+            @onclick="() => RequestMode(DerivationMode.SeedPhrase)">
+        <span class="mode-title">Rolling for a seed phrase</span>
+        <span class="mode-detail">BIP-39 words. The wallet itself.</span>
+    </button>
+    <button type="button" class="mode mode-key @(mode == DerivationMode.BackupKey ? "selected" : null)"
+            aria-pressed="@(mode == DerivationMode.BackupKey)"
+            @onclick="() => RequestMode(DerivationMode.BackupKey)">
+        <span class="mode-title">Rolling for a backup key (k)</span>
+        <span class="mode-detail">32 bytes of hex. Never words.</span>
+    </button>
+</div>
+
+@* Switching mode with rolls already recorded destroys them, and the confirmation says why
+   rather than asking "are you sure". One roll log must never produce both a seed and a key: on
+   24 words the seed entropy IS the key, byte for byte, so a log used twice makes k identical to
+   the wallet it exists to protect. Clearing on switch is how that stays unreachable here.
+
+   The confirmation is rendered inline rather than through window.confirm, because reaching that
+   needs JS interop and this app ships no JavaScript of its own to review. *@
+@if (pendingMode is { } pending)
+{
+    <div class="banner banner-loud">
+        <strong>Switching to @ModeName(pending) will clear your @rolls.Length recorded rolls.</strong>
+        A single roll log must never produce both a seed phrase and a backup key. The key is the
+        SHA-256 of your rolls and a 24-word seed's entropy is that same hash, so one log used
+        twice makes the key identical to the wallet it is meant to protect, and the shares stop
+        protecting anything. Roll a fresh log for the other purpose.
+        <div class="dice-actions">
+            <button type="button" class="secondary" @onclick="ConfirmModeSwitch">
+                Clear @rolls.Length rolls and switch
+            </button>
+            <button type="button" class="secondary" @onclick="CancelModeSwitch">Keep rolling, stay here</button>
+        </div>
+    </div>
+}
+
 <p class="subtitle">
-    Converts a log of six-sided dice rolls into a BIP-39 seed phrase, using the convention
-    Coldcard, SeedSigner and Krux all share for d6. It has no random number generator and never
-    rolls anything for you: every value comes off your dice. Derive here, then enter the same
-    rolls into a second tool and compare the words. Either order works, because the conversion
-    is deterministic and any correct implementation gives the same result.
+    @if (mode == DerivationMode.SeedPhrase)
+    {
+        <text>
+            Converts a log of six-sided dice rolls into a BIP-39 seed phrase, using the convention
+            Coldcard, SeedSigner and Krux all share for d6. It has no random number generator and
+            never rolls anything for you: every value comes off your dice. Derive here, then enter
+            the same rolls into a second tool and compare the words. Either order works, because
+            the conversion is deterministic and any correct implementation gives the same result.
+        </text>
+    }
+    else
+    {
+        <text>
+            Converts a log of six-sided dice rolls into the 32-byte key that encrypts your backup,
+            the value <code>slip39-backup</code> splits into shares. It is the SHA-256 of your
+            rolls and nothing else, so <code>printf '%s' "$ROLLS" | sha256sum</code> reproduces it.
+            <strong>These must be fresh rolls, not the ones behind your seed phrase.</strong> This
+            is optional: dice give the key a provenance you can account for, which is worth having
+            and is not the same as removing every generator from the picture.
+        </text>
+    }
 </p>
 
 <div class="panel">
+    @* One piece of state behind both modes, because it decides the same thing in both: how many
+       rolls the log needs. Twelve words and a 128-bit key want 50; twenty-four and 256 want 99.
+       Only the wording changes, so the minimum can never drift between the two. *@
     <div class="field">
-        <span class="field-label">Words</span>
+        <span class="field-label">@(mode == DerivationMode.SeedPhrase ? "Words" : "Key strength")</span>
         <div class="choice">
             @foreach (var option in new[] { WordCount.Twelve, WordCount.TwentyFour })
             {
                 <button type="button"
                         class="@(wordCount == option ? "selected" : null)"
                         @onclick="() => SelectWordCount(option)">
-                    @((int)option) words (@DiceRolls.MinimumRollsFor(option) rolls)
+                    @if (mode == DerivationMode.SeedPhrase)
+                    {
+                        <text>@((int)option) words (@DiceRolls.MinimumRollsFor(option) rolls)</text>
+                    }
+                    else
+                    {
+                        <text>@((int)DiceRolls.StrengthFor(option))-bit (@DiceRolls.MinimumRollsFor(option) rolls)</text>
+                    }
                 </button>
             }
         </div>
+        @if (mode == DerivationMode.BackupKey)
+        {
+            <p class="hint">
+                Match whatever your seed phrase is. The key is 32 bytes either way, so this
+                changes only how much is behind it: 256 bits over a 12-word seed protects nothing
+                the seed is not already giving away, and 128 bits under a 24-word seed makes the
+                key the weakest thing in the backup.
+            </p>
+        }
     </div>
 
     @* THESE BUTTONS RECORD A ROLL. THEY DO NOT MAKE ONE.
@@ -150,6 +243,50 @@ else
         <p class="hint">
             Write these on paper. There is no copy button, and that is deliberate: the app
             cannot tell whether this machine is the amnesic offline one you meant to use.
+        </p>
+    </div>
+}
+
+@* The key result deliberately looks nothing like the seed result: dashed border, hex in
+   numbered groups instead of a numbered word list, and a heading that says what it is not.
+   Someone glancing at the wrong screen, or at a photograph of one, has to be unable to mistake
+   these for each other. *@
+@if (backupKey is not null)
+{
+    <h2>Result</h2>
+    <div class="panel panel-key">
+        <div class="step-label">1. Preimage (the rolls, hashed as-is)</div>
+        <pre class="mono-block">@backupKey.Preimage</pre>
+
+        <div class="step-label">2. SHA-256 of the preimage. All 32 bytes of it: this is the key</div>
+
+        <div class="key-groups">
+            @foreach (var (group, index) in backupKey.KeyHexGroups.Select((g, i) => (g, i)))
+            {
+                <span class="key-group"><span class="key-group-index">@(index + 1)</span>@group</span>
+            }
+        </div>
+
+        <div class="step-label">3. Check code</div>
+        <div class="check-code">@backupKey.CheckCode</div>
+        <p class="hint">
+            Type this into <code>slip39-backup</code> alongside the key. Every other value copied
+            by hand in this ceremony carries a checksum; a key does not, because any string is a
+            valid passphrase, so a mistyped one encrypts cleanly and is discovered at recovery.
+            The code is the first four characters of
+            <code>printf '%s' "$K_HEX" | sha256sum</code>, so it can be checked with a shell and
+            nothing else.
+        </p>
+
+        <p class="hint hint-loud">
+            <strong>This is not a seed phrase.</strong> It does not go into a wallet and it will
+            not restore anything on its own. It goes into <code>slip39-backup</code>, which
+            encrypts your seed with it and splits it into shares.
+        </p>
+        <p class="hint">
+            Write it on paper only for as long as it takes to type it in, then destroy that
+            paper along with the roll log. Both are the key in plain text, and a key that
+            survives on paper defeats the shares entirely. There is no copy button here either.
         </p>
     </div>
 }
@@ -317,12 +454,35 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
     </p>
 </footer>
 
+</div>
+
 @code {
+    /// <summary>
+    /// What the rolls currently on screen are for. Not a preference and not stored: it decides
+    /// which derivation runs and what the result is, and it is rendered on the page throughout
+    /// rather than being something the user has to remember choosing.
+    /// </summary>
+    enum DerivationMode
+    {
+        SeedPhrase,
+        BackupKey,
+    }
+
     // The whole roll log: one character per roll, appended only by RecordRoll. It lives here
     // and dies with the tab; nothing is stored anywhere.
     string rolls = string.Empty;
     WordCount wordCount = WordCount.Twelve;
+    DerivationMode mode = DerivationMode.SeedPhrase;
+
+    // Only one of these is ever set, because only one mode can have been run. RunDerivation
+    // clears both before deciding, so a stale result from the other mode cannot survive on
+    // screen next to a log that no longer produced it.
     SeedDerivation? derivation;
+    BackupKeyDerivation? backupKey;
+
+    // Set only while a mode switch is waiting on the user, because switching discards rolls.
+    DerivationMode? pendingMode;
+
     string? error;
 
 
@@ -363,21 +523,29 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
     void RecordRoll(int face)
     {
         rolls += face.ToString();
-        derivation = null;
-        error = null;
+        ClearResults();
     }
 
     void UndoLastRoll()
     {
         rolls = rolls.Length == 0 ? rolls : rolls[..^1];
-        derivation = null;
-        error = null;
+        ClearResults();
     }
 
     void ClearRolls()
     {
         rolls = string.Empty;
+        ClearResults();
+    }
+
+    /// <summary>
+    /// Both results and the error, dropped together. Which one was on screen depends on the mode
+    /// that produced it, and neither may outlive the log it came from.
+    /// </summary>
+    void ClearResults()
+    {
         derivation = null;
+        backupKey = null;
         error = null;
     }
 
@@ -402,6 +570,14 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
 
     string LivePreimage => ParsedLog.IsSuccess ? ParsedLog.Value.Preimage : string.Empty;
 
+    // The backup key never touches the wordlist, and is still blocked when the wordlist check
+    // fails. CLAUDE.md rule 7 says the app refuses to derive anything, and that reading is the
+    // right one: a wordlist that does not match its published hash means the files being served
+    // are not the files that were published, which is a reason to distrust the whole build
+    // rather than only the part that would have used them.
+    //
+    // The minimum is asked in word-count terms in both modes because it is provably the same
+    // number; BackupKeyTests pins that so the two cannot drift apart.
     bool CanDerive => wordListOk && ParsedLog.IsSuccess && ParsedLog.Value.MeetsMinimumFor(wordCount).IsSuccess;
 
     // An empty log is where everyone starts, not a mistake, so it reads 0 with an instruction
@@ -424,6 +600,15 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
 
             var entropyBits = (int)wordCount == 12 ? 128 : 256;
 
+            if (mode == DerivationMode.BackupKey)
+                // The key mode note drops the device line, because there is no device to enter
+                // these rolls on, and says what a longer log does and does not buy in the same
+                // terms: the key is 32 bytes at every length.
+                return NothingRecordedYet ? $"Roll a real die and press the face you rolled: {minimum} rolls for a {entropyBits}-bit key."
+                    : RollCount == minimum ? "Exactly the minimum."
+                    : RollCount > minimum ? $"{RollCount - minimum} above the minimum. All {RollCount} rolls are hashed. The key is 32 bytes at any length and this one carries {entropyBits} bits; the extra rolls cover you if your dice are not perfectly fair."
+                    : $"{minimum - RollCount} more to go.";
+
             return NothingRecordedYet ? $"Roll a real die and press the face you rolled: {minimum} rolls for {(int)wordCount} words."
                 : RollCount == minimum ? "Exactly the minimum. This is what the device expects."
                 // Being above the minimum is fine and nothing is discarded, but it does not
@@ -442,15 +627,77 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
     void SelectWordCount(WordCount selected)
     {
         wordCount = selected;
-        derivation = null;
-        error = null;
+        ClearResults();
     }
 
+    /// <summary>
+    /// Asks for a mode. With rolls already recorded this only raises the confirmation, because
+    /// switching clears them: one roll log must never yield both a seed phrase and a backup key.
+    /// On a 24-word seed the entropy is byte for byte the key, so a log used twice makes k
+    /// identical to the wallet it protects. Clearing on switch is what makes that unreachable
+    /// from this page rather than merely discouraged in the documentation.
+    /// </summary>
+    void RequestMode(DerivationMode requested)
+    {
+        if (requested == mode)
+        {
+            pendingMode = null;
+            return;
+        }
+
+        if (rolls.Length == 0)
+        {
+            EnterMode(requested);
+            return;
+        }
+
+        pendingMode = requested;
+    }
+
+    void ConfirmModeSwitch()
+    {
+        if (pendingMode is { } requested)
+            EnterMode(requested);
+    }
+
+    void CancelModeSwitch() => pendingMode = null;
+
+    void EnterMode(DerivationMode requested)
+    {
+        mode = requested;
+        pendingMode = null;
+        rolls = string.Empty;
+        ClearResults();
+    }
+
+    static string ModeName(DerivationMode value) =>
+        value == DerivationMode.SeedPhrase ? "seed phrase" : "backup key";
+
+    // The whole page draws its accent from one custom property, so the mode is applied by
+    // redefining that property on the wrapper rather than by colouring each control.
+    string ModeClass => mode == DerivationMode.SeedPhrase ? "for-seed" : "for-key";
+
+    /// <summary>
+    /// One button, two derivations, and the results cleared first so a failure cannot leave the
+    /// previous mode's answer sitting under a log that no longer produced it.
+    /// </summary>
     void RunDerivation()
     {
-        var result = DiceSeed.Derive(rolls, wordCount);
+        ClearResults();
 
-        derivation = result.IsSuccess ? result.Value : null;
-        error = result.IsFailure ? result.Error : null;
+        if (mode == DerivationMode.SeedPhrase)
+        {
+            var result = DiceSeed.Derive(rolls, wordCount);
+
+            derivation = result.IsSuccess ? result.Value : null;
+            error = result.IsFailure ? result.Error : null;
+        }
+        else
+        {
+            var result = BackupKey.Derive(rolls, DiceRolls.StrengthFor(wordCount));
+
+            backupKey = result.IsSuccess ? result.Value : null;
+            error = result.IsFailure ? result.Error : null;
+        }
     }
 }

@@ -10,6 +10,21 @@ public enum WordCount
 }
 
 /// <summary>
+/// How much entropy the roll log is being asked to carry. The value is the bit count.
+///
+/// This exists because the minimum roll count was never really about words. Fifty rolls carry
+/// 129.25 bits and ninety-nine carry 255.91, and the vendors picked those numbers to clear 128
+/// and 256. A twelve-word seed is one thing that wants 128 bits; the backup key is another, and
+/// it has no words at all. Naming the entropy target rather than the word count lets both modes
+/// share one rule instead of one of them borrowing a name that does not describe it.
+/// </summary>
+public enum EntropyStrength
+{
+    Bits128 = 128,
+    Bits256 = 256,
+}
+
+/// <summary>
 /// Reading a roll log. Character validation and length validation are deliberately separate:
 /// the UI shows a live roll counter and a live preimage while the user is still typing, so it
 /// needs a log that is well formed but not yet long enough.
@@ -21,7 +36,18 @@ public static class DiceRolls
     /// and 99 for 24, and the job here is to agree with the vendors rather than to editorialise.
     /// </summary>
     public static int MinimumRollsFor(WordCount words) =>
-        words == WordCount.Twelve ? 50 : 99;
+        MinimumRollsFor(StrengthFor(words));
+
+    /// <summary>
+    /// The same two numbers, stated against the thing that actually determines them. The backup
+    /// key mode reaches the rule through here, because it has no word count to ask about.
+    /// </summary>
+    public static int MinimumRollsFor(EntropyStrength strength) =>
+        strength == EntropyStrength.Bits128 ? 50 : 99;
+
+    /// <summary>128 bits behind twelve words, 256 behind twenty-four.</summary>
+    public static EntropyStrength StrengthFor(WordCount words) =>
+        words == WordCount.Twelve ? EntropyStrength.Bits128 : EntropyStrength.Bits256;
 
     /// <summary>
     /// Strips whitespace, then rejects anything that is not a d6 face. No length rule is
@@ -94,5 +120,21 @@ public sealed record DiceRollLog
             ? Result.Success()
             : Result.Failure(
                 $"{Count} rolls is below the {minimum}-roll minimum for {(int)words} words. A short log does not become stronger by producing more words; the word count is not the entropy. Roll {minimum - Count} more.");
+    }
+
+    /// <summary>
+    /// The same rule for the backup key, which has no words to talk about. The message names
+    /// what a short log costs there instead: the key is 32 bytes whatever you roll, so a short
+    /// log produces a full-length key that is simply easier to guess, and nothing downstream
+    /// can tell the difference.
+    /// </summary>
+    public Result MeetsMinimumFor(EntropyStrength strength)
+    {
+        var minimum = DiceRolls.MinimumRollsFor(strength);
+
+        return Count >= minimum
+            ? Result.Success()
+            : Result.Failure(
+                $"{Count} rolls is below the {minimum}-roll minimum for {(int)strength} bits. The key is 32 bytes however many times you roll, so a short log does not look short: it produces a full-length key with less behind it. Roll {minimum - Count} more.");
     }
 }
