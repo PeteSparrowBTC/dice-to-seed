@@ -71,6 +71,22 @@ setting in a d6-only tool would produce a seed no vendor reproduces.
 - a guard that fails the build if `RandomNumberGenerator`, `System.Random`,
   `crypto.getRandomValues` or similar ever appears in first-party source
 
+## The two artifacts
+
+**An AppImage, about 11 MB.** One file, double-clicked on Tails. It opens a native window and
+needs nothing installed: WebKitGTK 4.1, GTK 3, libsoup and librsvg all ship with Tails, checked
+against its package manifest rather than assumed. Built by Tauri, which serves the published
+Blazor output through an in-process protocol, so nothing binds a port and the desktop artifact
+is the same `wwwroot` below rather than a second implementation.
+
+It deliberately does not bundle WebKitGTK. Tauri's own bundler does, which produces 83 MB
+instead of 11 for the same program, and pins a browser engine Tails already has.
+
+**The static site.** `publish/wwwroot`, served from loopback by any web server. This is the
+artifact to read and audit; the AppImage carries a window around it. Blazor WebAssembly cannot
+load over `file://`, so this route needs a local server. See
+[TAILS_INSTRUCTIONS.md](TAILS_INSTRUCTIONS.md).
+
 ## Running it locally
 
 ```bash

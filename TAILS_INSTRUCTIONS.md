@@ -44,7 +44,36 @@ configure.
 Download the LibreWolf AppImage from librewolf.net and put it on the stick as well. Do this
 now, because on Tails you will have networking off and cannot fetch it.
 
-## Running (on Tails, networking off)
+## The short way: the AppImage
+
+One file, no server, no port, no browser to configure. Download it from the latest CI run or
+release, verify it, and put it on the stick:
+
+```bash
+sha256sum -c dice-to-seed-x86_64.AppImage.sha256
+```
+
+On Tails, copy it off the stick first, because a USB may be mounted `noexec` and the executable
+bit does not survive a FAT filesystem:
+
+```bash
+cp /media/amnesia/<YOUR_USB>/dice-to-seed-x86_64.AppImage ~/
+cd ~ && chmod +x dice-to-seed-x86_64.AppImage
+./dice-to-seed-x86_64.AppImage
+```
+
+Run it from a terminal the first time. GNOME Files does not launch binaries on double-click and
+does it silently, so a double-click that appears to do nothing is usually that rather than a
+broken download.
+
+It needs nothing installed. Everything it links against ships with Tails: WebKitGTK 4.1, GTK 3,
+libsoup 3 and librsvg, all confirmed in the Tails package manifest. See
+[docs/tails-platform-notes.md](docs/tails-platform-notes.md).
+
+The rest of this document is the browser route, which does the same thing with a local web
+server. Both run the identical app; the AppImage merely carries a window with it.
+
+## The browser route (on Tails, networking off)
 
 Open a terminal.
 

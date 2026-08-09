@@ -86,3 +86,98 @@ jobs:
           name: dice-to-seed-wwwroot
           path: publish/wwwroot
           if-no-files-found: error
+
+  # Packages the app as a Linux AppImage: one file, double-clicked on Tails, with no web
+  # server, no port and no browser to configure.
+  #
+  # Tauri opens a native window and serves the published Blazor output through an in-process
+  # protocol. It hosts the ordinary browser build unmodified, so the desktop artifact is the
+  # same wwwroot a reviewer can read rather than a second execution path, and there is no .NET
+  # runtime in the bundle: the WebView is the runtime.
+  tauri-appimage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Tauri's Linux prerequisites, from its own documentation. webkit2gtk 4.1 is the version
+      # Tails ships; librsvg is for icon rendering; patchelf is used by the AppImage bundler.
+      - name: Install Tauri's Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libsoup-3.0-dev \
+            libssl-dev \
+            librsvg2-dev \
+            patchelf \
+            build-essential \
+            file
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # The frontend is simply the published browser build, unmodified. tauri.conf.json points
+      # frontendDist at this folder.
+      - name: Publish the Blazor app
+        run: dotnet publish DiceToSeed.Web --configuration Release --output publish
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.toml') }}
+
+      - name: Install the Tauri CLI
+        run: cargo install tauri-cli --version "^2.0" --locked
+
+      # --bundles none: Tauri's own bundler copies the whole WebKitGTK and GTK stack in,
+      # producing 83 MB. Tails ships those libraries, verified in its package manifest, so the
+      # AppImage is assembled below instead and comes out at about 11 MB.
+      - name: Build the application
+        run: cargo tauri build --bundles none
+
+      # The same binary, packaged our way: no bundled WebKitGTK, because Tails ships it and
+      # bundling a browser engine we know is present triples the size. Built in the same run as
+      # Tauri's own bundle so the two are directly comparable rather than compared across runs.
+      - name: Package the AppImage
+        env:
+          APPIMAGETOOL_VERSION: '1.9.1'
+          APPIMAGETOOL_SHA256: 'ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0'
+        run: |
+          mkdir -p AppDir/usr/bin
+          cp src-tauri/target/release/dice-to-seed AppDir/usr/bin/dice-to-seed
+          cp packaging/tauri-appimage/AppRun AppDir/AppRun
+          cp packaging/tauri-appimage/dice-to-seed.desktop AppDir/dice-to-seed.desktop
+          cp packaging/tauri-appimage/dice-to-seed.png AppDir/dice-to-seed.png
+          chmod +x AppDir/AppRun AppDir/usr/bin/dice-to-seed
+
+          wget -q "https://github.com/AppImage/appimagetool/releases/download/${APPIMAGETOOL_VERSION}/appimagetool-x86_64.AppImage"
+          echo "${APPIMAGETOOL_SHA256}  appimagetool-x86_64.AppImage" | sha256sum -c -
+          chmod +x appimagetool-x86_64.AppImage
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run AppDir dice-to-seed-slim-x86_64.AppImage
+          sha256sum dice-to-seed-slim-x86_64.AppImage | tee dice-to-seed-slim-x86_64.AppImage.sha256
+
+      - name: Upload the AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: dice-to-seed-appimage
+          path: |
+            dice-to-seed-slim-x86_64.AppImage
+            dice-to-seed-slim-x86_64.AppImage.sha256
+          if-no-files-found: error
+
+      - name: Report what was produced
+        run: |
+          find src-tauri/target -name "*.AppImage" -exec ls -lh {} \;
+          echo "--- runtime dependencies of the binary ---"
+          BIN=$(find src-tauri/target/release -maxdepth 1 -type f -name "dice-to-seed" | head -1)
+          [ -n "$BIN" ] && readelf -d "$BIN" | grep NEEDED || true

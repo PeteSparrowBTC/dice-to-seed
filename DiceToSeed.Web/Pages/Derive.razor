@@ -246,11 +246,27 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
 
     <div class="step-label">Ian Coleman's offline page (bip39-standalone.html)</div>
     <p class="hint">
-        Two settings, both silent footguns. Set <strong>Mnemonic Length to 12 or 24, never
-        "raw"</strong>: only the numeric lengths take the SHA-256 path, and "raw" uses a lossy
-        base-6 mapping worth about 1.67 bits per roll instead of 2.585. Set entropy type to
-        <strong>Base 10, not "Dice"</strong>: the Dice type rewrites every 6 to 0 before
-        hashing, so identical digits give a different seed.
+        The most portable check of all: one file, opens from <code>file://</code>, so it needs
+        no server, no proxy exception and no Python. It also has the two worst settings traps,
+        both verified against v0.5.6 rather than taken on trust.
+    </p>
+    <p class="hint">
+        Set <strong>Mnemonic Length to 12 or 24, never "raw"</strong>. Only the numeric lengths
+        take the SHA-256 path. With "raw" the same fifty 1s produced
+        <em>empty cause myself empty cause myself empty cause myself empty cause negative</em>,
+        which at least announces itself by repeating.
+    </p>
+    <p class="hint">
+        Set entropy type to <strong>Base 10, not "Dice"</strong>. The Dice type rewrites every
+        6 to a 0 before hashing. With a real log this is silent and total: fifty rolls
+        beginning 655152... gave <em>hole luggage safe present...</em> under Base 10 and
+        <em>tip toward alcohol rule pave...</em> under Dice. A different wallet, no warning.
+    </p>
+    <p class="hint">
+        <strong>Test your settings with a log that contains at least one 6.</strong> Dice and
+        Base 10 differ only where a 6 appears, so a log of all 1s produces the same words under
+        both and proves nothing about the setting that matters. The easiest log to type is the
+        one that cannot catch this.
     </p>
 
     <div class="step-label">On a SeedSigner</div>
