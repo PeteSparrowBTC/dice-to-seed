@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "dice-to-seed",
+  "version": "0.1.0",
+  "identifier": "btc.petesparrow.dicetoseed",
+  "build": {
+    "frontendDist": "../publish/wwwroot"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "dice to seed",
+        "width": 1000,
+        "height": 900,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["appimage"],
+    "icon": ["icons/icon.png"],
+    "category": "Utility",
+    "shortDescription": "Offline dice to BIP-39 seed phrase",
+    "longDescription": "Converts a log of six-sided dice rolls into a BIP-39 seed phrase, offline, as a second implementation to check a hardware wallet against."
+  }
+}

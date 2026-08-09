@@ -28,3 +28,8 @@ scratch/
 .playwright-mcp/
 *.png
 !DiceToSeed.Web/wwwroot/*.png
+src-tauri/target/
+
+# Downloaded build artifacts. CI is their source of truth; a repository whose value is that
+# you can read it has no business carrying 36 MB binaries.
+dist/

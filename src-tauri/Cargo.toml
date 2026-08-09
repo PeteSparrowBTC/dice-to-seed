@@ -1,0 +1,27 @@
+# The Tauri shell. Roughly thirty lines of Rust whose only job is to open a window and point a
+# WebView at the already-published Blazor app. It contains no cryptography, no key handling and
+# no application logic: the derivation stays in DiceToSeed.Core and is pinned by the published
+# Coldcard and SeedSigner vectors.
+
+[package]
+name = "dice-to-seed"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.77"
+description = "Offline dice to BIP-39 seed phrase, desktop shell"
+license = "MIT"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+
+# Small and stripped: this is a window, not a program, and the AppImage should stay reviewable
+# in size as well as in source.
+[profile.release]
+strip = true
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
