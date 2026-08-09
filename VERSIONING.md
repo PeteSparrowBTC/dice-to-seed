@@ -30,12 +30,30 @@ reach for MAJOR, stop and check whether you have accidentally altered the conver
 
 ## Bumping a version
 
-The number lives in three files and they must move together, because artifacts that disagree
-about what they are cannot be verified:
+The number is written by hand in **one place**, the `VERSION` file at the repository root, and
+everything else derives from it or is checked against it. Edit that file.
 
-- `Directory.Build.props` (`Version`, `AssemblyVersion`, `FileVersion`)
-- `src-tauri/Cargo.toml` (`version`)
-- `src-tauri/tauri.conf.json` (`version`)
+```
+1.2.3
+```
+
+Where it goes, and why the arrangement is shaped this way:
+
+| | how it gets the version |
+| --- | --- |
+| `Directory.Build.props` | reads `VERSION` directly, so `Version`, `AssemblyVersion` and `FileVersion` cannot drift by construction |
+| `src-tauri/tauri.conf.json` | has no `version` field at all. Tauri falls back to `Cargo.toml`, so the AppImage follows automatically |
+| `src-tauri/Cargo.toml` | the one remaining literal, and it must be edited too |
+
+Cargo has no mechanism for reading a value out of another file: the manifest is parsed before
+anything in the crate runs, so `build.rs` cannot influence it. That copy is therefore checked
+rather than trusted. `VersionTests` fails if it disagrees with `VERSION`, if `VERSION` is not a
+plain three-part number, if `tauri.conf.json` reacquires a `version` field, or if the compiled
+assembly does not carry what the file says. The last of those is the one that matters most: it
+proves the build actually read the file, which a comparison between two text files would not.
+
+Artifacts that disagree about what they are cannot be verified, and an AppImage is opaque enough
+that its claimed version is most of what a downloader has to go on.
 
 Then, in order:
 

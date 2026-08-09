@@ -1,13 +1,29 @@
 <Project>
 
-  <!-- One place for the version, so the assemblies, the AppImage and the git tag cannot drift
-       apart. Bump this, the version in src-tauri/Cargo.toml and the one in
-       src-tauri/tauri.conf.json together: a release whose artifacts disagree about what they
-       are is a release nobody can verify. -->
+  <!-- The version is read from the VERSION file at the repository root, which is the only place
+       it is written by hand. A release whose artifacts disagree about what they are is a release
+       nobody can verify, and the way that used to happen was five fields in three files edited
+       together from memory.
+
+       What reads this file, and what cannot:
+
+         this file            reads VERSION directly, below
+         tauri.conf.json      has no version field at all. Tauri falls back to the one in
+                              Cargo.toml: "If removed the version number from Cargo.toml is
+                              used", tauri-utils config.rs
+         src-tauri/Cargo.toml holds the only remaining literal, because Cargo has no mechanism
+                              for reading a value out of another file and the manifest is parsed
+                              before build.rs could influence it
+
+       That last one is checked rather than trusted: VersionTests fails the build if Cargo.toml
+       and VERSION disagree. Same approach as the entropy scan and the wordlist hash, because a
+       rule nobody can forget is worth more than a rule written down. -->
   <PropertyGroup>
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
+    <AppVersionRaw>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)VERSION'))</AppVersionRaw>
+    <Version>$(AppVersionRaw.Trim())</Version>
+    <!-- Assembly and file versions take four fields; the release number is three. -->
+    <AssemblyVersion>$(Version).0</AssemblyVersion>
+    <FileVersion>$(Version).0</FileVersion>
     <Authors>Pete Sparrow</Authors>
     <Product>dice to seed</Product>
     <Description>Converts a log of six-sided dice rolls into a BIP-39 seed phrase, offline.</Description>

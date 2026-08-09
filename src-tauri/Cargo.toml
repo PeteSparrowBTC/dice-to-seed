@@ -5,6 +5,13 @@
 
 [package]
 name = "dice-to-seed"
+# The only copy of the version outside the VERSION file at the repository root, and it is here
+# because Cargo cannot read a value out of another file: the manifest is parsed before anything
+# in this crate runs. tauri.conf.json has no version field and falls back to this one, so the
+# AppImage takes its version from here.
+#
+# VersionTests fails the build when this and VERSION disagree, so this being a copy is caught
+# rather than trusted.
 version = "1.1.0"
 edition = "2021"
 rust-version = "1.77"
