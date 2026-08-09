@@ -1,25 +1,49 @@
 #!/bin/sh
 # AppImage entry point.
 #
-# The AppImage bundles the .NET runtime (the app is published self-contained) so nothing has
-# to be installed on the machine running it. Tails has no .NET and installing one is not part
-# of an offline ceremony.
+# The AppImage bundles the .NET runtime (the app is published self-contained) so nothing has to
+# be installed on the machine running it. Tails has no .NET and installing one is not part of an
+# offline ceremony.
 #
 # What it deliberately does NOT bundle is WebKitGTK, which Photino uses to draw the window.
-# Bundling a browser engine would multiply the size and pin a rendering stack that the host
-# already has; Debian-based systems including Tails ship libwebkit2gtk. If it is missing the
-# app cannot start, so say why rather than dying silently.
+# Bundling a browser engine would multiply the size and pin a rendering stack the host already
+# has. Tails ships libwebkit2gtk-4.1-0: confirmed in the official package manifest for 7.10.1.
 
 HERE="$(dirname "$(readlink -f "$0")")"
 
 export LD_LIBRARY_PATH="$HERE/usr/lib:$LD_LIBRARY_PATH"
 
-if ! ldconfig -p 2>/dev/null | grep -q "libwebkit2gtk"; then
-    echo "dice-to-seed: libwebkit2gtk was not found on this system." >&2
-    echo "  The window is drawn by WebKitGTK, which this AppImage does not bundle." >&2
-    echo "  On Debian and Tails: apt install libwebkit2gtk-4.1-0" >&2
-    echo "  If you cannot install it, use the browser build instead: see TAILS_INSTRUCTIONS.md" >&2
-    exit 1
+# This is a HINT, never a gate. An earlier version ran `ldconfig -p` and refused to start when
+# it found nothing, which broke on Tails for a reason that had nothing to do with WebKitGTK:
+# ldconfig lives in /usr/sbin and is not on a normal user's PATH, so the command simply did not
+# exist, its error went to /dev/null, and the check reported a missing library that was in fact
+# installed. A pre-flight check that can produce a false negative is worse than no check, so
+# this one warns and then gets out of the way. If the library really is absent, the dynamic
+# linker says so far more precisely than this ever could.
+webkit_present() {
+    for lib in \
+        /usr/lib/x86_64-linux-gnu/libwebkit2gtk-4.1.so.0 \
+        /usr/lib/x86_64-linux-gnu/libwebkit2gtk-4.0.so.37 \
+        /usr/lib64/libwebkit2gtk-4.1.so.0 \
+        /usr/lib/libwebkit2gtk-4.1.so.0
+    do
+        [ -e "$lib" ] && return 0
+    done
+
+    for ldc in /usr/sbin/ldconfig /sbin/ldconfig ldconfig; do
+        if command -v "$ldc" >/dev/null 2>&1; then
+            "$ldc" -p 2>/dev/null | grep -q libwebkit2gtk && return 0
+        fi
+    done
+
+    return 1
+}
+
+if ! webkit_present; then
+    echo "dice-to-seed: could not find libwebkit2gtk, which draws the window." >&2
+    echo "  Starting anyway, because this check is a hint and can be wrong." >&2
+    echo "  If it fails, install it (Debian and Tails: libwebkit2gtk-4.1-0)," >&2
+    echo "  or use the browser build instead: see TAILS_INSTRUCTIONS.md" >&2
 fi
 
 exec "$HERE/usr/bin/DiceToSeed.Desktop" "$@"

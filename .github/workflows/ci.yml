@@ -128,6 +128,16 @@ jobs:
           echo "AppDir assembled:"
           find AppDir -maxdepth 2 | head -20
 
+      # Print what the native library actually links against. This was guesswork once: Debian
+      # 13 and Tails ship only webkit2gtk 4.1, so a Photino built against 4.0 would fail on the
+      # one platform that matters, and the failure would look like an application bug. Recording
+      # it in the build log makes the answer checkable instead of remembered.
+      - name: Report the native dependencies
+        run: |
+          sudo apt-get install -y binutils >/dev/null 2>&1 || true
+          echo "Photino.Native.so NEEDED entries:"
+          readelf -d AppDir/usr/bin/Photino.Native.so 2>/dev/null | grep NEEDED ||             strings AppDir/usr/bin/Photino.Native.so | grep -E "^lib(webkit|javascriptcore|gtk)" | sort -u
+
       # --appimage-extract-and-run because GitHub runners have no FUSE, which appimagetool
       # otherwise requires.
       - name: Build the AppImage

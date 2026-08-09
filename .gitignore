@@ -29,3 +29,7 @@ scratch/
 *.png
 !DiceToSeed.Web/wwwroot/*.png
 !packaging/appimage/*.png
+
+# Downloaded build artifacts. The AppImage is 36 MB and CI is its source of truth; a repo
+# whose value is that you can read it has no business carrying binaries.
+dist/
