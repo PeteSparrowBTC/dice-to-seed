@@ -1,0 +1,147 @@
+# Publishes a GitHub Release when a v* tag is pushed.
+#
+# A tag here is a release, and a release is what people will run against real money. Push one
+# only when the release commit is already on main through a merged pull request, and only
+# deliberately. See CLAUDE.md.
+#
+# What a release contains, and why each part:
+#
+#   dice-to-seed-x86_64.AppImage   the Tails route. One file, no server, no port.
+#   dice-to-seed-wwwroot.zip       the static site. This is the artifact to READ: it is the
+#                                  whole app, in files a person can open, and the AppImage is
+#                                  the same thing with a window around it.
+#   SHA256SUMS                     because an AppImage is an opaque blob and a checksum is the
+#                                  only thing a downloader can check it against.
+
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Tauri's Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev libsoup-3.0-dev libssl-dev librsvg2-dev \
+            patchelf build-essential file
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # The tests gate the release. The published vendor vectors are the reason to trust any of
+      # this, so a release that has not run them is not a release.
+      - name: Test
+        run: dotnet test --configuration Release
+
+      - name: Publish the Blazor app
+        run: dotnet publish DiceToSeed.Web --configuration Release --output publish
+
+      - name: Check the published app for external references
+        run: |
+          if grep -rIEn "https?://" publish/wwwroot --exclude-dir=_framework \
+               | grep -vE "127\.0\.0\.1|localhost"; then
+            echo "::error::The published app references an external origin."
+            exit 1
+          fi
+          echo "No external references."
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install the Tauri CLI
+        run: cargo install tauri-cli --version "^2.0" --locked
+
+      # --no-bundle for the reason given in ci.yml: Tauri's bundler copies the WebKitGTK stack
+      # in and triples the size, and Tails ships those libraries.
+      - name: Build the application
+        run: cargo tauri build --no-bundle
+
+      - name: Package the AppImage
+        env:
+          APPIMAGETOOL_VERSION: '1.9.1'
+          APPIMAGETOOL_SHA256: 'ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0'
+        run: |
+          mkdir -p AppDir/usr/bin
+          cp src-tauri/target/release/dice-to-seed AppDir/usr/bin/dice-to-seed
+          cp packaging/tauri-appimage/AppRun AppDir/AppRun
+          cp packaging/tauri-appimage/dice-to-seed.desktop AppDir/dice-to-seed.desktop
+          cp packaging/tauri-appimage/dice-to-seed.png AppDir/dice-to-seed.png
+          chmod +x AppDir/AppRun AppDir/usr/bin/dice-to-seed
+
+          wget -q "https://github.com/AppImage/appimagetool/releases/download/${APPIMAGETOOL_VERSION}/appimagetool-x86_64.AppImage"
+          echo "${APPIMAGETOOL_SHA256}  appimagetool-x86_64.AppImage" | sha256sum -c -
+          chmod +x appimagetool-x86_64.AppImage
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run AppDir dice-to-seed-x86_64.AppImage
+
+      - name: Assemble the release files
+        run: |
+          (cd publish/wwwroot && zip -qr ../../dice-to-seed-wwwroot.zip .)
+          sha256sum dice-to-seed-x86_64.AppImage dice-to-seed-wwwroot.zip | tee SHA256SUMS
+          ls -lh dice-to-seed-x86_64.AppImage dice-to-seed-wwwroot.zip
+
+      - name: Publish the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dice-to-seed-x86_64.AppImage
+            dice-to-seed-wwwroot.zip
+            SHA256SUMS
+          body: |
+            Converts a log of six-sided dice rolls into a BIP-39 seed phrase, offline, as a
+            second implementation to check a hardware wallet against.
+
+            ## Verify before you run it
+
+            ```
+            sha256sum -c SHA256SUMS
+            ```
+
+            An AppImage is an opaque blob. The checksum is the only thing you can check it
+            against, and `dice-to-seed-wwwroot.zip` is the same application in files you can
+            read.
+
+            ## On Tails
+
+            ```
+            cp dice-to-seed-x86_64.AppImage ~/ && cd ~
+            chmod +x dice-to-seed-x86_64.AppImage
+            ./dice-to-seed-x86_64.AppImage
+            ```
+
+            Copy it off the USB stick first: a stick may be mounted `noexec` and the executable
+            bit does not survive a FAT filesystem. Run it from a terminal the first time, since
+            GNOME Files does not launch binaries on double-click and does it silently.
+
+            Nothing needs installing. Everything it links against ships with Tails, checked
+            against the Tails package manifest rather than assumed.
+
+            ## Check it against something else
+
+            That is the entire point of this app. `TAILS_INSTRUCTIONS.md` lists the cross-checks
+            that work offline, including a BIP-39 library you carry rather than install.
+
+            A known answer to test with: fifty 1s give
+
+            ```
+            diet glad hat rural panther lawsuit act drop gallery urge where fit
+            ```
+
+            which is what Coldcard's own `rolls12.py` produces for the same log.
+
+            ## This app never generates entropy
+
+            No "roll for me", no simulated die, nothing random in the derivation. A test fails
+            the build if a source of randomness ever appears in the source.
