@@ -1,117 +1,121 @@
-# dice-to-seed
+# dice to seed
 
-An offline Blazor WebAssembly app that turns a log of six-sided dice rolls into a BIP-39 seed
-phrase, using the convention Coldcard, SeedSigner and Krux all use for d6.
+Turn a log of dice rolls into a BIP-39 seed phrase, offline, on a computer that has no way to
+remember it.
 
-**Physical dice only, and Tails first.** The app has no random number generator and never will:
-no "roll for me" button, no simulated die, nothing random anywhere in the derivation. It
-converts rolls you made with real dice, and a test fails the build if a random source ever
-appears in the source. The intended way to run it is from a USB stick on an offline Tails
-session, served on `127.0.0.1` by a local web server, which is required because Blazor
-WebAssembly does not load over `file://`. See
-[TAILS_INSTRUCTIONS.md](TAILS_INSTRUCTIONS.md).
+### [Try the demo →](https://petesparrowbtc.github.io/dice-to-seed/)
 
-## What this is for
+See what it does, in your browser, right now. **Do not make a real seed there.** A hosted page
+is for looking at, not for holding money: the rolls you type are the seed itself, and you have
+no way to confirm the page you were served is the one in this repository. For a real seed,
+download the release and run it offline, as below.
 
-This app is a **second implementation**, not a recommended primary generator. Its purpose is
-to be checked against: you enter the same roll log into a hardware wallet, into this app, and
-into a third tool, and confirm all three produce the same words before any money is involved.
+## Why you would use this
 
-That matters because you cannot audit entropy after the fact. A seed from a broken random
-number generator looks exactly like a seed from a good one. In July 2026 Coldcard firmware was
-found to have skipped its hardware generator entirely for five years, and Coinkite's guidance
-was that seeds with at least 50 fair, independent, private dice rolls were not at risk. Dice
-supply provenance; a second implementation is what confirms the device honoured it.
+Your hardware wallet made your seed. How do you know it used your dice?
 
-## The conversion
+You cannot tell by looking. A seed made from a broken random number generator looks exactly
+like a good one, and in July 2026 Coldcard firmware was found to have skipped its hardware
+generator entirely for five years. Coinkite's own guidance was that seeds made with at least
+50 fair dice rolls were not at risk.
 
+Dice are how you supply randomness you can account for. **This app is how you check that the
+device used it.** You enter the same rolls here, and the words must match. If they do not,
+something in that ceremony did not do what you thought it did.
+
+It is a second opinion, not a place to make a seed.
+
+## What you need
+
+- Dice you trust, and paper
+- A computer running [Tails](https://tails.net), with the network off
+- A USB stick
+
+Tails matters because it forgets. It runs from RAM, keeps nothing, and everything disappears
+when you shut it down. Your seed ends up on paper and nowhere else.
+
+## Doing it
+
+**Before you boot Tails**, download the AppImage from the
+[latest release](https://github.com/PeteSparrowBTC/dice-to-seed/releases), check it, and copy
+it to the stick:
+
+```bash
+sha256sum -c SHA256SUMS
 ```
-entropy  = SHA-256(the roll digits, joined by nothing)   truncated to 16 bytes for 12 words,
-                                                          32 bytes for 24
-checksum = the top 4 or 8 bits of SHA-256(that entropy)
-words    = (entropy || checksum) split into 11-bit indexes into the 2048-word list
+
+**On Tails, with the network off**, copy it off the stick and run it:
+
+```bash
+cp /media/amnesia/*/dice-to-seed-x86_64.AppImage ~/
+cd ~ && chmod +x dice-to-seed-x86_64.AppImage
+./dice-to-seed-x86_64.AppImage
 ```
 
-The hash is **truncated, not re-hashed**, and the checksum comes from the truncation. Both
-mistakes still produce twelve plausible words, which is why the test suite pins them.
+Run it from a terminal the first time. Double-clicking often appears to do nothing, because the
+Tails file manager will not launch programs that way.
 
-Minimums are the vendors': **50 rolls for 12 words, 99 for 24.** A short log does not become
-stronger by producing more words.
+Then:
 
-## Entering a log
+1. **Roll one die at a time.** Fifty rolls for twelve words, ninety-nine for twenty-four. Write
+   each result down as you go.
+2. **Press the face you rolled.** The buttons record what you rolled; nothing here rolls for
+   you. Keys 1 to 6 work too, and Backspace undoes the last roll.
+3. **Watch the counter.** Miscounting is the most common mistake in the whole exercise, and a
+   log one roll short still produces a perfectly convincing seed phrase.
+4. **Write the words on paper.** There is no copy button, deliberately.
 
-Six dice-face buttons, one press per physical roll. There is no text box, so no character
-other than a die face can enter the log: nothing to filter, nothing to paste by accident, and
-the count is exactly what you pressed. Keys 1 to 6 do the same thing and Backspace undoes the
-last roll.
+Full instructions, including how to check your result against other tools:
+**[TAILS_INSTRUCTIONS.md](TAILS_INSTRUCTIONS.md)**.
 
-The buttons **record** a roll. Nothing in this app ever picks one.
+## Two things people get wrong
 
-## What it deliberately does not do
+**Never re-roll a log because it looks wrong.** Fifty 1s is exactly as likely as any other
+fifty rolls, and the seed is exactly as strong. Throwing away logs for looking non-random means
+your seed is drawn from a smaller set than your dice offered, which is the one thing that
+genuinely weakens it.
 
-No BIP-32, no addresses, no master fingerprints, no SLIP-39 splitting, no saving or exporting,
-no clipboard button, and no built-in entropy source. It converts entropy you brought and shows
-you every intermediate value. Splitting a finished seed is the sibling
-[slip39-backup](https://github.com/PeteSparrowBTC/slip39-backup) app; the vendor-neutral
-reference on generating one is
+**If you throw several dice at once, use dice you can tell apart** and read them in the same
+order every time. Four identical dice thrown together lose a third of their entropy if you
+cannot record which was which, and the roll counter will still tell you that you did everything
+right.
+
+## What it will never do
+
+**It has no random number generator.** No "roll for me" button, no simulated die, nothing
+random anywhere. Every value comes off your dice. This is enforced by a test that fails the
+build if a source of randomness ever appears in the code.
+
+It also does not save, export, copy or send anything, and it makes no network request of any
+kind. No addresses, no account numbers, no wallet features. It converts your rolls, shows every
+intermediate value so you can check each step, and stops.
+
+## Why you can believe the words
+
+The app agrees with tools written by other people, and the test suite proves it on every
+change:
+
+- **SeedSigner's** published examples, from their own verification documentation
+- **Coldcard's** published example, confirmed by running their own script
+- the **official BIP-39 test vectors**, the complete published set
+- the wordlist itself, checked against its published fingerprint every time the app starts
+
+If any of those ever stopped matching, the build fails.
+
+## Related
+
+Splitting a seed you already have across several backups:
+[slip39-backup](https://github.com/PeteSparrowBTC/slip39-backup). A vendor-neutral guide to
+making one in the first place:
 [seed-generation](https://github.com/PeteSparrowBTC/seed-generation).
 
-There is also no separator or dialect control. All three d6 vendors hash the bare digit
-string; Krux's dash convention belongs to d20, where a face value can be two digits. A dash
-setting in a d6-only tool would produce a seed no vendor reproduces.
+## For developers
 
-## Verification built into the suite
-
-- the complete published BIP-39 English vector set, as upstream's file byte for byte, with its
-  SHA-256 asserted so it cannot be edited into agreement
-- Coldcard's published dice example, confirmed by running Coldcard's own `rolls12.py`
-- SeedSigner's published 50-roll and 99-roll examples
-- the wordlist checked at runtime against its published SHA-256; the app refuses to derive
-  anything if it does not match
-- a guard that fails the build if `RandomNumberGenerator`, `System.Random`,
-  `crypto.getRandomValues` or similar ever appears in first-party source
-
-## The two artifacts
-
-**An AppImage, about 11 MB.** One file, double-clicked on Tails. It opens a native window and
-needs nothing installed: WebKitGTK 4.1, GTK 3, libsoup and librsvg all ship with Tails, checked
-against its package manifest rather than assumed. Built by Tauri, which serves the published
-Blazor output through an in-process protocol, so nothing binds a port and the desktop artifact
-is the same `wwwroot` below rather than a second implementation.
-
-It deliberately does not bundle WebKitGTK. Tauri's own bundler does, which produces 83 MB
-instead of 11 for the same program, and pins a browser engine Tails already has.
-
-**The static site.** `publish/wwwroot`, served from loopback by any web server. This is the
-artifact to read and audit; the AppImage carries a window around it. Blazor WebAssembly cannot
-load over `file://`, so this route needs a local server. See
-[TAILS_INSTRUCTIONS.md](TAILS_INSTRUCTIONS.md).
-
-## Running it locally
+[CLAUDE.md](CLAUDE.md) has the engineering rules, [docs/](docs/) the design notes and platform
+findings, and [VERSIONING.md](VERSIONING.md) what a version number means here.
 
 ```bash
-dotnet test                                   # the vectors
-dotnet run --project DiceToSeed.Web           # a dev server on loopback
-```
-
-For real use, publish it and follow [TAILS_INSTRUCTIONS.md](TAILS_INSTRUCTIONS.md):
-
-```bash
-cd DiceToSeed.Web
-dotnet publish -c Release -o publish          # publish/wwwroot goes on the USB stick
-```
-
-## Working here
-
-Read [CLAUDE.md](CLAUDE.md) first, and [docs/tails-platform-notes.md](docs/tails-platform-notes.md) before testing anything on Tails: what a Tails session provides is a published manifest, not something to discover by booting a USB stick. In short: `main` moves only through a pull request, the app
-is never a source of entropy, the conversion takes no cryptographic dependency beyond SHA-256,
-the vectors come from the vendors' own published output, and every algorithmic change re-runs
-them.
-
-After cloning:
-
-```bash
-git config core.hooksPath .githooks
+dotnet test     # the vectors
 ```
 
 ---
