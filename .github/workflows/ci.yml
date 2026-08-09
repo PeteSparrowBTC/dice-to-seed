@@ -174,36 +174,3 @@ jobs:
             dice-to-seed-x86_64.AppImage.sha256
           if-no-files-found: error
 
-  # The same desktop shell for Windows. Photino draws its window with the system WebView, which
-  # is WebView2 here and WebKitGTK on Linux, so this is the identical Razor component rendered
-  # by a different engine rather than a second implementation.
-  #
-  # Shipped as a zip rather than an installer: an installer writes to the machine, and the
-  # habit this repository wants to encourage is running the tool from a folder you control and
-  # deleting it afterwards.
-  windows-desktop:
-    runs-on: windows-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      # Self-contained for the same reason as the AppImage: nothing to install first.
-      - name: Publish the desktop shell for Windows
-        run: >
-          dotnet publish DiceToSeed.Desktop
-          --configuration Release
-          --runtime win-x64
-          --self-contained true
-          --output windows-publish
-
-      - name: Upload the Windows build
-        uses: actions/upload-artifact@v4
-        with:
-          name: dice-to-seed-windows-x64
-          path: windows-publish
-          if-no-files-found: error
