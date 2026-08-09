@@ -7,10 +7,28 @@ available, so every step is here rather than referenced.
 
 ## What you need
 
+Tails is amnesic and you will be running it with the network off, so **you cannot install
+anything.** Everything has to be on the stick before you boot. Assemble this list on a
+networked machine first:
+
 - A USB stick with the published app on it (see "Publishing", below)
 - The LibreWolf AppImage on the same stick, downloaded **before** you boot Tails
 - Tails, booted, with networking off
 - Your dice, and paper
+
+For cross-checking, carry at least one of these as well. Both are single files or folders that
+run in place, with nothing to install:
+
+- **`rolls12.py`**, from Coldcard's verification docs. One file, imports only `hashlib`,
+  carries the wordlist inside it. The most portable check there is.
+- **The `mnemonic` package, unzipped.** On a networked machine:
+  `pip3 download mnemonic --no-deps -d lib && cd lib && unzip mnemonic-*.whl`. Copy the `lib`
+  folder to the stick. It is pure Python, so `PYTHONPATH=lib python3 ...` runs it without
+  installing anything.
+- **Ian Coleman's `bip39-standalone.html`**, which is one file and opens from `file://`.
+
+SeedSigner's own `tools/mnemonic.py` needs `pip install` of it and of `embit`, so it is a
+check to run before the ceremony on a networked machine, not on Tails.
 
 ## Publishing (on an ordinary machine, with the .NET SDK)
 
@@ -107,13 +125,28 @@ printf '%s' "$ROLLS" | openssl sha256
 `printf '%s'`, never `echo`. A plain `echo` appends a newline, hashes a different string, and
 gives a different wallet. Both commands must print the same hash the app shows.
 
-If you also carried Coldcard's `rolls12.py` on the stick:
+If you carried `rolls12.py`:
 
 ```bash
 echo "$ROLLS" | python3 rolls12.py
 ```
 
 It prints the truncated hash and the twelve words, and they must match the app.
+
+If you carried the unzipped `mnemonic` package, which is an implementation neither this app's
+author nor any hardware wallet vendor wrote:
+
+```bash
+PYTHONPATH=lib python3 -c "
+import hashlib
+from mnemonic import Mnemonic
+e = hashlib.sha256('$ROLLS'.encode()).digest()[:16]   # 32 for 24 words
+print(e.hex())
+print(Mnemonic('english').to_mnemonic(e))"
+```
+
+Both must agree with the app, character for character. Two independent implementations
+agreeing is the whole point of doing this.
 
 On the Coldcard itself: firmware 5.6.0 or later, **12 Word Dice Roll**, **Dice Only** rather
 than TRNG plus Dice. The mixed mode blends device entropy that cannot be reproduced, so this

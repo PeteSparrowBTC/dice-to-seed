@@ -194,35 +194,54 @@ printf '%s' "$ROLLS" | openssl sha256</pre>
         hashes a different string, and yields a different wallet.
     </p>
 
-    @* Ordering here is deliberate. A user checking a seed wants the most independent tool
-       first, and the one whose maker has not just shipped an entropy defect. *@
-    <div class="step-label">SeedSigner's own verification tool</div>
-    <pre class="mono-block">pip3 install embit
-git clone github.com/SeedSigner/seedsigner &amp;&amp; cd seedsigner
-pip3 install -e .
-cd tools &amp;&amp; python3 mnemonic.py dice "$ROLLS"</pre>
+    @* Everything in this panel has to survive one constraint: on Tails you cannot install
+       anything. It is amnesic and the network is off. So "pip install" is not a step, it is a
+       reason a tool is unusable. Only single files you carried on the stick count. *@
+    <div class="step-label">Carry these on the stick: nothing here installs anything</div>
     <p class="hint">
-        SeedSigner ships this specifically so its dice conversion can be checked against other
-        tools. It uses <code>embit</code>, a BIP-39 implementation written by neither
-        SeedSigner nor this app, so agreement is worth something. Install it before you go
-        offline.
+        Tails is amnesic and you will have the network off, so <code>pip install</code> is not
+        available to you. Every option below is a file you copy onto the USB stick beforehand
+        and run in place.
     </p>
 
-    <div class="step-label">Any BIP-39 library, in five lines</div>
-    <pre class="mono-block">pip3 install mnemonic
-python3 -c "
+    <div class="step-label">A BIP-39 library, carried rather than installed</div>
+    <pre class="mono-block"># beforehand, on a networked machine:
+pip3 download mnemonic --no-deps -d lib &amp;&amp; cd lib &amp;&amp; unzip mnemonic-*.whl
+
+# on Tails, with the lib folder on your stick:
+PYTHONPATH=lib python3 -c "
 import hashlib
 from mnemonic import Mnemonic
 e = hashlib.sha256('$ROLLS'.encode()).digest()[:16]   # 32 for 24 words
 print(e.hex())
 print(Mnemonic('english').to_mnemonic(e))"</pre>
     <p class="hint">
-        The <code>mnemonic</code> package is Trezor's reference implementation, the one the
-        official BIP-39 test vectors are published alongside. The two lines that matter are
-        visible: SHA-256 of the rolls, truncated to 16 bytes, handed to a library that knows
-        nothing about dice. If this and the app disagree, the app is wrong. Equivalents exist
-        everywhere: <code>bip39</code> on npm and the <code>bip39</code> crate in Rust both
-        take entropy bytes the same way.
+        <code>mnemonic</code> is Trezor's reference implementation, the one the official BIP-39
+        vectors are published alongside. It is pure Python, so unzipping the wheel and pointing
+        <code>PYTHONPATH</code> at it is enough: nothing is installed and nothing touches the
+        system. The two lines that matter are visible: SHA-256 of the rolls, truncated to 16
+        bytes, handed to a library that knows nothing about dice. If this and the app disagree,
+        the app is wrong.
+    </p>
+
+    <div class="step-label">A single self-contained script</div>
+    <pre class="mono-block">echo "$ROLLS" | python3 rolls12.py</pre>
+    <p class="hint">
+        Coldcard's <code>rolls12.py</code>, from their verification docs. It is one file, it
+        imports nothing but <code>hashlib</code>, and it carries the wordlist inside it, which
+        makes it the most portable cross-check there is: copy it to the stick and run it.
+        Coldcard is the vendor whose entropy defect this app exists in response to, and that
+        is worth remembering, but the defect was in firmware and not in this script, which is
+        short enough to read end to end before you trust it. Read it, then use it.
+    </p>
+
+    <div class="step-label">Not usable on Tails: SeedSigner's own tool</div>
+    <p class="hint">
+        SeedSigner ships <code>tools/mnemonic.py</code> specifically so its dice conversion can
+        be checked, and it is built on <code>embit</code>, a third independent implementation.
+        It needs <code>pip install</code> of both, so it is a check to run on a networked
+        machine before the ceremony, not on Tails. Worth doing once; not something to plan the
+        ceremony around.
     </p>
 
     <div class="step-label">Ian Coleman's offline page (bip39-standalone.html)</div>
