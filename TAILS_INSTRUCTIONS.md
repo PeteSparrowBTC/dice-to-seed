@@ -143,7 +143,8 @@ will fail, and that is not something to work around.
 
 ## Checking the result against something else
 
-The point of this app is to be a second opinion, so use it as one. In another Tails terminal:
+Whichever tool you derived with, a second one must agree. The conversion is deterministic, so
+any correct implementation gives the same words from the same rolls. In another Tails terminal:
 
 ```bash
 ROLLS=<your roll log, digits only>

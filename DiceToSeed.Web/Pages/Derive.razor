@@ -30,9 +30,10 @@ else
 <h1>dice to seed</h1>
 <p class="subtitle">
     Converts a log of six-sided dice rolls into a BIP-39 seed phrase, using the convention
-    Coldcard, SeedSigner and Krux all use for d6. This is a second implementation to check a
-    device against, not a recommended place to make a seed. It has no random number generator
-    and never rolls anything for you.
+    Coldcard, SeedSigner and Krux all share for d6. It has no random number generator and never
+    rolls anything for you: every value comes off your dice. Derive here, then enter the same
+    rolls into a second tool and compare the words. Either order works, because the conversion
+    is deterministic and any correct implementation gives the same result.
 </p>
 
 <div class="panel">
