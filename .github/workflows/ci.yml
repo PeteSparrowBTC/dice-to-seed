@@ -86,3 +86,66 @@ jobs:
           name: dice-to-seed-wwwroot
           path: publish/wwwroot
           if-no-files-found: error
+
+  # Packages the desktop shell as a Linux AppImage: one file, double-clicked on Tails, with no
+  # web server, no port and no browser to configure. The browser build remains the primary
+  # artifact; this is the convenience route.
+  #
+  # It runs on every pull request rather than only on tags, because the only way to know the
+  # Linux build works is to build it, and this repository has no Linux machine to test on
+  # otherwise.
+  appimage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # Self-contained: the AppImage carries its own .NET runtime, because Tails has none and
+      # installing one is not part of an offline ceremony.
+      - name: Publish the desktop shell for Linux
+        run: >
+          dotnet publish DiceToSeed.Desktop
+          --configuration Release
+          --runtime linux-x64
+          --self-contained true
+          --output appdir-publish
+
+      # The AppDir layout appimagetool expects: AppRun at the root, a .desktop file and an icon
+      # beside it, and the application under usr/.
+      - name: Assemble the AppDir
+        run: |
+          mkdir -p AppDir/usr/bin
+          cp -r appdir-publish/* AppDir/usr/bin/
+          cp packaging/appimage/AppRun AppDir/AppRun
+          chmod +x AppDir/AppRun AppDir/usr/bin/DiceToSeed.Desktop
+          cp packaging/appimage/dice-to-seed.desktop AppDir/dice-to-seed.desktop
+          cp packaging/appimage/dice-to-seed.png AppDir/dice-to-seed.png
+          echo "AppDir assembled:"
+          find AppDir -maxdepth 2 | head -20
+
+      # --appimage-extract-and-run because GitHub runners have no FUSE, which appimagetool
+      # otherwise requires.
+      - name: Build the AppImage
+        run: |
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run AppDir dice-to-seed-x86_64.AppImage
+          sha256sum dice-to-seed-x86_64.AppImage | tee dice-to-seed-x86_64.AppImage.sha256
+          ls -lh dice-to-seed-x86_64.AppImage
+
+      # The checksum is published beside the binary so that what a person downloads can be
+      # compared with what CI built. An unverifiable binary is exactly the thing this
+      # repository tells people not to trust.
+      - name: Upload the AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: dice-to-seed-appimage
+          path: |
+            dice-to-seed-x86_64.AppImage
+            dice-to-seed-x86_64.AppImage.sha256
+          if-no-files-found: error

@@ -1,0 +1,25 @@
+#!/bin/sh
+# AppImage entry point.
+#
+# The AppImage bundles the .NET runtime (the app is published self-contained) so nothing has
+# to be installed on the machine running it. Tails has no .NET and installing one is not part
+# of an offline ceremony.
+#
+# What it deliberately does NOT bundle is WebKitGTK, which Photino uses to draw the window.
+# Bundling a browser engine would multiply the size and pin a rendering stack that the host
+# already has; Debian-based systems including Tails ship libwebkit2gtk. If it is missing the
+# app cannot start, so say why rather than dying silently.
+
+HERE="$(dirname "$(readlink -f "$0")")"
+
+export LD_LIBRARY_PATH="$HERE/usr/lib:$LD_LIBRARY_PATH"
+
+if ! ldconfig -p 2>/dev/null | grep -q "libwebkit2gtk"; then
+    echo "dice-to-seed: libwebkit2gtk was not found on this system." >&2
+    echo "  The window is drawn by WebKitGTK, which this AppImage does not bundle." >&2
+    echo "  On Debian and Tails: apt install libwebkit2gtk-4.1-0" >&2
+    echo "  If you cannot install it, use the browser build instead: see TAILS_INSTRUCTIONS.md" >&2
+    exit 1
+fi
+
+exec "$HERE/usr/bin/DiceToSeed.Desktop" "$@"

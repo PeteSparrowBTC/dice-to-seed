@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=dice to seed
+Comment=Turn a log of six-sided dice rolls into a BIP-39 seed phrase, offline
+Exec=DiceToSeed.Desktop
+Icon=dice-to-seed
+Categories=Utility;Security;
+Terminal=false

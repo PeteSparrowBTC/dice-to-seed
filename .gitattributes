@@ -19,3 +19,5 @@
 # their SHA-256 is asserted, so that the suite can prove it is running the real vectors and
 # not a copy someone adjusted until the tests went green. Same CRLF reasoning as above.
 DiceToSeed.Tests/Vectors/** text eol=lf
+packaging/appimage/AppRun text eol=lf
+packaging/appimage/*.desktop text eol=lf
