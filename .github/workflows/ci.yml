@@ -139,11 +139,11 @@ jobs:
       - name: Install the Tauri CLI
         run: cargo install tauri-cli --version "^2.0" --locked
 
-      # --bundles none: Tauri's own bundler copies the whole WebKitGTK and GTK stack in,
+      # --no-bundle: Tauri's own bundler copies the whole WebKitGTK and GTK stack in,
       # producing 83 MB. Tails ships those libraries, verified in its package manifest, so the
       # AppImage is assembled below instead and comes out at about 11 MB.
       - name: Build the application
-        run: cargo tauri build --bundles none
+        run: cargo tauri build --no-bundle
 
       # The same binary, packaged our way: no bundled WebKitGTK, because Tails ships it and
       # bundling a browser engine we know is present triples the size. Built in the same run as
