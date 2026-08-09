@@ -87,7 +87,7 @@ dotnet publish -c Release -o publish          # publish/wwwroot goes on the USB 
 
 ## Working here
 
-Read [CLAUDE.md](CLAUDE.md) first. In short: `main` moves only through a pull request, the app
+Read [CLAUDE.md](CLAUDE.md) first, and [docs/tails-platform-notes.md](docs/tails-platform-notes.md) before testing anything on Tails: what a Tails session provides is a published manifest, not something to discover by booting a USB stick. In short: `main` moves only through a pull request, the app
 is never a source of entropy, the conversion takes no cryptographic dependency beyond SHA-256,
 the vectors come from the vendors' own published output, and every algorithmic change re-runs
 them.
