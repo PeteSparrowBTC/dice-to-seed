@@ -51,16 +51,16 @@ Before booting Tails, download the AppImage from the
 sha256sum -c SHA256SUMS
 ```
 
-Copy it to the stick. On Tails:
+Copy it to the stick. On Tails, no terminal is needed:
 
-```bash
-cp /media/amnesia/*/dice-to-seed-x86_64.AppImage ~/
-cd ~ && chmod +x dice-to-seed-x86_64.AppImage
-./dice-to-seed-x86_64.AppImage
-```
+1. Open the stick in Files and copy the AppImage into your Home folder. Copy it off the stick
+   rather than running it in place: a USB stick is often mounted so that programs on it cannot
+   run at all.
+2. Right-click it, choose **Properties**, and turn on **Executable as Program**.
+3. Right-click it again and choose **Run as a Program**.
 
-Run it from a terminal. Double-clicking does nothing, because the Tails file manager will not
-launch programs.
+Step 2 is needed because the permission does not survive the copy from a Windows-formatted
+stick, and without it step 3 does not appear. Double-clicking on its own does nothing.
 
 Roll one die at a time and press the matching face. Fifty rolls for twelve words, ninety-nine
 for twenty-four. Keys 1 to 6 work, and Backspace undoes the last roll. Watch the counter: a log

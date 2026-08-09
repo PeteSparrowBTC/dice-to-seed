@@ -53,8 +53,19 @@ release, verify it, and put it on the stick:
 sha256sum -c dice-to-seed-x86_64.AppImage.sha256
 ```
 
-On Tails, copy it off the stick first, because a USB may be mounted `noexec` and the executable
-bit does not survive a FAT filesystem:
+On Tails, no terminal is needed:
+
+1. Open the stick in **Files** and copy the AppImage into your **Home** folder. Copy it off the
+   stick rather than running it there: removable media is often mounted `noexec`, which stops
+   anything on it from running at all.
+2. Right-click it, choose **Properties**, and turn on **Executable as Program**.
+3. Right-click it again and choose **Run as a Program**.
+
+Step 2 exists because the executable bit does not survive a FAT or exFAT filesystem, which is
+what most sticks are formatted as. Without it, **Run as a Program** does not appear in the menu
+at all, and a plain double-click does nothing and says nothing.
+
+If you would rather use a terminal:
 
 ```bash
 cp /media/amnesia/<YOUR_USB>/dice-to-seed-x86_64.AppImage ~/
@@ -62,9 +73,8 @@ cd ~ && chmod +x dice-to-seed-x86_64.AppImage
 ./dice-to-seed-x86_64.AppImage
 ```
 
-Run it from a terminal the first time. GNOME Files does not launch binaries on double-click and
-does it silently, so a double-click that appears to do nothing is usually that rather than a
-broken download.
+The terminal is worth it once, the first time, because anything that goes wrong is printed
+there instead of being swallowed.
 
 It needs nothing installed. Everything it links against ships with Tails: WebKitGTK 4.1, GTK 3,
 libsoup 3 and librsvg, all confirmed in the Tails package manifest. See
