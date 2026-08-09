@@ -26,8 +26,10 @@ scratch/
 # Browser-driven UI checks write screenshots and page snapshots here. They are throwaway
 # evidence for a single session, and a screenshot of this app can contain a roll log.
 .playwright-mcp/
-*.png
-!DiceToSeed.Web/wwwroot/*.png
+# Only PNGs at the repository root, which is where browser-driven checks drop screenshots.
+# An unanchored *.png swallowed the AppImage icon and then the Tauri icon: application assets
+# live in subdirectories and must not be caught by a debris rule.
+/*.png
 src-tauri/target/
 
 # Downloaded build artifacts. CI is their source of truth; a repository whose value is that
