@@ -106,6 +106,31 @@ public class DiceSeedTests
     }
 
     /// <summary>
+    /// Vector 11: fifty 1s. Not published by any vendor, but pinned here because it is the log
+    /// a person reaches for when checking a build by hand: it is the fastest thing to enter,
+    /// on a device or in this app, and the easiest to get right.
+    ///
+    /// The expectation is Coldcard's, not this repository's arithmetic. It was produced by
+    /// running Coldcard's own rolls12.py, and the hash was confirmed with both sha256sum and
+    /// openssl before being written down.
+    ///
+    /// It also happens to be the log most likely to tempt someone into re-rolling because it
+    /// "looks wrong". It is not wrong. Fifty 1s is exactly as probable as any other fifty
+    /// rolls, and a seed derived from it is exactly as strong.
+    /// </summary>
+    [Fact]
+    public void Vector_11_fifty_ones_the_hand_check_log()
+    {
+        var derivation = DiceSeed.Derive(new string('1', 50), WordCount.Twelve).Value;
+
+        Assert.Equal("3dac51a65ec9fcfc409a1b5f1defe92ba723843118ea511971ab46b36859495f", derivation.Sha256Hex);
+        Assert.Equal("3dac51a65ec9fcfc409a1b5f1defe92b", derivation.EntropyHex);
+        Assert.Equal(
+            "diet glad hat rural panther lawsuit act drop gallery urge where fit",
+            string.Join(' ', derivation.Words));
+    }
+
+    /// <summary>
     /// There is no separator option, and this test records why, because "add a dialect
     /// selector" is the obvious thing for a future reader to want.
     ///
