@@ -33,10 +33,26 @@ keeps nothing, and write the words on paper.
 - Tails, with the network off
 - A USB stick
 
+**How many rolls.** The vendor minimums are 50 for twelve words and 99 for twenty-four, and the
+app keeps them so a seed already made that way can be reproduced. For a **new** seed, roll **60**
+or **111**:
+
+| rolls | fair | if one face came up a fifth of the time | target |
+| --- | --- | --- | --- |
+| 50 | 129.2 | 116.1 | 128 |
+| 60 | 155.1 | 139.3 | 128 |
+| 99 | 255.9 | 229.9 | 256 |
+| 111 | 286.9 | 257.7 | 256 |
+
+A fair d6 carries log2(6) = 2.585 bits, so **99 rolls does not reach 256 bits even with a perfect
+die.** It misses by a tenth of a bit. That is a vendor rounding rather than a sufficiency proof,
+and it is worth knowing before you rely on the minimum.
+
 Which dice: casino-grade ones have square edges and pips backfilled to the same density as the
 body. Ordinary dice have rounded corners and recessed pips, which leaves the 6 face lighter
-than the 1. That bias is real and smaller than people expect, costing a fraction of a bit over
-a whole run, so ordinary dice are usable.
+than the 1. That bias costs about half a bit of average entropy over a whole run, so ordinary
+dice are usable; on the conservative measure in the third column it costs more, which is what
+the extra rolls are for.
 [seed-generation has the numbers](https://github.com/PeteSparrowBTC/seed-generation/blob/main/docs/dice.md#your-dice-bias-and-what-it-costs)
 and [how to test a die you are unsure of](https://github.com/PeteSparrowBTC/seed-generation/blob/main/docs/dice.md#testing-your-own-dice).
 
@@ -63,9 +79,10 @@ Copy it to the stick. On Tails, no terminal is needed:
 Step 2 is needed because the permission does not survive the copy from a Windows-formatted
 stick, and without it step 3 does not appear. Double-clicking on its own does nothing.
 
-Roll one die at a time and press the matching face. Fifty rolls for twelve words, ninety-nine
-for twenty-four. Keys 1 to 6 work, and Backspace undoes the last roll. Watch the counter: a log
-one roll short still produces a valid-looking seed phrase. Write the words on paper.
+Roll one die at a time and press the matching face. Keys 1 to 6 work, and Backspace undoes the
+last roll. The counter targets the recommended count, 60 or 111; Derive unlocks earlier at the
+vendor minimum and says so. Watch the counter either way: a log one roll short still produces a
+valid-looking seed phrase. Write the words on paper.
 
 Full instructions, including how to check the result against other tools:
 [TAILS_INSTRUCTIONS.md](TAILS_INSTRUCTIONS.md).
@@ -85,7 +102,7 @@ find out at recovery.
 **Roll a fresh log.** Never the one behind your seed phrase. The key is the SHA-256 of your rolls,
 and a 24-word seed's entropy is that same hash, so one log used twice makes the key identical to
 the wallet it is meant to protect. Switching mode in the app clears your rolls for this reason.
-Roll the same number as your seed used, 50 or 99.
+Roll the same number as your seed used, 60 or 111.
 
 This is optional, and worth being plain about what it buys. Dice give the key a provenance you can
 account for. They do not remove every generator from the picture: the backup tool still generates

@@ -139,10 +139,14 @@ will fail, and that is not something to work around.
    rolls the test barely works, and re-rolling a log because it failed means your seed is
    chosen from a smaller set than the dice offered, which weakens it. The chi-squared
    worksheet in the `seed-generation` repository is built for this.
-1. Roll your dice. **Fifty rolls for twelve words, ninety-nine for twenty-four.** Roll them
-   one at a time and write each result down as you go. Whatever comes up is your log: never
-   re-roll it because it looks too orderly. Six 6s in a row is exactly as likely as any other
-   six rolls.
+1. Roll your dice. **Sixty rolls for twelve words, a hundred and eleven for twenty-four**, if
+   this is a new seed. The vendor minimums of 50 and 99 still derive, because a seed already made
+   with 50 rolls has to be reproducible here, but they are thinner than they look: 50 fair rolls
+   carry 129.2 bits against 128, and **99 fair rolls carry 255.9 against 256, so the 24-word
+   minimum does not reach its target even with a perfect die.** The extra rolls cost minutes and
+   settle it. Roll them one at a time and write each result down as you go. Whatever comes up is
+   your log: never re-roll it because it looks too orderly. Six 6s in a row is exactly as likely
+   as any other six rolls.
 2. Record each roll in the app by pressing the button showing the face you rolled. The keys 1
    to 6 do the same thing, Backspace undoes the last roll, and there is an Undo and a Clear.
    There is no text box: nothing but a die face can go in, so a stray keystroke cannot end up

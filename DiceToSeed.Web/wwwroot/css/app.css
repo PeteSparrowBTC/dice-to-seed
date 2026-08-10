@@ -446,3 +446,52 @@ button.mode-key.selected {
     border-left: 3px solid var(--accent);
     padding-left: .75rem;
 }
+
+/* A result that derived from fewer rolls than a new seed should have. Not an error, so not the
+   red used for failures: the count cleared the vendor minimum or nothing would have derived.
+   Amber, the warn colour, and a left bar so it reads as a note attached to the result rather
+   than as chrome. It sits above the words on purpose, where it stays visible while they are
+   being written down. */
+.warn-block {
+    border-left: 3px solid var(--warn);
+    background: #241d09;
+    color: var(--ink);
+    padding: .7rem .9rem;
+    border-radius: .3rem;
+    margin-bottom: 1.1rem;
+    font-size: .9375rem;
+}
+
+/* The entropy table. A grid rather than a <table> so it collapses sensibly on a narrow window,
+   with role attributes so it is still announced as a table. Rows whose conservative floor misses
+   the target are marked in the warn colour, which is how the 99-roll row explains itself without
+   a caption pointing at it. */
+.entropy-table {
+    display: grid;
+    grid-template-columns: auto repeat(3, minmax(3.5rem, auto));
+    gap: .1rem 1rem;
+    font-size: .9375rem;
+    margin: .6rem 0 1rem;
+    overflow-x: auto;
+}
+
+.entropy-table > [role="row"] {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+}
+
+.entropy-table [role="cell"]:not(:first-child),
+.entropy-table [role="columnheader"]:not(:first-child) {
+    font-family: var(--mono);
+    text-align: right;
+}
+
+.entropy-head {
+    color: var(--ink-dim);
+    font-size: .8125rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.entropy-table .entropy-short { color: var(--warn); }

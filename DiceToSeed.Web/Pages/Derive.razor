@@ -122,13 +122,15 @@ else
                 <button type="button"
                         class="@(wordCount == option ? "selected" : null)"
                         @onclick="() => SelectWordCount(option)">
+                    @* The recommended count, matching the counter's target. Quoting the vendor
+                       minimum here would set an expectation the counter then contradicts. *@
                     @if (mode == DerivationMode.SeedPhrase)
                     {
-                        <text>@((int)option) words (@DiceRolls.MinimumRollsFor(option) rolls)</text>
+                        <text>@((int)option) words (@RollEntropy.RecommendedRollsFor(option) rolls)</text>
                     }
                     else
                     {
-                        <text>@((int)DiceRolls.StrengthFor(option))-bit (@DiceRolls.MinimumRollsFor(option) rolls)</text>
+                        <text>@((int)DiceRolls.StrengthFor(option))-bit (@RollEntropy.RecommendedRollsFor(option) rolls)</text>
                     }
                 </button>
             }
@@ -198,7 +200,10 @@ else
     <div class="field">
         <span class="field-label">Rolls</span>
         <div class="counter @CounterClass">
-            @RollCount<span class="of"> / @DiceRolls.MinimumRollsFor(wordCount)</span>
+            @* The denominator is the recommended count, not the vendor minimum: the usual job here
+               is making a new seed, so the target on screen should be the number that is actually
+               sufficient. Derive unlocks earlier, at the minimum, and the note says so. *@
+            @RollCount<span class="of"> / @RecommendedRolls</span>
         </div>
         <div class="counter-note">@CounterNote</div>
     </div>
@@ -224,6 +229,11 @@ else
 {
     <h2>Result</h2>
     <div class="panel">
+        @if (ShortOfRecommended)
+        {
+            <div class="warn-block">@RecommendationWarning</div>
+        }
+
         <div class="step-label">1. Preimage (the rolls, hashed as-is)</div>
         <pre class="mono-block">@derivation.Preimage</pre>
 
@@ -255,6 +265,11 @@ else
 {
     <h2>Result</h2>
     <div class="panel panel-key">
+        @if (ShortOfRecommended)
+        {
+            <div class="warn-block">@RecommendationWarning</div>
+        }
+
         <div class="step-label">1. Preimage (the rolls, hashed as-is)</div>
         <pre class="mono-block">@backupKey.Preimage</pre>
 
@@ -304,12 +319,48 @@ else
    away; the rolls that become a seed are used unconditionally. *@
 <h2>Before you start: your dice</h2>
 <div class="panel">
+    @* The arithmetic, stated rather than implied. The vendor minimums are a rounding decision and
+       this app was presenting them as though they were a sufficiency proof. The 99-roll figure is
+       the uncomfortable one: it does not reach 256 bits even with perfect dice. All of these
+       numbers come from RollEntropy and are pinned by RollEntropyTests, so they cannot rot. *@
     <p class="hint">
-        A die that is not fair costs you entropy, and the vendor minimums leave little margin:
-        50 fair rolls carry 129.25 bits against the 128 a 12-word seed holds. Worth checking,
-        but check it <strong>before</strong> the ceremony, with a few hundred rolls you then
-        throw away. The chi-squared worksheet in the <code>seed-generation</code> repository is
-        built for exactly that.
+        <strong>What your rolls are worth.</strong> A fair d6 carries log<sub>2</sub>(6) = 2.585
+        bits. The second column is the conservative floor: min-entropy if one face came up a fifth
+        of the time, which is worse than real dice are.
+    </p>
+    <div class="entropy-table" role="table" aria-label="Entropy by roll count">
+        <div role="row" class="entropy-head">
+            <span role="columnheader">rolls</span>
+            <span role="columnheader">fair</span>
+            <span role="columnheader">biased floor</span>
+            <span role="columnheader">against</span>
+        </div>
+        @foreach (var (count, target, label) in EntropyRows)
+        {
+            <div role="row" class="@(RollEntropy.PessimisticBits(count) < target ? "entropy-short" : null)">
+                <span role="cell">@count @label</span>
+                <span role="cell">@RollEntropy.FairBits(count).ToString("0.0")</span>
+                <span role="cell">@RollEntropy.PessimisticBits(count).ToString("0.0")</span>
+                <span role="cell">@target</span>
+            </div>
+        }
+    </div>
+    <p class="hint">
+        So <strong>99 rolls does not reach 256 bits</strong>, by a tenth of a bit, with a perfect
+        die. It is a vendor rounding, not a sufficiency proof, and this app kept the minimum only
+        so a seed already made with 99 rolls can still be reproduced here. For a new seed roll
+        <strong>60</strong> or <strong>111</strong>.
+    </p>
+    <p class="hint">
+        Bias is cheap on the average measure and expensive on the floor: that same lopsided die
+        costs about half a bit of Shannon entropy across fifty rolls, which is the "fraction of a
+        bit" figure people quote, while costing thirteen bits of min-entropy. Real attack cost sits
+        between the two columns. Rolling past the minimum settles the question either way.
+    </p>
+    <p class="hint">
+        Testing a die is worth doing, but do it <strong>before</strong> the ceremony, with a few
+        hundred rolls you then throw away. The chi-squared worksheet in the
+        <code>seed-generation</code> repository is built for exactly that.
     </p>
     <p class="hint">
         <strong>Never re-roll a log because it looks wrong.</strong> If a sequence looks too
@@ -511,6 +562,17 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
 
     static readonly IReadOnlyList<int> Faces = [1, 2, 3, 4, 5, 6];
 
+    // The rows of the entropy table: the two vendor minimums and the two recommendations, each
+    // against the target it is meant to clear. Built from RollEntropy rather than typed out, so
+    // the table and the counter can never quote different numbers.
+    static readonly IReadOnlyList<(int Count, int Target, string Label)> EntropyRows =
+    [
+        (DiceRolls.MinimumRollsFor(WordCount.Twelve), RollEntropy.TargetBitsFor(WordCount.Twelve), "(12-word minimum)"),
+        (RollEntropy.RecommendedRollsFor(WordCount.Twelve), RollEntropy.TargetBitsFor(WordCount.Twelve), "(12-word recommended)"),
+        (DiceRolls.MinimumRollsFor(WordCount.TwentyFour), RollEntropy.TargetBitsFor(WordCount.TwentyFour), "(24-word minimum)"),
+        (RollEntropy.RecommendedRollsFor(WordCount.TwentyFour), RollEntropy.TargetBitsFor(WordCount.TwentyFour), "(24-word recommended)"),
+    ];
+
     /// <summary>
     /// Appends one roll. The value comes from the button the user pressed after reading a
     /// physical die; nothing here chooses it.
@@ -586,41 +648,89 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
     // presents it.
     bool NothingRecordedYet => rolls.Length == 0;
 
+    // THE COUNTER TARGETS THE RECOMMENDED COUNT, NOT THE VENDOR MINIMUM.
+    // ==================================================================
+    // The common use of this app is making a new seed and then checking it against a second
+    // implementation, so the number the counter drives you toward is the one a new seed should
+    // have: 60 rolls for 12 words, 111 for 24. See RollEntropy for where those come from.
+    //
+    // Derive still unlocks at the vendor minimum, 50 and 99, because reproducing a device's
+    // 50-roll seed is the other thing this app is for and gating it would turn away exactly the
+    // people the 2026 Coldcard advisory sent here. So the minimum is a floor on what is possible
+    // and the recommendation is a target on screen, and the note says which is which.
+    int RecommendedRolls => RollEntropy.RecommendedRollsFor(wordCount);
+
     string CounterClass =>
         NothingRecordedYet ? "counter-under"
-        : RollCount == DiceRolls.MinimumRollsFor(wordCount) ? "counter-exact"
-        : RollCount > DiceRolls.MinimumRollsFor(wordCount) ? "counter-over"
+        : RollCount == RecommendedRolls ? "counter-exact"
+        : RollCount > RecommendedRolls ? "counter-over"
+        // Past the vendor floor but short of the recommendation: derivable, not yet what a new
+        // seed wants. Amber rather than green says that without blocking anything.
+        : RollCount >= DiceRolls.MinimumRollsFor(wordCount) ? "counter-over"
         : "counter-under";
+
+    /// <summary>
+    /// A result derived from fewer rolls than a new seed should have. Not an error: the count is
+    /// above the vendor minimum or nothing would have derived at all. It is shown with the result
+    /// rather than as a confirmation before it, because a dialog you click through to reach what
+    /// you came for is a dialog nobody reads, while a line sitting next to the words stays there
+    /// while they are written down.
+    /// </summary>
+    bool ShortOfRecommended =>
+        (derivation is not null || backupKey is not null) && RollCount < RecommendedRolls;
+
+    string RecommendationWarning
+    {
+        get
+        {
+            var minimum = DiceRolls.MinimumRollsFor(wordCount);
+            var target = RollEntropy.TargetBitsFor(wordCount);
+            var thing = mode == DerivationMode.BackupKey ? "key" : "seed";
+
+            var reproducing = $"Derived from {RollCount} rolls. If you are reproducing a {minimum}-roll {thing} that already exists, this is right and you should not add rolls.";
+
+            var shortfall = RollEntropy.MinimumFallsShortFor(wordCount)
+                ? $"{minimum} fair rolls carry {RollEntropy.FairBits(minimum):0.0} bits and the target is {target}, so the vendor minimum does not reach it even with perfect dice."
+                : $"{RollCount} fair rolls carry {RollEntropy.FairBits(RollCount):0.0} bits against a target of {target}, and on the conservative measure a die with one face at a fifth carries only {RollEntropy.PessimisticBits(RollCount):0.0}.";
+
+            return $"{reproducing} If this is a new {thing}, roll {RecommendedRolls} instead: {shortfall}";
+        }
+    }
 
     string CounterNote
     {
         get
         {
             var minimum = DiceRolls.MinimumRollsFor(wordCount);
+            var target = RollEntropy.TargetBitsFor(wordCount);
+            var recommended = RecommendedRolls;
 
-            var entropyBits = (int)wordCount == 12 ? 128 : 256;
+            var thing = mode == DerivationMode.BackupKey ? $"{target}-bit key" : $"{(int)wordCount}-word seed";
 
-            if (mode == DerivationMode.BackupKey)
-                // The key mode note drops the device line, because there is no device to enter
-                // these rolls on, and says what a longer log does and does not buy in the same
-                // terms: the key is 32 bytes at every length.
-                return NothingRecordedYet ? $"Roll a real die and press the face you rolled: {minimum} rolls for a {entropyBits}-bit key."
-                    : RollCount == minimum ? "Exactly the minimum."
-                    : RollCount > minimum ? $"{RollCount - minimum} above the minimum. All {RollCount} rolls are hashed. The key is 32 bytes at any length and this one carries {entropyBits} bits; the extra rolls cover you if your dice are not perfectly fair."
-                    : $"{minimum - RollCount} more to go.";
+            if (NothingRecordedYet)
+                return $"Roll a real die and press the face you rolled: {recommended} rolls for a new {thing}.";
 
-            return NothingRecordedYet ? $"Roll a real die and press the face you rolled: {minimum} rolls for {(int)wordCount} words."
-                : RollCount == minimum ? "Exactly the minimum. This is what the device expects."
-                // Being above the minimum is fine and nothing is discarded, but it does not
-                // buy a stronger seed: the entropy is a truncation of SHA-256, so the result
-                // is fixed at 128 or 256 bits however long the log is. What extra rolls do buy
-                // is margin against dice that are not perfectly fair, since the vendor minimum
-                // clears the target by very little (50 fair rolls is 129.25 bits against 128).
-                // The device warning matters more than the arithmetic: a log that differs from
-                // the one entered on the hardware wallet produces a completely different seed,
-                // which looks exactly like the device ignoring the dice.
-                : RollCount > minimum ? $"{RollCount - minimum} above the minimum. All {RollCount} rolls are hashed. This does not make the seed stronger, which is fixed at {entropyBits} bits; it covers you if your dice are not perfectly fair. Enter these same {RollCount} rolls on your device, or the seeds will not match."
-                : $"{minimum - RollCount} more to go.";
+            if (RollCount < minimum)
+                return $"{minimum - RollCount} more before this can derive at all, {recommended - RollCount} more for the {recommended} a new {thing} should have.";
+
+            if (RollCount < recommended)
+                // The honest statement of what the vendor minimum buys. At 24 words it does not
+                // even reach the target on perfect dice, which is the fact this copy exists for.
+                return RollEntropy.MinimumFallsShortFor(wordCount)
+                    ? $"Enough to reproduce a device's {minimum}-roll seed. Not enough for a new one: {minimum} fair rolls carry {RollEntropy.FairBits(minimum):0.0} bits and the target is {target}, so the vendor minimum does not reach it even with perfect dice. {recommended - RollCount} more for {recommended}."
+                    : $"Enough to reproduce a device's {minimum}-roll seed, and thin for a new one: {minimum} fair rolls carry {RollEntropy.FairBits(minimum):0.0} bits against a target of {target}, and dice that are slightly unfair carry less. {recommended - RollCount} more for {recommended}.";
+
+            if (RollCount == recommended)
+                return $"At {recommended}. That clears {target} bits even if one face of your die comes up a fifth of the time, which is worse than real dice are.";
+
+            return mode == DerivationMode.BackupKey
+                ? $"{RollCount - recommended} above {recommended}. All {RollCount} rolls are hashed, and the key is 32 bytes at any length."
+                // Nothing is discarded above the recommendation, and it does not raise the seed's
+                // strength either: the entropy is a truncation of SHA-256, fixed at the target
+                // however long the log is. The device warning is the part that bites, because a
+                // log differing from the one entered on the hardware wallet gives a completely
+                // different seed and looks exactly like the device ignoring the dice.
+                : $"{RollCount - recommended} above {recommended}. All {RollCount} rolls are hashed. The seed stays {target} bits; the extra rolls are margin against unfair dice. If you are also entering these on a device, enter all {RollCount} or the seeds will not match.";
         }
     }
 
