@@ -1,0 +1,31 @@
+<!-- The favicon: a d6 showing five, matching the AppImage's icon so the browser tab and the
+     desktop window are recognisably one application.
+
+     SVG rather than PNG on purpose. This repository's claim is that you can read what you are
+     about to trust with a key, and that should hold for every file it ships, including the ones
+     that are only decoration. A PNG is a binary blob a reviewer skips; this is seven shapes and
+     two colours, and the colours are the app's own background and ink tokens from app.css.
+
+     No external reference, no font, no filter, no script. It renders with the network cable out,
+     which is the requirement every other file here meets.
+
+     Geometry: a 64 unit square. The face is inset 6 units with a 12 unit corner radius, and the
+     pips sit on a 3x3 grid at 20, 32 and 44 with a radius of 5. That radius is deliberately
+     generous: at a 16 pixel tab the pips are the only thing distinguishing this from a plain
+     rounded square, so they have to survive being scaled down by a factor of four.
+
+     Careful with comments in here. An SVG is XML, and an XML comment may not contain two hyphens
+     in a row, so writing a CSS custom property name like the ones in app.css makes the whole file
+     unparseable and the icon silently does not render. That happened; hence this note. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img"
+     aria-label="A six-sided die showing five">
+  <rect width="64" height="64" fill="#14161a"/>
+  <rect x="6" y="6" width="52" height="52" rx="12" fill="#e6e8ec"/>
+  <g fill="#14161a">
+    <circle cx="20" cy="20" r="5"/>
+    <circle cx="44" cy="20" r="5"/>
+    <circle cx="32" cy="32" r="5"/>
+    <circle cx="20" cy="44" r="5"/>
+    <circle cx="44" cy="44" r="5"/>
+  </g>
+</svg>

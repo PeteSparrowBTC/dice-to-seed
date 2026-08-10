@@ -26,10 +26,18 @@
 }
 else
 {
+    @* Loopback is necessary and not sufficient: it means nobody swapped the files on you in
+       transit, and says nothing about the machine. So this states the requirement rather than
+       congratulating the reader on where the page came from. Tails is not a recommendation here:
+       the roll log is the seed in plaintext, and an ordinary operating system keeps things, indexes
+       things and may already be compromised in ways you cannot see. *@
     <div class="banner">
-        <strong>Served from @host.</strong>
-        Intended use is an offline Tails session with the network disconnected. Nothing is
-        stored, sent or copied: no local storage, no cookies, no network call of any kind.
+        <strong>Served from @host. Use this on Tails, with the network off, and nowhere else.</strong>
+        Your rolls are your seed in plain text before any hashing, so the machine decides whether
+        this is safe, not the app. Tails keeps nothing: it runs in RAM and forgets everything when
+        you shut down. An ordinary computer does the opposite, and cannot tell you whether it is
+        already compromised. Nothing here is stored, sent or copied: no local storage, no cookies,
+        no network call of any kind.
     </div>
 }
 
@@ -103,8 +111,9 @@ else
         <text>
             Converts a log of six-sided dice rolls into the 32-byte key that
             <code>slip39-backup</code> encrypts with and splits into shares. It is the SHA-256 of
-            your rolls and nothing else, so <code>printf '%s' "$ROLLS" | sha256sum</code>
-            reproduces it and you can confirm the tool used the dice you rolled.
+            your rolls and nothing else, so hashing the rolls in a terminal reproduces it and you
+            can confirm the tool used the dice you rolled. The runbook below has the exact command,
+            with your rolls already in it.
             <strong>These must be fresh rolls, not the ones behind your seed phrase.</strong> That
             rule is not a formality: on a 24-word seed the BIP-39 entropy is that same hash, byte
             for byte, so one log used twice makes your backup key derivable from the wallet it is
@@ -255,8 +264,13 @@ else
             }
         </ol>
         <p class="hint">
-            Write these on paper. There is no copy button, and that is deliberate: the app
-            cannot tell whether this machine is the amnesic offline one you meant to use.
+            @* The old justification was that the app cannot tell whether this machine is the
+               amnesic offline one. That reasoning is retired: the requirement is Tails, stated at
+               the top of the page, and hedging about where you might be undercuts it. The reason
+               to write on paper is simpler and does not depend on the machine at all. *@
+            Write these on paper, now, and check them against the screen before you leave the page.
+            Paper is what survives the session; Tails forgets everything when it shuts down, and
+            that is what you chose it for.
         </p>
     </div>
 }
@@ -291,9 +305,12 @@ else
         <p class="hint">
             Type this in alongside the value above. It confirms you transcribed the value you
             actually rolled rather than one from an earlier session, which nothing downstream can
-            tell on its own. The code is the first four characters of
-            <code>printf '%s' "$K_HEX" | sha256sum</code>, so it can be checked with a shell and
-            nothing else.
+            tell on its own. It is the first four characters of the hash of the key above, so a
+            shell confirms it with nothing else installed:
+        </p>
+        <pre class="mono-block">printf '%s' '@backupKey.KeyHex' | sha256sum</pre>
+        <p class="hint">
+            The first four characters of that output are the check code.
         </p>
 
         @* The one thing this line must keep doing is separating "not a seed phrase" from "does
@@ -307,7 +324,7 @@ else
         <p class="hint">
             Write it on paper only for as long as it takes to type it in, then destroy that
             paper along with the roll log. Both are the key in plain text, and a key that
-            survives on paper defeats the shares entirely. There is no copy button here either.
+            survives on paper defeats the shares entirely.
         </p>
     </div>
 }
@@ -381,53 +398,106 @@ else
 <details class="runbook">
     <summary>The verification runbook</summary>
 
-    <div class="step-label">The hash, with two independent programs</div>
-    <pre class="mono-block">printf '%s' "$ROLLS" | sha256sum
-printf '%s' "$ROLLS" | openssl sha256</pre>
+    @* EVERY COMMAND HERE CARRIES YOUR ACTUAL ROLLS, NOT A $ROLLS PLACEHOLDER.
+       =====================================================================
+       It used to use $ROLLS in five commands and define it in none. An unset variable expands to
+       nothing, so anyone following it hashed the empty string and got e3b0c442...b855 from every
+       command: a plausible hash matching nothing, whose obvious reading is that the app is wrong.
+       That is the false alarm this page exists to prevent, produced by the page itself.
+
+       Adding a "ROLLS=..." line first would have fixed it by instruction. Substituting the real
+       log fixes it by construction: there is no variable to forget, and the line can go straight
+       into a terminal. The log is on screen a few inches above anyway, so nothing is revealed
+       here that the page was not already showing. *@
+    <div class="step-label">Step 2 only: the hash, with two independent programs</div>
+    <pre class="mono-block">printf '%s' '@RollsForCommands' | sha256sum
+printf '%s' '@RollsForCommands' | openssl sha256</pre>
+    <p class="hint">
+        <strong>These print the hash and nothing else. They do not produce words</strong>, because
+        neither program knows anything about BIP-39. What they check is step 2 above, which is the
+        step where a wrong preimage shows up: a stray character, a separator, a trailing newline.
+        Get the same hash and your rolls are being hashed identically; the words then follow from
+        ordinary BIP-39, and the tools further down are what check that part.
+    </p>
+    <p class="hint">
+        Compare the hex and ignore the rest of the line. <code>sha256sum</code> appends
+        <code>&nbsp;-</code> for standard input and <code>openssl</code> prints
+        <code>SHA2-256(stdin)=</code> in front.
+    </p>
     <p class="hint">
         <code>printf '%s'</code>, never <code>echo</code>. A plain echo appends a newline,
         hashes a different string, and yields a different wallet.
     </p>
 
-    @* Everything in this panel has to survive one constraint: on Tails you cannot install
-       anything. It is amnesic and the network is off. So "pip install" is not a step, it is a
-       reason a tool is unusable. Only single files you carried on the stick count. *@
-    <div class="step-label">Carry these on the stick: nothing here installs anything</div>
+    @* ORDERED BY WHAT A NON-TECHNICAL READER CAN ACTUALLY DO.
+       ======================================================
+       It used to lead with the mnemonic package: pip3 download, unzip a wheel, set PYTHONPATH,
+       paste a five-line Python program. That is the hardest option on the page and it was first,
+       so anyone who is not comfortable in a terminal met a wall before reaching the option that
+       needs no terminal at all. One check that gets done beats three that do not.
+
+       Everything here has to survive one constraint: on Tails you cannot install anything, so
+       "pip install" is not a step, it is a reason a tool is unusable. Every option is a file you
+       carried on the stick. *@
+    <div class="step-label">Pick one. Any of them is worth more than none</div>
     <p class="hint">
-        Tails is amnesic and you will have the network off, so <code>pip install</code> is not
-        available to you. Every option below is a file you copy onto the USB stick beforehand
-        and run in place.
+        Carry at least one of these on the stick before you boot, because Tails is amnesic and the
+        network is off, so nothing can be downloaded or installed once you are there. They are
+        listed easiest first.
     </p>
 
-    <div class="step-label">A BIP-39 library, carried rather than installed</div>
-    <pre class="mono-block"># beforehand, on a networked machine:
-pip3 download mnemonic --no-deps -d lib &amp;&amp; cd lib &amp;&amp; unzip mnemonic-*.whl
+    <div class="step-label">1. No terminal: Ian Coleman's page</div>
+    <p class="hint">
+        One HTML file, opened by double-clicking it. Type your rolls into the Entropy box, set two
+        dropdowns, and read the words. If you do only one cross-check, do this one. The settings
+        are the next section, and they matter more than anything else on this page.
+    </p>
 
-# on Tails, with the lib folder on your stick:
-PYTHONPATH=lib python3 -c "
+    <div class="step-label">2. One command: Coldcard's rolls12.py</div>
+    <pre class="mono-block">echo '@RollsForCommands' | python3 rolls12.py</pre>
+    <p class="hint">
+        One file, from Coldcard's verification docs. It imports nothing but <code>hashlib</code>
+        and carries the wordlist inside it, so it needs no setup at all: copy it to the stick, open
+        a terminal in the folder you copied it to, and run that line. It prints the truncated hash
+        and the words.
+    </p>
+    <p class="hint">
+        Coldcard is the vendor whose entropy defect this app exists in response to. That defect was
+        in firmware, not in this script, which is short enough to read end to end before you trust
+        it. Read it, then use it.
+    </p>
+
+    <div class="step-label">3. If you are comfortable in a terminal: Trezor's reference library</div>
+    <p class="hint">
+        This is the implementation the official BIP-39 vectors are published alongside, so it is the
+        strongest independent check available offline. It is also the most work. Four steps
+        beforehand, on your ordinary networked computer:
+    </p>
+    <ol class="hint">
+        <li>Open a terminal and run <code>pip3 download mnemonic --no-deps -d lib</code>. That
+            downloads one file into a new folder called <code>lib</code> and installs nothing.</li>
+        <li>Run <code>cd lib</code> then <code>unzip mnemonic-*.whl</code>. That unpacks it, and you
+            now have a <code>mnemonic</code> folder inside <code>lib</code>.</li>
+        <li>Copy the whole <code>lib</code> folder onto the USB stick, next to the AppImage.</li>
+        <li>On Tails, copy <code>lib</code> from the stick into your Home folder, the same way you
+            copied the AppImage.</li>
+    </ol>
+    <p class="hint">
+        Then open a terminal in your Home folder and paste this in one go, including the closing
+        quote on the last line:
+    </p>
+    <pre class="mono-block">PYTHONPATH=lib python3 -c "
 import hashlib
 from mnemonic import Mnemonic
-e = hashlib.sha256('$ROLLS'.encode()).digest()[:16]   # 32 for 24 words
+e = hashlib.sha256('@RollsForCommands'.encode()).digest()[:@EntropyByteCount]
 print(e.hex())
 print(Mnemonic('english').to_mnemonic(e))"</pre>
     <p class="hint">
-        <code>mnemonic</code> is Trezor's reference implementation, the one the official BIP-39
-        vectors are published alongside. It is pure Python, so unzipping the wheel and pointing
-        <code>PYTHONPATH</code> at it is enough: nothing is installed and nothing touches the
-        system. The two lines that matter are visible: SHA-256 of the rolls, truncated to 16
-        bytes, handed to a library that knows nothing about dice. If this and the app disagree,
-        the app is wrong.
-    </p>
-
-    <div class="step-label">A single self-contained script</div>
-    <pre class="mono-block">echo "$ROLLS" | python3 rolls12.py</pre>
-    <p class="hint">
-        Coldcard's <code>rolls12.py</code>, from their verification docs. It is one file, it
-        imports nothing but <code>hashlib</code>, and it carries the wordlist inside it, which
-        makes it the most portable cross-check there is: copy it to the stick and run it.
-        Coldcard is the vendor whose entropy defect this app exists in response to, and that
-        is worth remembering, but the defect was in firmware and not in this script, which is
-        short enough to read end to end before you trust it. Read it, then use it.
+        It prints the entropy and then the words. Nothing is installed and nothing touches the
+        system: pointing <code>PYTHONPATH</code> at the folder is enough, because the package is
+        pure Python. The two lines that matter are in plain sight, SHA-256 of the rolls truncated to
+        @EntropyByteCount bytes, handed to a library that knows nothing about dice. If this and the
+        app disagree, the app is wrong.
     </p>
 
     <div class="step-label">Not usable on Tails: SeedSigner's own tool</div>
@@ -439,11 +509,25 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
         ceremony around.
     </p>
 
-    <div class="step-label">Ian Coleman's offline page (bip39-standalone.html)</div>
+    <div class="step-label">Ian Coleman's page: the two settings that decide everything</div>
     <p class="hint">
         The most portable check of all: one file, opens from <code>file://</code>, so it needs
         no server, no proxy exception and no Python. It also has the two worst settings traps,
         both verified against v0.5.6 rather than taken on trust.
+    </p>
+    @* No hyperlink: this page makes no outbound request and an anchor invites a click on a machine
+       that is supposed to be offline. The address is written out so it can be typed on the
+       networked machine where the download belongs. *@
+    <p class="hint">
+        Download <code>bip39-standalone.html</code> from the releases page,
+        <code>github.com/iancoleman/bip39/releases</code>, before you boot Tails. The current
+        release is 0.5.6, which is the version the settings notes below were checked against.
+    </p>
+    <p class="hint">
+        That release also carries <code>signature.txt.asc</code>. You are about to check a seed
+        against this file, so check the file first: verify the signature on the networked machine
+        while you still can. A cross-check you have not verified is a second thing to trust, not a
+        second opinion.
     </p>
     <p class="hint">
         Set <strong>Mnemonic Length to 12 or 24, never "raw"</strong>. Only the numeric lengths
@@ -490,7 +574,7 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
     <p class="hint">
         Coldcard's <code>rolls12.py</code>, from its verification docs, is still a useful
         second opinion despite the above: it is a short script you can read in full, and the
-        defect was in firmware, not in it. <code>echo "$ROLLS" | python3 rolls12.py</code>
+        defect was in firmware, not in it. The command is in the runbook above, option 2.
     </p>
 
     <div class="step-label">Do not do this on a networked machine</div>
@@ -673,6 +757,17 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
     Result<DiceRollLog> ParsedLog => DiceRolls.Read(rolls);
 
     int RollCount => rolls.Length;
+
+    // The runbook's commands carry the log actually on screen, so a line can go straight into a
+    // terminal with nothing to substitute. Before any rolls exist they name what belongs there
+    // rather than showing a made-up log, which someone could run and then wonder why the words
+    // disagree with the app.
+    string RollsForCommands => LivePreimage.Length > 0 ? LivePreimage : "YOUR-ROLLS-GO-HERE";
+
+    // 16 for twelve words, 32 for twenty-four. The runbook's Python slices to this, and stating it
+    // rather than hardcoding 16 with a comment about 24 removes the one edit a reader could get
+    // wrong while copying.
+    int EntropyByteCount => (int)DiceRolls.StrengthFor(wordCount) / 8;
 
     string LivePreimage => ParsedLog.IsSuccess ? ParsedLog.Value.Preimage : string.Empty;
 
