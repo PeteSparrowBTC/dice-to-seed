@@ -57,7 +57,14 @@ jobs:
 
       - name: Check the published app for external references
         run: |
+          # An XML namespace name is an identifier, not an address. Nothing ever fetches
+          # http://www.w3.org/2000/svg, and favicon.svg cannot leave it out and still parse as SVG.
+          # So xmlns values are stripped before the check rather than the whole matching line being
+          # excused, which would let a genuine external URL through if it shared a line with a
+          # namespace declaration.
           if grep -rIEn "https?://" publish/wwwroot --exclude-dir=_framework \
+               | sed -E 's/xmlns(:[a-zA-Z0-9]+)?="https?:\/\/[^"]*"//g' \
+               | grep -E "https?://" \
                | grep -vE "127\.0\.0\.1|localhost"; then
             echo "::error::The published app references an external origin."
             exit 1
