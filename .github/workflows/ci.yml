@@ -78,8 +78,9 @@ jobs:
           fi
           echo "No external references."
 
-      # Uploaded so a reviewer can download exactly what would go on a USB stick and check it
-      # themselves, rather than taking the build's word for it.
+      # A per-run artifact for review, not a release asset: it is the static build the AppImage
+      # and the Pages demo are both made from, so a reviewer can look at what those contain
+      # without extracting an AppImage. What goes on a USB stick is the AppImage.
       - name: Upload the publishable output
         uses: actions/upload-artifact@v4
         with:

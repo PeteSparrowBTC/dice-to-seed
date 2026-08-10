@@ -144,12 +144,28 @@ These are not style preferences. Each one exists because this code generates pri
    `localStorage`, no `sessionStorage`, no cookies, no analytics, no external fonts or CDNs.
 7. **The wordlist is verified at runtime** against its known SHA-256, and the app refuses to
    derive anything if the check fails.
-8. **Tails first: the shipped artifact is a download, not a website.** The intended way to
-   run this app is to publish it, copy `wwwroot` to a USB stick, boot Tails with networking
-   off, serve it with `python3 -m http.server 9876 --bind 127.0.0.1`, and open
-   `http://127.0.0.1:9876` in LibreWolf. A local server is required because Blazor
-   WebAssembly will not load over `file://`; there is no file-and-double-click option, and
-   any instruction that implies one is wrong.
+8. **Tails first: the shipped artifact is a download, not a website.** The intended way to run
+   this app is to download the AppImage, check it against `SHA256SUMS`, copy it to a USB stick,
+   boot Tails with networking off, copy it from the stick into the Home folder, mark it
+   executable in Properties and run it from the file manager. One file, no server, no port, no
+   browser.
+
+   Copying it off the stick is not optional: removable media is frequently mounted `noexec`. Nor
+   is the executable bit, which does not survive a FAT or exFAT filesystem, and without it the
+   run entry does not appear in the menu at all and a double-click does nothing and says nothing.
+
+   A `wwwroot` zip used to ship too, for serving the same app with
+   `python3 -m http.server 9876 --bind 127.0.0.1` and opening it in LibreWolf. It is gone. It was
+   a second route to the same place carrying its own instructions, its own port to verify and its
+   own LibreWolf-not-Tor-Browser proxy caveat, and it was justified as the artifact "a person can
+   read", which oversold it: only the markup and the stylesheet are readable, since the derivation
+   is compiled to WebAssembly in either artifact. Reading the app means reading the source, and
+   the Pages demo covers looking at it in a browser. Do not reintroduce a browser route without a
+   reason the AppImage cannot serve.
+
+   Blazor WebAssembly still cannot load over `file://`, so there is no file-and-double-click
+   option for the static build and any instruction implying one is wrong. That is a fact about
+   the static files, not about the AppImage, which carries its own WebView.
 
    If a build is ever served from anywhere other than `127.0.0.1` or `localhost`, it must
    say so at the top of the page, before the input, in the manner of the sibling

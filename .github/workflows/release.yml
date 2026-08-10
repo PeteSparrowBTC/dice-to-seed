@@ -6,12 +6,18 @@
 #
 # What a release contains, and why each part:
 #
-#   dice-to-seed-x86_64.AppImage   the Tails route. One file, no server, no port.
-#   dice-to-seed-wwwroot.zip       the static site. This is the artifact to READ: it is the
-#                                  whole app, in files a person can open, and the AppImage is
-#                                  the same thing with a window around it.
+#   dice-to-seed-x86_64.AppImage   the whole app. One file, no server, no port, no browser to
+#                                  configure. Verified to run on Tails from the file manager.
 #   SHA256SUMS                     because an AppImage is an opaque blob and a checksum is the
 #                                  only thing a downloader can check it against.
+#
+# A dice-to-seed-wwwroot.zip used to ship alongside, for running the same app behind
+# `python3 -m http.server` in a browser. It was dropped once the AppImage was confirmed working
+# on Tails, because it was a second route to the same place with its own instructions, its own
+# LibreWolf-not-Tor-Browser proxy caveat and its own port to check. It was also described as the
+# artifact "a person can read", which oversold it: the UI and the stylesheet are readable, and
+# the derivation is compiled into WebAssembly either way. Reading the app means reading the
+# source, and the GitHub Pages demo covers looking at it in a browser.
 
 name: release
 
@@ -88,16 +94,14 @@ jobs:
 
       - name: Assemble the release files
         run: |
-          (cd publish/wwwroot && zip -qr ../../dice-to-seed-wwwroot.zip .)
-          sha256sum dice-to-seed-x86_64.AppImage dice-to-seed-wwwroot.zip | tee SHA256SUMS
-          ls -lh dice-to-seed-x86_64.AppImage dice-to-seed-wwwroot.zip
+          sha256sum dice-to-seed-x86_64.AppImage | tee SHA256SUMS
+          ls -lh dice-to-seed-x86_64.AppImage
 
       - name: Publish the release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dice-to-seed-x86_64.AppImage
-            dice-to-seed-wwwroot.zip
             SHA256SUMS
           body: |
             Converts a log of six-sided dice rolls into a BIP-39 seed phrase, offline, as a
@@ -109,9 +113,10 @@ jobs:
             sha256sum -c SHA256SUMS
             ```
 
-            An AppImage is an opaque blob. The checksum is the only thing you can check it
-            against, and `dice-to-seed-wwwroot.zip` is the same application in files you can
-            read.
+            An AppImage is an opaque blob and the checksum is the only thing you can check it
+            against. To read the app rather than run it, read the source: the conversion is a
+            few hundred lines and the suite carries the published Coldcard and SeedSigner
+            vectors. There is also a demo build in the browser, linked from the README.
 
             ## On Tails
 

@@ -74,14 +74,20 @@ dependency. In order of likelihood:
    along. `AppRun` now warns rather than blocking, and CI prints the real `NEEDED` entries on
    every build. A guard that can produce a false negative is worse than no guard.
 
-## Browser notes
+## Browser notes, kept for a route no longer shipped
 
-- **LibreWolf, not Tor Browser**, for the local server route. Tor Browser on Tails sends
-  `127.0.0.1` through the Tor proxy and refuses the connection. It can be fixed under
-  `about:preferences`, Network Settings, "No Proxy for", but the setting does not reliably
-  survive. Carry the LibreWolf AppImage on the stick, downloaded before booting Tails.
+The `wwwroot` zip and the local-server route were dropped once the AppImage was confirmed
+working on Tails. These notes stay because they are what made that route awkward, and they are
+the cost of bringing it back.
+
+- **LibreWolf, not Tor Browser.** Tor Browser on Tails sends `127.0.0.1` through the Tor proxy
+  and refuses the connection. It can be fixed under `about:preferences`, Network Settings, "No
+  Proxy for", but the setting does not reliably survive, and diagnosing a proxy at the moment you
+  are about to generate a key is a poor use of attention. It also meant carrying a second
+  AppImage on the stick, downloaded before booting.
 - `file://` needs no proxy exception, which is why a single-file HTML build would sidestep the
-  browser question entirely if the desktop route is ever abandoned.
+  browser question entirely if the desktop route is ever abandoned. Blazor WebAssembly cannot
+  load over `file://`, so that would mean a different build, not a different instruction.
 
 ---
 

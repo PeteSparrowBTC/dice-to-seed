@@ -11,8 +11,7 @@ Tails is amnesic and you will be running it with the network off, so **you canno
 anything.** Everything has to be on the stick before you boot. Assemble this list on a
 networked machine first:
 
-- A USB stick with the published app on it (see "Publishing", below)
-- The LibreWolf AppImage on the same stick, downloaded **before** you boot Tails
+- A USB stick with the AppImage on it, downloaded and checked **before** you boot Tails
 - Tails, booted, with networking off
 - Your dice, and paper
 
@@ -35,27 +34,14 @@ run in place, with nothing to install:
 SeedSigner's own `tools/mnemonic.py` needs `pip install` of it and of `embit`, so it is a
 check to run before the ceremony on a networked machine, not on Tails.
 
-## Publishing (on an ordinary machine, with the .NET SDK)
+## Running it
+
+One file, no server, no port, no browser to configure. Download the AppImage from the
+[releases page](https://github.com/PeteSparrowBTC/dice-to-seed/releases) along with
+`SHA256SUMS`, check it, and put it on the stick:
 
 ```bash
-cd DiceToSeed.Web
-dotnet publish -c Release -o publish
-```
-
-The app is then `publish/wwwroot`. Copy that folder to the USB stick and name it
-`dice-to-seed`. It is entirely static files: no server, no runtime to install, nothing to
-configure.
-
-Download the LibreWolf AppImage from librewolf.net and put it on the stick as well. Do this
-now, because on Tails you will have networking off and cannot fetch it.
-
-## The short way: the AppImage
-
-One file, no server, no port, no browser to configure. Download it from the latest CI run or
-release, verify it, and put it on the stick:
-
-```bash
-sha256sum -c dice-to-seed-x86_64.AppImage.sha256
+sha256sum -c SHA256SUMS
 ```
 
 On Tails, no terminal is needed:
@@ -85,52 +71,8 @@ It needs nothing installed. Everything it links against ships with Tails: WebKit
 libsoup 3 and librsvg, all confirmed in the Tails package manifest. See
 [docs/tails-platform-notes.md](docs/tails-platform-notes.md).
 
-The rest of this document is the browser route, which does the same thing with a local web
-server. Both run the identical app; the AppImage merely carries a window with it.
-
-## The browser route (on Tails, networking off)
-
-Open a terminal.
-
-```bash
-cd /media/amnesia/<YOUR_USB>/dice-to-seed
-chmod +x start-server.sh
-./start-server.sh
-```
-
-That runs `python3 -m http.server 9876 --bind 127.0.0.1`. Confirm nothing is listening
-anywhere else:
-
-```bash
-ss -tlnp | grep 9876
-```
-
-Expect `127.0.0.1:9876` and nothing else. If you see `0.0.0.0:9876`, stop: the `--bind` did
-not take effect and the machine you are about to type a seed into is answering the network.
-
-In another terminal, start the browser:
-
-```bash
-cd /media/amnesia/<YOUR_USB>
-chmod +x LibreWolf.x86_64.AppImage
-./LibreWolf.x86_64.AppImage
-```
-
-Go to `http://127.0.0.1:9876`.
-
-### Why LibreWolf and not Tor Browser
-
-Tor Browser on Tails routes `127.0.0.1` through the Tor proxy, so the local connection is
-refused and the page never loads. It can be fixed (`about:preferences`, Network Settings,
-"No Proxy for", add `127.0.0.1, localhost`) but the setting does not reliably survive, and
-diagnosing a proxy at the point where you are about to generate a key is a poor use of your
-attention. LibreWolf works with loopback out of the box.
-
-### Why a web server at all
-
-Blazor WebAssembly does not load over `file://`. The browser needs real HTTP for the wasm
-MIME type, for module loading and for streaming compilation. Opening `index.html` directly
-will fail, and that is not something to work around.
+That is the whole of it. There is no browser to install, no port to check and no proxy setting
+to diagnose.
 
 ## Using it
 
@@ -230,8 +172,10 @@ which hands the provenance back to the device you are trying to check.
 
 ## When you are done
 
-Press Ctrl+C in the terminal running the server. Close the browser. Shut Tails down; it is
-RAM-only and everything goes with it. Your seed exists on paper and nowhere else.
+Close the app and shut Tails down. It is RAM-only, so everything goes with it, including the
+copy of the AppImage you put in your Home folder. Your seed exists on paper and nowhere else.
+
+Destroy the roll log. It is the seed in plain text, before any hashing.
 
 ## What this app never does
 

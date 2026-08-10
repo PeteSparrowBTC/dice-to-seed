@@ -67,13 +67,14 @@ review, not from a branch.
 
 ## What a release contains
 
-- `dice-to-seed-x86_64.AppImage`: the Tails route, one file
-- `dice-to-seed-wwwroot.zip`: the same application in files a person can read
+- `dice-to-seed-x86_64.AppImage`: the whole app, one file
 - `SHA256SUMS`
 
-The static site ships alongside the AppImage deliberately. An AppImage is an opaque blob and
-the checksum is all a downloader can check it against; the zip is the same program in a form
-that can be inspected.
+An AppImage is an opaque blob and the checksum is all a downloader can check it against. A
+`wwwroot` zip used to ship alongside it, described as the same program in a form that can be
+inspected. That claim did not hold up: the markup and the stylesheet are readable, and the
+derivation is compiled to WebAssembly in both artifacts. Reading this app means reading the
+source, and running it in a browser is what the Pages demo is for.
 
 The tests gate the release. The published vendor vectors are the reason to trust any of this,
 so a release that has not run them is not a release.
