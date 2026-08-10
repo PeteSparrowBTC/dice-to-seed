@@ -170,8 +170,7 @@ Do this only after the seed is finished and off the screen.
 3. Press Derive. You get 32 bytes of hex in numbered groups, and a four-character check code.
    There are no words here and there never will be: hex cannot be mistaken for a seed phrase.
 4. Type both into `slip39-backup`. It recomputes the check code and refuses if they disagree,
-   which is what catches a mistyped character. Without that, a wrong key encrypts perfectly well
-   and you learn about it at recovery.
+   which confirms you transcribed the value you rolled rather than one from an earlier session.
 5. Destroy the roll log and any paper you wrote the key on. Both are the key in plain text, and a
    key that survives on paper defeats the shares entirely.
 
@@ -182,9 +181,9 @@ printf '%s' "$ROLLS" | sha256sum            # the key
 printf '%s' "$K_HEX" | sha256sum | cut -c1-4  # the check code
 ```
 
-Rolling for the key is optional. It gives the key a provenance you can account for. It does not
-remove every generator from the picture: `slip39-backup` still generates the age file key itself,
-and the key you rolled only wraps it.
+Rolling for the key is optional, and here is the limit. This is the key that wraps your backup, not
+the file key inside the age format, which `slip39-backup` generates itself and which the payload is
+actually encrypted under. So it is not a claim that no generator is involved anywhere.
 
 ## Checking the result against something else
 

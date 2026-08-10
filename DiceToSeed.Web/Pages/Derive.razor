@@ -100,12 +100,15 @@ else
     else
     {
         <text>
-            Converts a log of six-sided dice rolls into the 32-byte key that encrypts your backup,
-            the value <code>slip39-backup</code> splits into shares. It is the SHA-256 of your
-            rolls and nothing else, so <code>printf '%s' "$ROLLS" | sha256sum</code> reproduces it.
-            <strong>These must be fresh rolls, not the ones behind your seed phrase.</strong> This
-            is optional: dice give the key a provenance you can account for, which is worth having
-            and is not the same as removing every generator from the picture.
+            Converts a log of six-sided dice rolls into the 32-byte key that
+            <code>slip39-backup</code> encrypts with and splits into shares. It is the SHA-256 of
+            your rolls and nothing else, so <code>printf '%s' "$ROLLS" | sha256sum</code>
+            reproduces it and you can confirm the tool used the dice you rolled.
+            <strong>These must be fresh rolls, not the ones behind your seed phrase.</strong> That
+            rule is not a formality: on a 24-word seed the BIP-39 entropy is that same hash, byte
+            for byte, so one log used twice makes your backup key derivable from the wallet it is
+            protecting. Optional, and the limit is worth knowing: this is the key that wraps your
+            backup, not the file key inside the age format, which the backup tool generates itself.
         </text>
     }
 </p>
@@ -285,14 +288,16 @@ else
         <div class="step-label">3. Check code</div>
         <div class="check-code">@backupKey.CheckCode</div>
         <p class="hint">
-            Type this into <code>slip39-backup</code> alongside the key. Every other value copied
-            by hand in this ceremony carries a checksum; a key does not, because any string is a
-            valid passphrase, so a mistyped one encrypts cleanly and is discovered at recovery.
-            The code is the first four characters of
+            Type this in alongside the value above. It confirms you transcribed the value you
+            actually rolled rather than one from an earlier session, which nothing downstream can
+            tell on its own. The code is the first four characters of
             <code>printf '%s' "$K_HEX" | sha256sum</code>, so it can be checked with a shell and
             nothing else.
         </p>
 
+        @* The one thing this line must keep doing is separating "not a seed phrase" from "does
+           nothing". It is a real key with a real job; it simply is not the thing you put in a
+           wallet. Someone who reads it as decorative will not write it down. *@
         <p class="hint hint-loud">
             <strong>This is not a seed phrase.</strong> It does not go into a wallet and it will
             not restore anything on its own. It goes into <code>slip39-backup</code>, which

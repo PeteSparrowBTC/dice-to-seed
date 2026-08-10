@@ -91,22 +91,22 @@ Full instructions, including how to check the result against other tools:
 
 If you back your seed up with
 [slip39-backup](https://github.com/PeteSparrowBTC/slip39-backup), it encrypts the seed with a
-32-byte key and splits only that key into shares. Normally the key comes from the computer's
-random number generator. This app can take it off dice instead.
+32-byte key and splits only that key into shares. Normally that key comes entirely from the
+computer's random number generator. This app can take it off dice instead.
 
 Switch to **Rolling for a backup key**. It shows 32 bytes of hex and a four-character check code,
-never words, and you type both into the backup tool. The check code is there because a key has no
-checksum of its own: any string is a valid passphrase, so a mistyped one encrypts cleanly and you
-find out at recovery.
+never words, and you type both into the backup tool. Because the key is the SHA-256 of your rolls
+and nothing else, `printf '%s' "$ROLLS" | sha256sum` reproduces it, so you can confirm the tool
+used the dice you rolled rather than taking its word for it.
 
 **Roll a fresh log.** Never the one behind your seed phrase. The key is the SHA-256 of your rolls,
-and a 24-word seed's entropy is that same hash, so one log used twice makes the key identical to
-the wallet it is meant to protect. Switching mode in the app clears your rolls for this reason.
-Roll the same number as your seed used, 60 or 111.
+and a 24-word seed's entropy is that same hash, so one log used twice makes your backup key
+derivable from the wallet it is protecting. Switching mode in the app clears your rolls for that
+reason. Roll 60 or 111, matching your seed.
 
-This is optional, and worth being plain about what it buys. Dice give the key a provenance you can
-account for. They do not remove every generator from the picture: the backup tool still generates
-the age file key itself, and the key you rolled only wraps it.
+It is optional, and worth being plain about the limit. This is the key that wraps your backup, not
+the file key inside the age format, which the backup tool generates itself and the payload is
+encrypted under. So it is not a claim that no generator is involved anywhere.
 
 ## Two mistakes to avoid
 

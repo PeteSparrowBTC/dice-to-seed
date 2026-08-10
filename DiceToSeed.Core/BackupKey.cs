@@ -30,9 +30,17 @@ public sealed record BackupKeyDerivation(
 }
 
 /// <summary>
-/// The backup key, k: the 32-byte symmetric key that encrypts the backup payload and that
-/// SLIP-39 then splits into shares. This mode exists so k can come off physical dice instead of
-/// a generator whose output nobody can check, which is the same argument the seed mode rests on.
+/// The backup key, k: the 32-byte symmetric key that a backup tool encrypts with and that SLIP-39
+/// then splits into shares. This mode exists so k can come off physical dice instead of a
+/// generator whose output nobody can check, which is the same argument the seed mode rests on.
+///
+/// k is the dice and nothing else, deliberately, and the alternative was considered and dropped.
+/// Mixing in a generated value by XOR would hedge against a biased or observed die, at the cost of
+/// making k impossible for anyone to recompute, including its owner. That trade is wrong here for
+/// the same reason it would be wrong for the seed: the one property this project will not give up
+/// is that a value can be checked against an independent implementation. Bias is dealt with the
+/// way the seed deals with it, by rolling past the minimum: see RollEntropy, where 60 rolls clear
+/// 128 bits even on the conservative measure.
 ///
 /// The convention is deliberately the one this app already uses, so nothing new has to be
 /// trusted or published:
