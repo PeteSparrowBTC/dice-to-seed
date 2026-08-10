@@ -123,6 +123,89 @@ else
     }
 </p>
 
+@* BEFORE YOU START, ABOVE THE PAD RATHER THAN BELOW IT.
+   ====================================================
+   This was at the bottom of the page, which is the wrong place for advice whose whole point is
+   that it has to be read first. Someone who scrolls to the dice and starts pressing has already
+   missed it.
+
+   The arithmetic is behind a disclosure, and that is the compromise: the full table is fifty lines
+   and would push the dice buttons off a 900 pixel window, which is what the AppImage opens at. So
+   what stays visible is the three things you can act on, and the numbers backing them are one
+   click away.
+
+   Deliberately absent, and the reason belongs here rather than anywhere else: a fairness test on
+   the rolls being used. At 50 rolls a chi-squared test has almost no power, six categories and
+   five degrees of freedom with an expected 8.33 per face, so about one honest session in twenty
+   trips the 0.05 critical value while a real bias of p=0.20 on one face goes undetected most of
+   the time. Worse, a test on the rolls about to be used invites re-rolling when it fails, which
+   conditions the seed on passing a statistical test and removes part of the output space. That
+   reduces entropy. Testing belongs before the ceremony, on rolls that are thrown away. *@
+@* Open on load, so it is read before anything is rolled, and collapsible because it is not needed
+   twice. Measured rather than guessed: with this expanded the dice pad starts at y=864 in the
+   1000x900 window the AppImage opens at, which puts the primary action below the fold. Collapsed,
+   the pad comes back up into view. Nothing here is remembered between sessions, by design, so it
+   reopens each time and that is the right default for advice with "before you start" in the name. *@
+<details class="panel prestart" open>
+    <summary><h2>Before you start</h2></summary>
+    <p class="hint">
+        <strong>Roll @RollEntropy.RecommendedRollsFor(WordCount.Twelve) times for twelve words,
+        @RollEntropy.RecommendedRollsFor(WordCount.TwentyFour) for twenty-four.</strong> The vendor
+        minimums of @DiceRolls.MinimumRollsFor(WordCount.Twelve) and
+        @DiceRolls.MinimumRollsFor(WordCount.TwentyFour) still work, so an existing seed can be
+        reproduced, but 99 does not reach 256 bits even with a perfect die.
+    </p>
+    <p class="hint">
+        <strong>Never re-roll a log because it looks wrong.</strong> Six 6s in a row is exactly as
+        likely as any other six rolls. Discarding a log for looking non-random draws your seed from a
+        smaller set than the dice offered, which is the one thing that genuinely weakens it.
+    </p>
+    <p class="hint">
+        <strong>Test a die beforehand if you want to, never with the rolls you are about to use.</strong>
+        The chi-squared worksheet in <code>seed-generation</code> is built for that.
+    </p>
+
+    <details class="runbook">
+        <summary>What your rolls are actually worth</summary>
+        @* The vendor minimums are a rounding decision and this app used to present them as though
+           they were a sufficiency proof. The 99-roll row is the uncomfortable one. Every number
+           comes from RollEntropy and is pinned by RollEntropyTests, so none of it can rot. *@
+        <p class="hint">
+            A fair d6 carries log<sub>2</sub>(6) = 2.585 bits. The second column is the conservative
+            floor: min-entropy if one face came up a fifth of the time, which is worse than real
+            dice are.
+        </p>
+        <div class="entropy-table" role="table" aria-label="Entropy by roll count">
+            <div role="row" class="entropy-head">
+                <span role="columnheader">rolls</span>
+                <span role="columnheader">fair</span>
+                <span role="columnheader">biased floor</span>
+                <span role="columnheader">against</span>
+            </div>
+            @foreach (var (count, target, label) in EntropyRows)
+            {
+                <div role="row" class="@(RollEntropy.PessimisticBits(count) < target ? "entropy-short" : null)">
+                    <span role="cell">@count @label</span>
+                    <span role="cell">@RollEntropy.FairBits(count).ToString("0.0")</span>
+                    <span role="cell">@RollEntropy.PessimisticBits(count).ToString("0.0")</span>
+                    <span role="cell">@target</span>
+                </div>
+            }
+        </div>
+        <p class="hint">
+            So <strong>99 rolls does not reach 256 bits</strong>, by a tenth of a bit, with a perfect
+            die. It is a vendor rounding, not a sufficiency proof, and the minimum is kept only so a
+            seed already made with 99 rolls can still be reproduced here.
+        </p>
+        <p class="hint">
+            Bias is cheap on the average measure and expensive on the floor: that same lopsided die
+            costs about half a bit of Shannon entropy across fifty rolls, which is the "fraction of
+            a bit" figure people quote, while costing thirteen bits of min-entropy. Real attack cost
+            sits between the two columns. Rolling past the minimum settles the question either way.
+        </p>
+    </details>
+</details>
+
 <div class="panel">
     @* One piece of state behind both modes, because it decides the same thing in both: how many
        rolls the log needs. Twelve words and a 128-bit key want 50; twenty-four and 256 want 99.
@@ -222,7 +305,7 @@ else
     </div>
 
     <div class="field">
-        <span class="field-label">Preimage, exactly as it will be hashed</span>
+        <span class="field-label">What will be hashed</span>
         <pre class="mono-block @(LivePreimage.Length == 0 ? "empty" : null)">@(LivePreimage.Length == 0 ? "(nothing yet)" : LivePreimage)</pre>
         <p class="hint">
             No separator, no trailing newline, nothing appended. Compare this string character
@@ -247,10 +330,10 @@ else
             <div class="warn-block">@RecommendationWarning</div>
         }
 
-        <div class="step-label">1. Preimage (the rolls, hashed as-is)</div>
+        <div class="step-label">1. What was hashed: your rolls, and nothing else</div>
         <pre class="mono-block">@derivation.Preimage</pre>
 
-        <div class="step-label">2. SHA-256 of the preimage</div>
+        <div class="step-label">2. SHA-256 of that string</div>
         <pre class="mono-block">@derivation.Sha256Hex</pre>
 
         <div class="step-label">3. Entropy: the first @(derivation.EntropyHex.Length / 2) bytes of that hash, truncated, not re-hashed</div>
@@ -288,25 +371,55 @@ else
             <div class="warn-block">@RecommendationWarning</div>
         }
 
-        <div class="step-label">1. Preimage (the rolls, hashed as-is)</div>
+        <div class="step-label">1. What was hashed: your rolls, and nothing else</div>
         <pre class="mono-block">@backupKey.Preimage</pre>
 
-        <div class="step-label">2. SHA-256 of the preimage. All 32 bytes of it: this is the key</div>
+        @* TWO RENDERINGS OF ONE VALUE, AND THE COPYABLE ONE COMES FIRST.
+           =============================================================
+           The grouped view was the only rendering, and it cannot be copied: selecting it drags the
+           group numbers in, so you get "1 6cb0 2 9af8 3 5505" instead of the key. Anyone pasting
+           that into the backup tool would be pasting rubbish, and the check code would catch it,
+           which is a poor substitute for not causing it.
 
+           So the unbroken string is the primary form and is labelled as the thing that goes to the
+           backup tool, and the grouped view stays underneath as a reading aid for writing it by
+           hand. The group numbers carry user-select: none, so even a careless selection of the
+           grouped block no longer picks them up. *@
+        <div class="step-label">2. SHA-256 of that string. This is the key</div>
+        <div class="handoff">
+            <div class="handoff-label">This is what goes into <code>slip39-backup</code></div>
+            <pre class="mono-block key-plain">@backupKey.KeyHex</pre>
+            <div class="handoff-label">And this, as the check code</div>
+            <div class="check-code">@backupKey.CheckCode</div>
+        </div>
+        <p class="hint">
+            Those two values, and nothing else on this page. All 32 bytes of the hash, as 64
+            characters, plus the four-character code.
+        </p>
+
+        <div class="step-label">The same key in groups, for writing it out by hand</div>
         <div class="key-groups">
             @foreach (var (group, index) in backupKey.KeyHexGroups.Select((g, i) => (g, i)))
             {
-                <span class="key-group"><span class="key-group-index">@(index + 1)</span>@group</span>
+                @* The group number is a CSS ::before on data-index, not a text node. user-select:
+                   none was tried first and is not enough: it stops a mouse selecting the number but
+                   the text is still in the DOM, so a copy can pick it up and you paste
+                   "1 6cb0 2 9af8" instead of the key. Generated content is never in the DOM text,
+                   so no copy of any kind can reach it. *@
+                <span class="key-group" data-index="@(index + 1)">@group</span>
             }
         </div>
-
-        <div class="step-label">3. Check code</div>
-        <div class="check-code">@backupKey.CheckCode</div>
         <p class="hint">
-            Type this in alongside the value above. It confirms you transcribed the value you
-            actually rolled rather than one from an earlier session, which nothing downstream can
-            tell on its own. It is the first four characters of the hash of the key above, so a
-            shell confirms it with nothing else installed:
+            Identical to the line above, in sixteen groups of four. Sixty-four unbroken characters is
+            where people lose their place, and the numbers let you resume after an interruption. If
+            you are copying and pasting, use the single line above: this one is for pen and paper.
+        </p>
+
+        <div class="step-label">About the check code</div>
+        <p class="hint">
+            It confirms you transferred the value you actually rolled rather than one from an earlier
+            session, which nothing downstream can tell on its own. It is the first four characters of
+            the hash of the key, so a shell confirms it with nothing else installed:
         </p>
         <pre class="mono-block">printf '%s' '@backupKey.KeyHex' | sha256sum</pre>
         <p class="hint">
@@ -322,77 +435,13 @@ else
             encrypts your seed with it and splits it into shares.
         </p>
         <p class="hint">
-            Write it on paper only for as long as it takes to type it in, then destroy that
-            paper along with the roll log. Both are the key in plain text, and a key that
-            survives on paper defeats the shares entirely.
+            You do not need to keep this. Once <code>slip39-backup</code> has it, the shares are what
+            reconstruct it. If you wrote it out to get it across, destroy that paper along with the
+            roll log: both are the key in plain text, and a key that survives on paper defeats the
+            shares entirely.
         </p>
     </div>
 }
-
-@* Deliberately not a feature of this app: a fairness test on the rolls being used. Two
-   reasons, and the second is why it would be harmful rather than merely useless.
-
-   At 50 rolls a chi-squared test has almost no power: 6 categories, 5 degrees of freedom, an
-   expected 8.33 per face, so roughly one in twenty honest sessions exceeds the 0.05 critical
-   value while a real bias of p=0.20 on one face goes undetected most of the time.
-
-   And a test applied to the rolls about to be used invites re-rolling when it fails, which
-   conditions the seed on passing a statistical test and so removes part of the output space.
-   That reduces entropy. Testing belongs before the ceremony, on rolls that are then thrown
-   away; the rolls that become a seed are used unconditionally. *@
-<h2>Before you start: your dice</h2>
-<div class="panel">
-    @* The arithmetic, stated rather than implied. The vendor minimums are a rounding decision and
-       this app was presenting them as though they were a sufficiency proof. The 99-roll figure is
-       the uncomfortable one: it does not reach 256 bits even with perfect dice. All of these
-       numbers come from RollEntropy and are pinned by RollEntropyTests, so they cannot rot. *@
-    <p class="hint">
-        <strong>What your rolls are worth.</strong> A fair d6 carries log<sub>2</sub>(6) = 2.585
-        bits. The second column is the conservative floor: min-entropy if one face came up a fifth
-        of the time, which is worse than real dice are.
-    </p>
-    <div class="entropy-table" role="table" aria-label="Entropy by roll count">
-        <div role="row" class="entropy-head">
-            <span role="columnheader">rolls</span>
-            <span role="columnheader">fair</span>
-            <span role="columnheader">biased floor</span>
-            <span role="columnheader">against</span>
-        </div>
-        @foreach (var (count, target, label) in EntropyRows)
-        {
-            <div role="row" class="@(RollEntropy.PessimisticBits(count) < target ? "entropy-short" : null)">
-                <span role="cell">@count @label</span>
-                <span role="cell">@RollEntropy.FairBits(count).ToString("0.0")</span>
-                <span role="cell">@RollEntropy.PessimisticBits(count).ToString("0.0")</span>
-                <span role="cell">@target</span>
-            </div>
-        }
-    </div>
-    <p class="hint">
-        So <strong>99 rolls does not reach 256 bits</strong>, by a tenth of a bit, with a perfect
-        die. It is a vendor rounding, not a sufficiency proof, and this app kept the minimum only
-        so a seed already made with 99 rolls can still be reproduced here. For a new seed roll
-        <strong>60</strong> or <strong>111</strong>.
-    </p>
-    <p class="hint">
-        Bias is cheap on the average measure and expensive on the floor: that same lopsided die
-        costs about half a bit of Shannon entropy across fifty rolls, which is the "fraction of a
-        bit" figure people quote, while costing thirteen bits of min-entropy. Real attack cost sits
-        between the two columns. Rolling past the minimum settles the question either way.
-    </p>
-    <p class="hint">
-        Testing a die is worth doing, but do it <strong>before</strong> the ceremony, with a few
-        hundred rolls you then throw away. The chi-squared worksheet in the
-        <code>seed-generation</code> repository is built for exactly that.
-    </p>
-    <p class="hint">
-        <strong>Never re-roll a log because it looks wrong.</strong> If a sequence looks too
-        orderly, that is not evidence of a bad die: every sequence is equally improbable, and
-        six 6s in a row is exactly as likely as any other six rolls. Discarding a log for
-        looking non-random means your seed is chosen from a smaller set than the dice offered,
-        which is the one thing that genuinely weakens it. Record what you rolled and use it.
-    </p>
-</div>
 
 <h2>Checking this against another tool</h2>
 <details class="runbook">

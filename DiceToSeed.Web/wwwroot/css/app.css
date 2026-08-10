@@ -418,7 +418,8 @@ button.mode-key.selected {
     padding-top: .85rem;
 }
 
-.key-group-index {
+.key-group::before {
+    content: attr(data-index);
     position: absolute;
     top: 0;
     left: 0;
@@ -495,3 +496,61 @@ button.mode-key.selected {
 }
 
 .entropy-table .entropy-short { color: var(--warn); }
+
+/* The handoff block: the values that leave this page and go into the backup tool. Boxed and
+   labelled because "which of these do I copy" was a real question, and the answer used to be
+   spread across three step labels and a hint. */
+.handoff {
+    border: 2px solid var(--accent);
+    border-radius: .4rem;
+    padding: .8rem .9rem 1rem;
+    margin: .6rem 0 1rem;
+}
+
+.handoff-label {
+    font-weight: 600;
+    font-size: .9375rem;
+    color: var(--accent);
+    margin-bottom: .35rem;
+}
+
+.handoff .check-code { margin-bottom: 0; }
+.handoff-label:not(:first-child) { margin-top: 1rem; }
+
+/* The key as one unbroken line: the form to copy. Wraps rather than scrolls, so all 64 characters
+   are on screen and a select-all gets the whole value. */
+.key-plain {
+    font-size: 1.05rem;
+    letter-spacing: .04em;
+    word-break: break-all;
+    white-space: pre-wrap;
+}
+
+
+/* "Before you start" sits above the dice pad and is collapsible. Open on load so it is read first;
+   collapsed it costs one line, which is what brings the pad back above the fold in the AppImage's
+   900 pixel window. The h2 lives inside the summary so the heading stays a heading for anything
+   reading the document structure, with the browser's default marker suppressed in favour of one
+   that lines up with the text. */
+details.prestart { padding: .35rem 1.1rem .9rem; }
+
+details.prestart > summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+details.prestart > summary::-webkit-details-marker { display: none; }
+
+details.prestart > summary::before {
+    content: "▸";
+    color: var(--ink-dim);
+    font-size: .8rem;
+}
+
+details.prestart[open] > summary::before { content: "▾"; }
+
+details.prestart > summary h2 { margin: .6rem 0; }
+details.prestart > summary:hover h2 { color: var(--accent); }
