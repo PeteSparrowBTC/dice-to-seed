@@ -83,6 +83,31 @@ public class VersionTests
         Assert.DoesNotContain("\"version\"", config, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// The footer splits this string on '+' to show the release and the commit separately, so the
+    /// shape has to hold: the version, then optionally "+commit" and nothing else.
+    ///
+    /// The commit arrives without any CI flag. The .NET SDK reads it from the git checkout and
+    /// appends it as SourceRevisionId, so "1.1.0+&lt;sha&gt;" is what an ordinary build produces.
+    /// The empty case is a build with no git directory, such as a source download, and the footer
+    /// then shows the version alone rather than inventing a provenance it does not have.
+    /// </summary>
+    [Fact]
+    public void The_informational_version_starts_with_the_version_file()
+    {
+        var informational = typeof(DiceToSeed.Core.DiceSeed).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+
+        Assert.NotNull(informational);
+        Assert.StartsWith(DeclaredVersion(), informational);
+
+        // Anything after the version is a "+suffix" and nothing else, so the footer can split on
+        // '+' to decide whether a commit was recorded.
+        var suffix = informational[DeclaredVersion().Length..];
+        Assert.True(suffix.Length == 0 || suffix.StartsWith('+'),
+            $"Informational version was \"{informational}\", which is not \"{DeclaredVersion()}\" optionally followed by +commit.");
+    }
+
     static string DeclaredVersion() =>
         File.ReadAllText(Path.Combine(RepositoryRoot().FullName, "VERSION")).Trim();
 

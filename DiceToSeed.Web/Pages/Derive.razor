@@ -1,4 +1,5 @@
 @page "/"
+@using System.Reflection
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
 @inject NavigationManager Navigation
@@ -500,6 +501,27 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
 </details>
 
 <footer>
+    @* The version is on the page because there is otherwise no way to tell which build you are
+       looking at, and that matters most where it is least visible: the demo redeploys on every
+       push to main, so it runs ahead of the newest release as soon as anything merges. A bare
+       "1.1.0" would then be a claim the build does not support.
+
+       So the commit is shown next to it. The .NET SDK puts it in the informational version as
+       "1.1.0+<sha>" on its own, from the git checkout, with no CI flag needed. Twelve characters
+       is git's own long-form abbreviation and enough to find the commit; the full hash is in the
+       title attribute for anyone comparing exactly.
+
+       A release is the version with nothing after it to worry about: check the commit against the
+       tag. If they differ, this build is not that release. *@
+    <p>
+        Version <code>@releaseVersion</code>
+        @* A span, not a <text> block: Razor strips leading whitespace from <text>, which rendered
+           "1.1.0at commit". Element content keeps it. *@
+        @if (buildCommit.Length > 0)
+        {
+            <span> at commit <code title="@buildCommit">@buildCommit[..Math.Min(12, buildCommit.Length)]</code></span>
+        }
+    </p>
     <p>
         BIP-39 English wordlist, 2048 words, SHA-256
         <code>@wordListHash</code>@(wordListOk ? " (verified at startup)" : " (CHECK FAILED)")
@@ -547,6 +569,12 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
     string wordListHash = string.Empty;
     bool wordListOk;
 
+    // The two halves of the informational version, "1.1.0" and the commit after the '+'. The
+    // commit is empty when the build had no git checkout to read, which is what a source download
+    // gives you, and the line then simply shows the version.
+    string releaseVersion = string.Empty;
+    string buildCommit = string.Empty;
+
     protected override void OnInitialized()
     {
         // Read the host from the navigation URI rather than through JS interop: one less
@@ -554,6 +582,17 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
         var uri = new Uri(Navigation.Uri);
         host = uri.IsDefaultPort ? uri.Host : $"{uri.Host}:{uri.Port}";
         servedFromElsewhere = uri.Host is not ("127.0.0.1" or "localhost" or "[::1]");
+
+        // Read from the assembly rather than from a constant, so the number on screen is the one
+        // the build actually carries. Directory.Build.props reads it from the VERSION file, and
+        // VersionTests asserts the two agree and that the shape is "version" or "version+commit".
+        var informational = Assembly.GetExecutingAssembly()
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+            ?? "unknown";
+
+        var plus = informational.IndexOf('+');
+        releaseVersion = plus < 0 ? informational : informational[..plus];
+        buildCommit = plus < 0 ? string.Empty : informational[(plus + 1)..];
 
         // The wordlist check runs once, at startup, and its outcome is on screen either way.
         // A failure here disables derivation entirely: see CanDerive.
