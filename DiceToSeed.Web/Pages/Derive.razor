@@ -628,7 +628,11 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
         <code>@wordListHash</code>@(wordListOk ? " (verified at startup)" : " (CHECK FAILED)")
     </p>
     <p>
-        No storage, no network, no telemetry, no clipboard writes. No random number generator:
+        @* "No clipboard writes" used to sit here as though it were a safeguard. It is not: you can
+           select any of this and copy it yourself. What is true, and worth saying, is that the app
+           never does it for you, so nothing lands on the clipboard unless you put it there. *@
+        No storage, no network, no telemetry. Nothing is copied for you: whatever reaches your
+        clipboard, you put there. No random number generator:
         every bit of entropy here came off your dice.
     </p>
 </footer>

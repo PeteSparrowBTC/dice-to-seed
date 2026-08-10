@@ -139,9 +139,26 @@ These are not style preferences. Each one exists because this code generates pri
    asserted so it cannot be quietly edited), Coldcard's published dice example, and
    SeedSigner's published 50-roll and 99-roll examples. A change that moves any of them is
    wrong until proven otherwise.
-6. **No persistence, no network, no telemetry, no clipboard writes of seed material.** The
-   app must work with the network cable out, and must leave nothing behind. No
+6. **No persistence, no network, no telemetry, and the app never writes to the clipboard
+   itself.** The app must work with the network cable out, and must leave nothing behind. No
    `localStorage`, no `sessionStorage`, no cookies, no analytics, no external fonts or CDNs.
+
+   The clipboard clause says less than it used to, on purpose. What holds is that the app never
+   puts seed material anywhere you did not ask it to: there is no silent copy, no "helpfully"
+   populated clipboard, nothing on the clipboard unless you put it there. That is a real property
+   and worth keeping.
+
+   What does not hold, and used to be implied by listing it beside "no network call", is that the
+   absence of a copy button prevents copying. It does not. Any text on the page can be selected
+   and copied with the keyboard, so a missing button is friction, not protection, and describing
+   friction as a safeguard is the kind of claim this repository exists not to make.
+
+   Copy buttons were considered and not added, because selection already does the job and a button
+   would be one more thing on a page whose value is being small. If they are ever added, gate them
+   on `ServingOrigin.IsLocal` so a hosted build never offers one, and say plainly that the gate is
+   about the hosted demo rather than about the clipboard being dangerous on Tails. On an offline
+   amnesic session it is not: there is no swap to page it to, RAM is wiped on shutdown, and nothing
+   can send it anywhere.
 7. **The wordlist is verified at runtime** against its known SHA-256, and the app refuses to
    derive anything if the check fails.
 8. **Tails first: the shipped artifact is a download, not a website.** The intended way to run

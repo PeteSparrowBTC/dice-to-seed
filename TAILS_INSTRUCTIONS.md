@@ -65,9 +65,9 @@ at all, and a plain double-click does nothing and says nothing.
 If you would rather use a terminal:
 
 ```bash
-cp /media/amnesia/<YOUR_USB>/dice-to-seed-x86_64.AppImage ~/
-cd ~ && chmod +x dice-to-seed-x86_64.AppImage
-./dice-to-seed-x86_64.AppImage
+cp /media/amnesia/<YOUR_USB>/dice-to-seed-*-x86_64.AppImage ~/
+cd ~ && chmod +x dice-to-seed-*-x86_64.AppImage
+./dice-to-seed-*-x86_64.AppImage
 ```
 
 The terminal is worth it once, the first time, because anything that goes wrong is printed

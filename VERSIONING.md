@@ -67,7 +67,9 @@ review, not from a branch.
 
 ## What a release contains
 
-- `dice-to-seed-x86_64.AppImage`: the whole app, one file
+- `dice-to-seed-<version>-x86_64.AppImage`: the whole app, one file. The version is in the name
+  because the AppImage is what survives on somebody's USB stick, long after `SHA256SUMS` has been
+  deleted, and a bare filename tells its owner nothing about which release they are holding
 - `SHA256SUMS`
 
 An AppImage is an opaque blob and the checksum is all a downloader can check it against. A

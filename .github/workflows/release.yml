@@ -6,8 +6,11 @@
 #
 # What a release contains, and why each part:
 #
-#   dice-to-seed-x86_64.AppImage   the whole app. One file, no server, no port, no browser to
-#                                  configure. Verified to run on Tails from the file manager.
+#   dice-to-seed-<version>-x86_64.AppImage
+#                                  the whole app. One file, no server, no port, no browser to
+#                                  configure. Verified to run on Tails from the file manager. The
+#                                  version is in the name because the AppImage is the file that
+#                                  survives on somebody's USB stick, long after SHA256SUMS is gone.
 #   SHA256SUMS                     because an AppImage is an opaque blob and a checksum is the
 #                                  only thing a downloader can check it against.
 #
@@ -97,18 +100,24 @@ jobs:
           wget -q "https://github.com/AppImage/appimagetool/releases/download/${APPIMAGETOOL_VERSION}/appimagetool-x86_64.AppImage"
           echo "${APPIMAGETOOL_SHA256}  appimagetool-x86_64.AppImage" | sha256sum -c -
           chmod +x appimagetool-x86_64.AppImage
-          ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run AppDir dice-to-seed-x86_64.AppImage
+          # The version goes in the filename, read from the same VERSION file everything else
+          # derives from. A downloaded AppImage otherwise carries no clue which release it is:
+          # SHA256SUMS says, but only while the two files sit together, and the one that survives
+          # on somebody's USB stick is the AppImage. This is also the usual AppImage convention,
+          # name-version-arch.
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run \
+            AppDir "dice-to-seed-$(cat VERSION)-x86_64.AppImage"
 
       - name: Assemble the release files
         run: |
-          sha256sum dice-to-seed-x86_64.AppImage | tee SHA256SUMS
-          ls -lh dice-to-seed-x86_64.AppImage
+          sha256sum dice-to-seed-*-x86_64.AppImage | tee SHA256SUMS
+          ls -lh dice-to-seed-*-x86_64.AppImage
 
       - name: Publish the release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dice-to-seed-x86_64.AppImage
+            dice-to-seed-*-x86_64.AppImage
             SHA256SUMS
           body: |
             Converts a log of six-sided dice rolls into a BIP-39 seed phrase, offline, as a
@@ -128,9 +137,9 @@ jobs:
             ## On Tails
 
             ```
-            cp dice-to-seed-x86_64.AppImage ~/ && cd ~
-            chmod +x dice-to-seed-x86_64.AppImage
-            ./dice-to-seed-x86_64.AppImage
+            cp dice-to-seed-*-x86_64.AppImage ~/ && cd ~
+            chmod +x dice-to-seed-*-x86_64.AppImage
+            ./dice-to-seed-*-x86_64.AppImage
             ```
 
             Copy it off the USB stick first: a stick may be mounted `noexec` and the executable
