@@ -3,6 +3,66 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## 1.3.1
+
+The same words from the same rolls as 1.3.0. One claim on the page had no number behind it, and
+this release puts one there.
+
+### "Worse than real dice are" is now a measurement
+
+- The entropy table's conservative column was dismissed with the words **"which is worse than real
+  dice are"**, and that was the whole argument. The roll counter said the same thing at the
+  recommended count. It is an assurance rather than a statement, which is what this app exists not
+  to make.
+- The number is Weldon's, 1894: 315,672 rolls of ordinary pipped dice, with a 5 or a 6 appearing
+  **33.77% of the time against an expected 33.33%**. It is the largest published count on ordinary
+  dice. The mechanism is understood and is not a defect: the spots are drilled out and filled with
+  lighter paint, so the six face is missing the most mass and lands upward slightly more often,
+  which is why casino dice have flush pips of matched density.
+- Across a 60-roll log that die costs **0.004 bits** on the average measure and **1.1 bits** on the
+  min-entropy floor, out of 155.1 collected against a target of 128. The two figures differ by a
+  factor of about 300, so the page quotes both: citing one alone is how this subject gets
+  misrepresented in either direction.
+- The pessimistic column's die, one face at a fifth, is **15 times** more lopsided than that
+  measurement. That factor replaced the assurance, in the table's legend and in the counter.
+- **The table gains a "real dice" column** between fair and floor, because the comparison is the
+  argument. Two things become visible in it: a real die still clears 128 bits at the 50-roll
+  minimum, at 128.3, and the 99-roll shortfall sits in every column, so it is the roll count and
+  not the dice.
+- The README had applied the pessimistic die's half-a-bit Shannon figure to ordinary dice, which
+  is wrong by three orders of magnitude. Corrected, with the same table.
+
+### When to suspect a die, since fairness is the wrong question
+
+- Working those numbers moved the advice. The risk worth managing is not statistical: a die goes
+  badly wrong because someone made it that way or because it is damaged, and no statistic computed
+  from a log will say which die produced it. So the page now covers the physical object: the
+  reasons to set a die aside, the saturated-salt float test that finds a loaded one in a minute,
+  and the two things that matter more than the die, which are throwing it so it tumbles and
+  rotating several dice if you have them.
+- The old line, "test a die beforehand if you want to", left the reader to guess whether it
+  mattered. It does not, and the page says so with the arithmetic behind it.
+- Why not to test the rolls you are about to use is stated with its power rather than asserted: at
+  60 rolls a chi-squared test misses a real 20% bias most of the time while failing one honest log
+  in twenty, and re-rolling on failure conditions the seed on passing a test, which shrinks the
+  output space.
+- It also states the limit. A roll log carries no evidence of the die that produced it, so none of
+  this is checkable afterwards by anyone, which is why it is words on a page and not a feature.
+
+### Fixes
+
+- `TAILS_INSTRUCTIONS.md` still described the missing copy button as a safeguard the app maintains
+  because it "cannot tell the difference" between machines. That claim was retired from the rules
+  in 1.3.0 and the instructions kept it. Any text on the page can be selected and copied; what
+  holds is that the app never writes to the clipboard itself.
+
+### Under it
+
+- Eleven new tests, 145 total. They pin the distribution, the one-bit claim, the factor of fifteen,
+  the ordering of the three models at every roll count the table shows, and that a real die clears
+  its target at 50, 60 and 111 rolls. Every figure the page quotes is computed in `RollEntropy`,
+  because a number typed into a UI string rots silently.
+
 ## 1.3.0
 
 The same words from the same rolls as 1.2.0. This release is what came out of running the AppImage
