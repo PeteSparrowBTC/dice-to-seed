@@ -678,11 +678,16 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
 
     protected override void OnInitialized()
     {
-        // Read the host from the navigation URI rather than through JS interop: one less
-        // moving part, and no JavaScript file to review.
+        // Read the origin from the navigation URI rather than through JS interop: one less moving
+        // part, and no JavaScript file to review.
+        //
+        // The decision and its wording both come from Core, where they are tested. This used to be
+        // an inline expression comparing the host against three strings, and the Pages workflow
+        // claimed the behaviour was tested when nothing tested it. See ServingOrigin for the cases
+        // that matter, including 127.0.0.1.example.com, which a substring check would have passed.
         var uri = new Uri(Navigation.Uri);
-        host = uri.IsDefaultPort ? uri.Host : $"{uri.Host}:{uri.Port}";
-        servedFromElsewhere = uri.Host is not ("127.0.0.1" or "localhost" or "[::1]");
+        host = ServingOrigin.Describe(uri);
+        servedFromElsewhere = !ServingOrigin.IsLocal(uri);
 
         // Read from the assembly rather than from a constant, so the number on screen is the one
         // the build actually carries. Directory.Build.props reads it from the VERSION file, and

@@ -11,7 +11,9 @@
 #
 # So this deployment exists to demonstrate and to be read, not to be used. The app itself
 # detects that it is served from something other than 127.0.0.1 or localhost and shows a red
-# banner saying so, above the input, before anything can be entered. That behaviour is tested
+# banner saying so, above the input, before anything can be entered. The decision lives in
+# DiceToSeed.Core/ServingOrigin.cs and ServingOriginTests covers it, including the hosts a naive
+# check waves through, such as 127.0.0.1.example.com. That behaviour is tested
 # and must not be removed: it is the only thing standing between a curious visitor and a real
 # roll log typed into a web page.
 #
