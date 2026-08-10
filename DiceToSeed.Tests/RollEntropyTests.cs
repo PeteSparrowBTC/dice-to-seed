@@ -94,4 +94,90 @@ public class RollEntropyTests
     [Fact]
     public void The_bias_model_is_a_face_at_one_in_five() =>
         Assert.Equal(RollEntropy.MinBitsPerBiasedRoll, Math.Log2(5), 12);
+
+    /// <summary>
+    /// Weldon's measurement has to be a probability distribution before anything derived from it
+    /// means what the page says it means.
+    /// </summary>
+    [Fact]
+    public void The_measured_die_is_a_distribution_over_six_faces()
+    {
+        Assert.Equal(6, RollEntropy.MeasuredFaceProbabilities.Count);
+        Assert.Equal(1.0, RollEntropy.MeasuredFaceProbabilities.Sum(), 12);
+        Assert.All(RollEntropy.MeasuredFaceProbabilities, p => Assert.InRange(p, 0.0, 1.0));
+
+        // Two high faces above fair, four below, which is the direction the pip cavities predict.
+        Assert.Equal(2, RollEntropy.MeasuredFaceProbabilities.Count(p => p > RollEntropy.FairFaceProbability));
+        Assert.Equal(4, RollEntropy.MeasuredFaceProbabilities.Count(p => p < RollEntropy.FairFaceProbability));
+    }
+
+    /// <summary>
+    /// The claim the page makes about ordinary dice, as a number: the largest bias ever measured
+    /// on pipped dice costs about one bit of min-entropy across a sixty-roll log, and a few
+    /// thousandths of a bit on the average measure. This is the assertion that replaced the
+    /// unbacked words "worse than real dice are".
+    /// </summary>
+    [Fact]
+    public void The_measured_bias_costs_about_one_bit_across_a_sixty_roll_log()
+    {
+        Assert.Equal(0.16885, RollEntropy.MeasuredTopFaceProbability, 8);
+
+        var minEntropyCost = RollEntropy.FairBits(60) - RollEntropy.MeasuredBits(60);
+        Assert.Equal(1.1, minEntropyCost, 1);
+
+        // On the average measure the same die costs three orders of magnitude less, because the
+        // Shannon penalty is quadratic in the deviation while the min-entropy penalty is linear.
+        Assert.Equal(0.004, RollEntropy.MeasuredShannonShortfall(60), 3);
+        Assert.True(minEntropyCost / RollEntropy.MeasuredShannonShortfall(60) > 100);
+    }
+
+    /// <summary>
+    /// A real die still clears both targets at the recommended count, and clears 128 bits even at
+    /// the 12-word minimum. If this ever fails, the recommendation is no longer a margin over
+    /// reality and the page must stop saying ordinary dice are sufficient.
+    /// </summary>
+    [Theory]
+    [InlineData(50, 128)]
+    [InlineData(60, 128)]
+    [InlineData(111, 256)]
+    public void A_measured_real_die_clears_the_target(int rollCount, int target) =>
+        Assert.True(RollEntropy.MeasuredBits(rollCount) > target,
+            $"{rollCount} rolls of a die with the bias Weldon measured give {RollEntropy.MeasuredBits(rollCount):0.0} bits against {target}.");
+
+    /// <summary>
+    /// The 99-roll minimum falls short of 256 on a real die too, for the same reason it does on a
+    /// perfect one: the roll count, not the dice.
+    /// </summary>
+    [Fact]
+    public void Ninety_nine_rolls_fall_short_of_256_on_a_real_die_as_well()
+    {
+        Assert.True(RollEntropy.MeasuredBits(99) < 256);
+        Assert.True(RollEntropy.FairBits(99) < 256);
+    }
+
+    /// <summary>
+    /// The pessimistic column is fifteen times more lopsided than the measurement, and the page
+    /// says "fifteen" in words. Pinned so the prose and the arithmetic cannot part company.
+    /// </summary>
+    [Fact]
+    public void The_pessimistic_die_is_fifteen_times_more_lopsided_than_a_measured_one()
+    {
+        Assert.InRange(RollEntropy.PessimismFactor, 15.0, 16.0);
+        Assert.Equal(15.3, RollEntropy.PessimismFactor, 1);
+    }
+
+    /// <summary>
+    /// The three models have to be ordered, at every roll count the page shows, or the table is
+    /// telling a story the numbers do not support.
+    /// </summary>
+    [Theory]
+    [InlineData(50)]
+    [InlineData(60)]
+    [InlineData(99)]
+    [InlineData(111)]
+    public void Fair_beats_measured_beats_pessimistic(int rollCount)
+    {
+        Assert.True(RollEntropy.FairBits(rollCount) > RollEntropy.MeasuredBits(rollCount));
+        Assert.True(RollEntropy.MeasuredBits(rollCount) > RollEntropy.PessimisticBits(rollCount));
+    }
 }

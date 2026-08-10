@@ -82,11 +82,35 @@ to diagnose.
 
 ## Using it
 
-0. If you want to know whether your dice are fair, test them **before** you start, with a few
-   hundred rolls that you then throw away. Do not test the rolls you are about to use: at 50
-   rolls the test barely works, and re-rolling a log because it failed means your seed is
-   chosen from a smaller set than the dice offered, which weakens it. The chi-squared
-   worksheet in the `seed-generation` repository is built for this.
+0. **Any ordinary die is good enough. Look at the die, not at your rolls.**
+
+   Manufacturing bias in normal dice is real, understood and tiny. A pipped die has its spots
+   drilled out and filled with lighter paint, so the six face is missing the most mass and lands
+   upward slightly more often. Weldon measured it in 1894 over 315,672 rolls: a 5 or a 6 came up
+   33.77% of the time against an expected 33.33%. Across a 60-roll log that costs you 0.004 bits
+   on the average measure, or 1.1 bits on the min-entropy floor, out of 155 collected against a
+   target of 128. You cannot make an ordinary die matter here.
+
+   What can matter is a die that is loaded or damaged, and that is a question about the object
+   rather than about statistics. Use a different die if it is not yours, if an edge or corner is
+   chipped, rounded or worn, if one face is scuffed more than the others, if it rocks on a flat
+   surface, if it is translucent with a bubble or a filled hole, or if it is hollow, foam, wood,
+   oversized or a giveaway. A new die costs less than testing an old one.
+
+   If you do want to test one, do it physically: dissolve salt in warm water until a die floats,
+   spin it with a finger a dozen times, and see whether the same face keeps coming up on top. A
+   weighted die will, because the weight settles to the bottom. That takes a minute and finds the
+   bias that matters.
+
+   Two things matter more than the die. Throw it so it **tumbles**, since sliding it or dropping it
+   flat from an inch can carry the starting face through; and rotate several dice if you have them,
+   so a bad one touches only its share of the log.
+
+   Do not run a statistical test on the rolls you are about to use. At 60 rolls it would miss a
+   real 20% bias most of the time while failing one honest log in twenty, and re-rolling a log
+   because it failed a test means your seed is drawn from a smaller set than the dice offered,
+   which genuinely weakens it. If you want the arithmetic, the chi-squared worksheet in the
+   `seed-generation` repository is built for testing a die beforehand, on rolls you throw away.
 1. Roll your dice. **Sixty rolls for twelve words, a hundred and eleven for twenty-four**, if
    this is a new seed. The vendor minimums of 50 and 99 still derive, because a seed already made
    with 50 rolls has to be reproducible here, but they are thinner than they look: 50 fair rolls
@@ -104,9 +128,12 @@ to diagnose.
    perfectly plausible seed phrase.
 4. Read the preimage the app shows. It is the exact string being hashed. This is the value you
    compare against any other tool.
-5. Press Derive, and write the words on paper. There is no copy button and there will not be
-   one: on an amnesic offline system a clipboard is a small risk, and on a machine that turns
-   out not to be one it is a large risk, and the app cannot tell the difference.
+5. Press Derive, and write the words on paper. There is no copy button, and that is friction
+   rather than a safeguard: any text on the page can be selected and copied with the keyboard,
+   so the absence of a button prevents nothing. What the app does guarantee is that it never
+   writes to the clipboard itself, so nothing lands there unless you put it there. On an offline
+   Tails session, where there is no swap and RAM is wiped at shutdown, a clipboard is not the
+   thing to worry about; on a machine that is not Tails, the roll log was already exposed.
 
 ## If you are also rolling for the backup key
 

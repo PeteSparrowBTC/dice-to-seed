@@ -37,27 +37,39 @@ keeps nothing, and write the words on paper.
 app keeps them so a seed already made that way can be reproduced. For a **new** seed, roll **60**
 or **111**:
 
-| rolls | fair | if one face came up a fifth of the time | target |
-| --- | --- | --- | --- |
-| 50 | 129.2 | 116.1 | 128 |
-| 60 | 155.1 | 139.3 | 128 |
-| 99 | 255.9 | 229.9 | 256 |
-| 111 | 286.9 | 257.7 | 256 |
+| rolls | fair | real dice, measured | if one face came up a fifth of the time | target |
+| --- | --- | --- | --- | --- |
+| 50 | 129.2 | 128.3 | 116.1 | 128 |
+| 60 | 155.1 | 154.0 | 139.3 | 128 |
+| 99 | 255.9 | 254.1 | 229.9 | 256 |
+| 111 | 286.9 | 284.8 | 257.7 | 256 |
 
 A fair d6 carries log2(6) = 2.585 bits, so **99 rolls does not reach 256 bits even with a perfect
 die.** It misses by a tenth of a bit. That is a vendor rounding rather than a sufficiency proof,
-and it is worth knowing before you rely on the minimum.
+and it is worth knowing before you rely on the minimum. Note which column the shortfall lives in:
+it is the roll count, not the dice.
 
-Which dice: casino-grade ones have square edges and pips backfilled to the same density as the
-body. Ordinary dice have rounded corners and recessed pips, which leaves the 6 face lighter
-than the 1. That bias costs about half a bit of average entropy over a whole run, so ordinary
-dice are usable; on the conservative measure in the third column it costs more, which is what
-the extra rolls are for.
+**Which dice: any ordinary die will do, and here is the size of that claim.** Casino dice have
+square edges and pips backfilled to the same density as the body. Ordinary dice have rounded
+corners and recessed pips filled with lighter paint, which leaves the 6 face lighter than the 1, so
+it lands upward slightly more often. Weldon measured that in 1894 over 315,672 rolls: a 5 or a 6
+came up 33.77% of the time against an expected 33.33%, the largest published count on ordinary
+dice. Across a 60-roll log it costs 0.004 bits of average entropy, or 1.1 bits on the min-entropy
+floor, which is the middle column above. The last column assumes a face at one in five, fifteen
+times more lopsided than that measurement, and exists so the recommended counts have margin rather
+than because dice are like that.
+
+So the question is provenance, not fairness. A die becomes badly biased because it was made that
+way or because it is damaged, and no statistic computed from your rolls will tell you which die
+produced them. Use a different die if it is not yours, is chipped, worn or scuffed on one face,
+rocks on a flat surface, or is hollow, foam, wood or a giveaway. To test one, float it in
+saturated salt water and spin it: a weighted die keeps bringing the same face up.
 [seed-generation has the numbers](https://github.com/PeteSparrowBTC/seed-generation/blob/main/docs/dice.md#your-dice-bias-and-what-it-costs)
 and [how to test a die you are unsure of](https://github.com/PeteSparrowBTC/seed-generation/blob/main/docs/dice.md#testing-your-own-dice).
 
-If you test dice, do it before the ceremony on rolls you throw away. Testing the rolls you are
-about to use, and re-rolling when they fail, narrows the set your seed comes from.
+Never run the test on the rolls you are about to use. At 60 rolls it would miss a real 20% bias
+most of the time while failing one honest log in twenty, and re-rolling because a log failed
+narrows the set your seed comes from.
 
 ## Use
 

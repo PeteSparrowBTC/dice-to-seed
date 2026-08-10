@@ -140,12 +140,16 @@ else
    trips the 0.05 critical value while a real bias of p=0.20 on one face goes undetected most of
    the time. Worse, a test on the rolls about to be used invites re-rolling when it fails, which
    conditions the seed on passing a statistical test and removes part of the output space. That
-   reduces entropy. Testing belongs before the ceremony, on rolls that are thrown away. *@
+   reduces entropy. Testing belongs before the ceremony, on rolls that are thrown away.
+
+   The second disclosure below replaced the previous version of this advice, which said to test a
+   die "if you want to" and left the reader to guess whether it mattered. It does not, and the
+   arithmetic for saying so is in RollEntropy. *@
 @* Open on load, so it is read before anything is rolled, and collapsible because it is not needed
-   twice. Measured rather than guessed: with this expanded the dice pad starts at y=864 in the
+   twice. Measured rather than guessed: with this expanded the dice pad starts at y=908 in the
    1000x900 window the AppImage opens at, which puts the primary action below the fold. Collapsed,
-   the pad comes back up into view. Nothing here is remembered between sessions, by design, so it
-   reopens each time and that is the right default for advice with "before you start" in the name. *@
+   the pad comes back up to y=657 and into view. Nothing here is remembered between sessions, by
+   design, so it reopens each time, which is the right default for advice named "before you start". *@
 <details class="panel prestart" open>
     <summary><h2>Before you start</h2></summary>
     <p class="hint">
@@ -161,8 +165,9 @@ else
         smaller set than the dice offered, which is the one thing that genuinely weakens it.
     </p>
     <p class="hint">
-        <strong>Test a die beforehand if you want to, never with the rolls you are about to use.</strong>
-        The chi-squared worksheet in <code>seed-generation</code> is built for that.
+        <strong>Any ordinary die is good enough: check the die, not the log.</strong> Normal
+        manufacturing bias costs about one bit in a hundred and fifty. A chipped or borrowed die is the
+        real risk, and no test on your rolls can find it.
     </p>
 
     <details class="runbook">
@@ -171,15 +176,17 @@ else
            they were a sufficiency proof. The 99-roll row is the uncomfortable one. Every number
            comes from RollEntropy and is pinned by RollEntropyTests, so none of it can rot. *@
         <p class="hint">
-            A fair d6 carries log<sub>2</sub>(6) = 2.585 bits. The second column is the conservative
-            floor: min-entropy if one face came up a fifth of the time, which is worse than real
-            dice are.
+            A fair d6 carries log<sub>2</sub>(6) = 2.585 bits. <strong>Real dice</strong> is a
+            measurement, not an allowance: Weldon's 315,672 recorded rolls, below.
+            <strong>Floor</strong> is min-entropy with one face at a fifth, fifteen times more
+            lopsided than that measurement.
         </p>
         <div class="entropy-table" role="table" aria-label="Entropy by roll count">
             <div role="row" class="entropy-head">
                 <span role="columnheader">rolls</span>
                 <span role="columnheader">fair</span>
-                <span role="columnheader">biased floor</span>
+                <span role="columnheader">real dice</span>
+                <span role="columnheader">floor</span>
                 <span role="columnheader">against</span>
             </div>
             @foreach (var (count, target, label) in EntropyRows)
@@ -187,6 +194,7 @@ else
                 <div role="row" class="@(RollEntropy.PessimisticBits(count) < target ? "entropy-short" : null)">
                     <span role="cell">@count @label</span>
                     <span role="cell">@RollEntropy.FairBits(count).ToString("0.0")</span>
+                    <span role="cell">@RollEntropy.MeasuredBits(count).ToString("0.0")</span>
                     <span role="cell">@RollEntropy.PessimisticBits(count).ToString("0.0")</span>
                     <span role="cell">@target</span>
                 </div>
@@ -195,13 +203,99 @@ else
         <p class="hint">
             So <strong>99 rolls does not reach 256 bits</strong>, by a tenth of a bit, with a perfect
             die. It is a vendor rounding, not a sufficiency proof, and the minimum is kept only so a
-            seed already made with 99 rolls can still be reproduced here.
+            seed already made with 99 rolls can still be reproduced here. Note which column that
+            shortfall lives in: it is the roll count, not the dice.
         </p>
         <p class="hint">
-            Bias is cheap on the average measure and expensive on the floor: that same lopsided die
-            costs about half a bit of Shannon entropy across fifty rolls, which is the "fraction of
-            a bit" figure people quote, while costing thirteen bits of min-entropy. Real attack cost
-            sits between the two columns. Rolling past the minimum settles the question either way.
+            Bias is cheap on the average measure and expensive on the floor. The lopsided die in the
+            last column costs about half a bit of Shannon entropy across fifty rolls, which is the
+            "fraction of a bit" figure people quote, while costing thirteen bits of min-entropy. Real
+            guessing cost sits between the two, and rolling past the minimum settles it either way.
+        </p>
+    </details>
+
+    @* THE FAIRNESS CLAIM, WITH ITS NUMBERS.
+       ======================================
+       This section exists because the page used to dismiss the pessimistic column as "worse than
+       real dice are" and leave it there. That is an assurance, not a statement, and this app has no
+       business making assurances: its entire value is that everything it says can be checked.
+
+       The substantive point, which took working the numbers to see: the risk from an ordinary die is
+       not worth managing, and the risk that is worth managing is not statistical. Manufacturing bias
+       costs about a bit out of a hundred and fifty. A loaded or damaged die can cost far more, and no
+       amount of arithmetic on the resulting log will reveal it, because a log carries no evidence of
+       the die that made it. So the advice has to be about the physical object, and a fairness test on
+       the rolls is the wrong instrument twice over: too weak to find real bias, and an invitation to
+       re-roll, which conditions the seed on passing a test and shrinks the output space.
+
+       Chi-squared power, since it is what people reach for: at 60 rolls the expected count is ten a
+       face, five degrees of freedom, and a face at p = 0.20 gives a noncentrality of about 0.5
+       against a critical value of 11.07. It goes undetected the large majority of the time, while
+       one honest log in twenty trips the 0.05 threshold anyway. *@
+    <details class="runbook">
+        <summary>Are ordinary dice good enough, and when to suspect one</summary>
+        <p class="hint">
+            Yes, and the margin is large enough to state rather than assert. The bias in normal dice
+            is real, understood and small. A pipped die has its spots drilled out and filled with
+            lighter paint, so the six face is missing the most mass and lands upward slightly more
+            often. Raphael Weldon counted it in 1894 over
+            @RollEntropy.WeldonRollCount.ToString("N0") rolls: a 5 or a 6 came up
+            @((RollEntropy.WeldonHighPairFrequency * 100).ToString("0.00"))% of the time against an
+            expected 33.33%. It is the largest published count on ordinary dice, and an automated
+            repetition in 2009 found the same direction. Casino dice have flush pips of matched
+            density for exactly this reason.
+        </p>
+        <p class="hint">
+            Put that die through a @RollEntropy.RecommendedRollsFor(WordCount.Twelve)-roll log and it
+            costs you <strong>@RollEntropy.MeasuredShannonShortfall(RollEntropy.RecommendedRollsFor(WordCount.Twelve)).ToString("0.000")
+            bits</strong> on the average measure, or
+            <strong>@((RollEntropy.FairBits(RollEntropy.RecommendedRollsFor(WordCount.Twelve)) - RollEntropy.MeasuredBits(RollEntropy.RecommendedRollsFor(WordCount.Twelve))).ToString("0.0"))
+            bits</strong> on the min-entropy floor, which is the measure that hands an attacker
+            perfect knowledge of which face is heavy. Out of
+            @RollEntropy.FairBits(RollEntropy.RecommendedRollsFor(WordCount.Twelve)).ToString("0.0"),
+            against a target of @RollEntropy.TargetBitsFor(WordCount.Twelve). There is no way to make
+            an ordinary die matter here, which is why the app has no fairness feature.
+        </p>
+        <p class="hint">
+            <strong>The question is provenance, not fairness.</strong> A die does not become badly
+            biased through manufacturing tolerance; it becomes badly biased because someone made it
+            that way or because it is damaged. Statistics will not find that for you, and a
+            chi-squared test on @RollEntropy.RecommendedRollsFor(WordCount.Twelve) rolls least of all:
+            with ten rolls expected per face, a face landing one time in five slips past it the large
+            majority of the time, while one honest log in twenty fails it regardless. Look at the die.
+        </p>
+        <p class="hint">Set a die aside and use a different one when:</p>
+        <ul class="hint">
+            <li>it is not yours: borrowed, found loose in a drawer, handed to you, or part of a
+                gambling, casino-novelty or magic set</li>
+            <li>an edge or corner is chipped, rounded or worn, or one face is scuffed noticeably more
+                than the others, since the worn face is the one that lands down</li>
+            <li>it rocks, or does not sit flat, on a hard flat surface</li>
+            <li>it is translucent and shows a bubble, an inclusion or a filled hole</li>
+            <li>it is hollow, foam, wood, oversized or a promotional giveaway</li>
+        </ul>
+        <p class="hint">
+            A new die costs less than the time spent testing an old one. If you do want to test, the
+            test that works is physical: dissolve salt in warm water until a die floats, which takes
+            more salt than you expect, then spin it with a finger a dozen times and note which face
+            ends up on top. A fair die shows a mix; a weighted one keeps the same face up, because the
+            weight settles to the bottom. That finds a loaded die in a minute. It cannot see a 1% pip
+            effect, and neither can anything else you can do at a table, which is the point: the bias
+            you can find is the one that matters and the one you cannot find does not.
+        </p>
+        <p class="hint">
+            Two things matter more than the die. <strong>Throw it so it tumbles</strong>: sliding it,
+            dropping it flat from an inch, or rolling it off a fixed grip can carry the starting face
+            through, so shake it in a cup or throw it hard enough to bounce off something. And
+            <strong>rotate several dice</strong> if you have them, so that a bad one touches only its
+            share of the log: one die in five, over
+            @RollEntropy.RecommendedRollsFor(WordCount.Twelve) rolls, is
+            @(RollEntropy.RecommendedRollsFor(WordCount.Twelve) / 5) rolls.
+        </p>
+        <p class="hint">
+            The honest limit on all of it: a roll log carries no evidence of the die that produced it,
+            so none of this is checkable afterwards, by you or by anyone. It is advice about a physical
+            object, which is why it is here as words and not as a feature.
         </p>
     </details>
 </details>
@@ -932,10 +1026,13 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
                 // even reach the target on perfect dice, which is the fact this copy exists for.
                 return RollEntropy.MinimumFallsShortFor(wordCount)
                     ? $"Enough to reproduce a device's {minimum}-roll seed. Not enough for a new one: {minimum} fair rolls carry {RollEntropy.FairBits(minimum):0.0} bits and the target is {target}, so the vendor minimum does not reach it even with perfect dice. {recommended - RollCount} more for {recommended}."
-                    : $"Enough to reproduce a device's {minimum}-roll seed, and thin for a new one: {minimum} fair rolls carry {RollEntropy.FairBits(minimum):0.0} bits against a target of {target}, and dice that are slightly unfair carry less. {recommended - RollCount} more for {recommended}.";
+                    : $"Enough to reproduce a device's {minimum}-roll seed, and thin for a new one: {minimum} fair rolls carry {RollEntropy.FairBits(minimum):0.0} bits against a target of {target}, and a real die carries {RollEntropy.MeasuredBits(minimum):0.0}. {recommended - RollCount} more for {recommended}.";
 
             if (RollCount == recommended)
-                return $"At {recommended}. That clears {target} bits even if one face of your die comes up a fifth of the time, which is worse than real dice are.";
+                // The margin, said with the size of it rather than an assurance. "Worse than real
+                // dice are" stood here on its own for two releases, which is the kind of sentence
+                // this app is supposed to be checkable instead of.
+                return $"At {recommended}. That clears {target} bits even if one face of your die comes up a fifth of the time, which is {RollEntropy.PessimismFactor:0} times more lopsided than the largest bias ever measured on ordinary dice.";
 
             return mode == DerivationMode.BackupKey
                 ? $"{RollCount - recommended} above {recommended}. All {RollCount} rolls are hashed, and the key is 32 bytes at any length."

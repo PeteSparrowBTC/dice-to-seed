@@ -304,6 +304,20 @@ details.runbook {
 
 details.runbook summary { cursor: pointer; font-weight: 600; }
 
+/* "Before you start" now holds two of these back to back: the arithmetic, and whether your die
+   is good enough. Adjacent ones would otherwise share an edge and read as one box. */
+details.runbook + details.runbook { margin-top: .6rem; }
+
+/* The list of reasons to suspect a die. Indented to the bullet rather than hanging off the panel
+   edge, and given room between items because each one is a thing to check against an object in
+   your hand rather than a line to skim. */
+ul.hint {
+    margin: .4rem 0 0;
+    padding-left: 1.2rem;
+}
+
+ul.hint li { margin-bottom: .3rem; }
+
 footer {
     margin-top: 2.5rem;
     padding-top: 1rem;
@@ -469,7 +483,9 @@ button.mode-key.selected {
    a caption pointing at it. */
 .entropy-table {
     display: grid;
-    grid-template-columns: auto repeat(3, minmax(3.5rem, auto));
+    /* Four numeric columns: fair, real dice, floor, target. The middle one is a measurement
+       rather than a model, which is the whole reason it was added. */
+    grid-template-columns: auto repeat(4, minmax(3.25rem, auto));
     gap: .1rem 1rem;
     font-size: .9375rem;
     margin: .6rem 0 1rem;
