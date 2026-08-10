@@ -3,6 +3,68 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## 1.3.0
+
+The same words from the same rolls as 1.2.0. This release is what came out of running the AppImage
+on Tails and reading the page as a user rather than as its author.
+
+### The page is ordered for someone using it
+
+- **"Before you start" is above the dice pad**, where advice about what to do first belongs. It was
+  at the bottom, past the point where anyone had already started rolling. It is collapsible and open
+  on load, because expanded it pushes the dice below the fold in the 1000x900 window the AppImage
+  opens at: the pad sits at y=852 open and y=657 collapsed. Read it, close it, roll.
+- The entropy table moved behind its own disclosure. Fifty lines of arithmetic is not what "before
+  you start" means.
+
+### The word "preimage" is gone from the interface
+
+- The result said "Preimage (the rolls, hashed as-is)", which claimed the value shown was already a
+  digest and used jargon to do it. The labels now read **What will be hashed**, **What was hashed:
+  your rolls, and nothing else**, and **SHA-256 of that string**. For d6 the value is the roll log
+  character for character, and the label says so instead of naming the concept.
+
+### The backup key can be copied, and says where it goes
+
+- **The key was renderable only as sixteen numbered groups**, and selecting that block dragged the
+  group numbers into the clipboard, so a paste produced `1 6cb0 2 9af8 3 5505` rather than the key.
+  The unbroken 64-character line is now the primary rendering, with the grouped view kept below it
+  and labelled for pen and paper.
+- The group numbers became CSS generated content on a data attribute. `user-select: none` was tried
+  first and is not enough: it prevents a mouse selecting the number while leaving the text in the
+  DOM, so a copy still reaches it. Generated content cannot be copied by any route.
+- The key and the check code are now boxed together under **"This is what goes into
+  slip39-backup"**, followed by "Those two values, and nothing else on this page". They used to be
+  three step labels apart with commentary in between, so which values to transfer was a fair
+  question.
+
+### The banner decision is tested
+
+- The Pages workflow described the red warning on a hosted build as "the only thing standing between
+  a curious visitor and a real roll log typed into a web page", and said the behaviour was tested.
+  Nothing tested it: it was an inline expression comparing the host against three strings. It now
+  lives in `DiceToSeed.Core/ServingOrigin.cs` with 25 cases, including the hosts a shortcut waves
+  through, such as `127.0.0.1.example.com` and `localhost.evil.com`.
+- The check also got wider where it was too narrow, and one case was a latent defect: a non-web
+  scheme is local, because `tauri:` and `file:` are an in-process handler rather than a network; the
+  whole loopback range counts, not only `127.0.0.1`; and anything under `.localhost` counts, per RFC
+  6761. Tauri serves from `tauri.localhost` on Windows, so a Windows desktop build would have warned
+  against itself on every launch.
+
+### Packaging
+
+- **The AppImage filename carries the version**: `dice-to-seed-1.3.0-x86_64.AppImage`. The AppImage
+  is the file that survives on somebody's USB stick long after `SHA256SUMS` has been deleted, and a
+  bare name tells its owner nothing about which release they hold. Anything scripted against
+  `dice-to-seed-x86_64.AppImage` needs updating; the release notes and docs glob on the pattern.
+
+### Honesty about the clipboard
+
+- Rule 6 listed "no clipboard writes of seed material" beside "no network call", which reads as a
+  safeguard. It is not one: any text on the page can be selected and copied. What is true, and what
+  the rule and the footer now say, is that the app never writes to the clipboard itself, so nothing
+  lands there unless you put it there. Copy buttons were considered and not added.
+
 ## 1.2.0
 
 The same words from the same rolls as 1.1.0. This release is about the page telling the truth and
