@@ -547,6 +547,23 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
         both and proves nothing about the setting that matters. The easiest log to type is the
         one that cannot catch this.
     </p>
+    @* The setting can be checked on his own page instead of taken on trust from ours, and that is
+       worth more than another paragraph of assertion. His Filtered Entropy field is the string the
+       tool actually consumes, so the rewrite is visible there before any hashing happens. *@
+    <p class="hint">
+        <strong>You can watch this happen, rather than take our word for it.</strong> Tick
+        <em>Show entropy details</em> and look at the <strong>Filtered Entropy</strong> line: that
+        is the string his tool actually uses. Type a log with a 6 in it and switch between the two
+        settings. Under Base 10 the line matches what you typed. Under Dice, every 6 becomes a
+        <code>0</code>, and the words change underneath it.
+    </p>
+    <p class="hint">
+        Why his Dice setting does that, since it is not a defect: treating rolls as base-6 digits
+        needs the values 0 to 5, and 6 is congruent to 0. It is the correct conversion for that
+        interpretation. It is the wrong one here, because Coldcard, SeedSigner and Krux do not treat
+        d6 rolls as base-6 digits at all. They hash the literal characters, which is what Base 10
+        leaves alone and what the preimage above shows.
+    </p>
 
     <div class="step-label">On a SeedSigner</div>
     <p class="hint">

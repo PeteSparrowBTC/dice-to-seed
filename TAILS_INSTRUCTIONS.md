@@ -31,6 +31,12 @@ run in place, with nothing to install:
   contains at least one 6, because the two types agree on any log without one, and a log of all
   1s therefore proves nothing about the setting that matters.
 
+  You can see this rather than trust it. Tick **Show entropy details** and watch the **Filtered
+  Entropy** line, which is the string his tool actually uses: under Base 10 it matches what you
+  typed, and under Dice every 6 shows as a `0`. His conversion is not wrong, it is answering a
+  different question. Treating rolls as base-6 digits needs the values 0 to 5, and 6 is congruent
+  to 0. The vendors do not treat d6 rolls as base-6 digits; they hash the literal characters.
+
 SeedSigner's own `tools/mnemonic.py` needs `pip install` of it and of `embit`, so it is a
 check to run before the ceremony on a networked machine, not on Tails.
 
