@@ -3,6 +3,59 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## 1.3.8
+
+The same words from the same rolls as 1.3.7. How to actually throw the die, which the app had said
+nothing about, and a test it had oversold.
+
+### How to throw it
+
+A new section on the page, in `TAILS_INSTRUCTIONS.md`, in the README and in the bundle's
+`READ-THIS-FIRST.txt`. This is the one part of the ceremony the app cannot do, and it had no
+coverage at all.
+
+- **A hard flat surface, and make the die hit something.** A table rather than carpet, which absorbs
+  the bounce and lets a die settle without turning over. The load-bearing reference is casino craps,
+  where both dice must strike the far wall and that wall is lined with rubber pyramids. That rule
+  exists to destroy whatever the thrower set up, which is exactly the property wanted here, and it is
+  a published convention rather than a recollection.
+- **The test is tumbling, not a height.** Several turns and at least one bounce. Sliding, spinning it
+  flat, or dropping it from an inch can carry the starting face straight through. No height in
+  centimetres is given, because the observable is the tumbling and a number would be invented
+  precision. The reliable method is an opaque cup: shake and tip out.
+- **The off-the-table rule is fixed before the first throw**, and this is the part that matters. If
+  the die leaves the surface, lands leaning rather than flat, or cannot be read cleanly, that throw
+  does not count. The danger is not the re-throw: a die on the floor is unconnected to the number it
+  would have shown, so discarding it costs nothing. Choosing to discard a roll *after* reading a
+  number you did not like is a different act, and it narrows the set your seed came from in the same
+  way re-rolling a whole log does. Apply the rule before reading the face, and never discard a roll
+  already recorded.
+- **Press the button after each throw**, so the counter and the throws cannot drift apart.
+
+### The float test was oversold
+
+- It was described as "the test that works... finds a loaded die in a minute". Two corrections. The
+  practical one first: **many dice never float**, whatever you do, because saturated brine is about
+  the density of the plastic. One published comparison got 4 of 22 dice to float, so "keep adding
+  salt" can be a dead end, and sending someone off to keep going until it works is worse than telling
+  them it might not.
+- It also measures where the centre of mass sits rather than which face lands upward, which is related
+  but not the same. The same comparison found its predictions unsupported by rolling; that part is
+  weak evidence in itself, since 100 rolls of a d20 is five expected per face and has almost no power,
+  so it is reported as what it is rather than adopted as a conclusion.
+- It stays in the text as a way to catch a weight glued into a novelty die, and no longer as a
+  fairness measurement.
+
+### No video
+
+- A video was asked for and none is linked. The app cannot carry one at all: rule 6 forbids external
+  references, CI fails the build on one, and it runs offline where a link is useless. In the README a
+  link would be possible, and the honest obstacle is that video content cannot be verified from here,
+  while "dice control" tutorials teach the opposite of what this section recommends. Linking one
+  unwatched, in guidance for key generation, is the kind of unverified claim this repository exists
+  not to make. The [dice control](https://en.wikipedia.org/wiki/Dice_control) reference is linked
+  instead, since it explains the back-wall mechanism and can be read rather than trusted.
+
 ## 1.3.7
 
 The same words from the same rolls as 1.3.6. **One die, thrown repeatedly**, is now the

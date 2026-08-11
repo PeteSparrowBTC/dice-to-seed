@@ -152,6 +152,32 @@ the counter reads 60 and the words look exactly as convincing. Nothing in the ap
 So if you do throw several, use dice you can tell apart, read them in a fixed order every time, and
 never sort them into ascending order, which is the same mistake performed on purpose.
 
+## How to throw it
+
+The app cannot do this part, so it is the part worth reading once.
+
+**A hard flat surface, and make the die hit something.** A table rather than carpet, which absorbs the
+bounce and lets a die settle without turning over. Throw it against a book stood on edge, a box lid, or
+the wall. Casino craps requires both dice to strike the far wall, and that wall is lined with rubber
+pyramids, for exactly this reason: the bounce destroys whatever the thrower set up, which is the
+property you want and the reason
+[dice control](https://en.wikipedia.org/wiki/Dice_control) is hard at a real table.
+
+**The test is tumbling, not a height.** Several turns and at least one bounce. Sliding it, spinning it
+flat, or dropping it from an inch can carry the starting face straight through. The reliable method is
+an opaque cup: shake and tip out, which guarantees tumbling and means you cannot see the die before it
+lands.
+
+**Fix the off-the-table rule before the first throw.** If it leaves the surface, lands leaning rather
+than flat, or cannot be read cleanly, that throw does not count: throw again and record the second
+one. Decide it in advance, because the danger is not the re-throw. A die on the floor is unconnected to
+the number it would have shown, so discarding it costs nothing; choosing to discard a roll after
+reading a number you did not like is a different act, and narrows the set your seed came from. Apply
+the rule before you read the face.
+
+**Press the button after each throw**, before the next, so the counter and the throws cannot drift
+apart. A log one roll short produces a perfectly convincing seed phrase for a different wallet.
+
 ## Limits
 
 No random number generator. Every value comes from your dice, and a test fails the build if a

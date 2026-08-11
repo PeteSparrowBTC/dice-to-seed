@@ -146,7 +146,7 @@ else
    die "if you want to" and left the reader to guess whether it mattered. It does not, and the
    arithmetic for saying so is in RollEntropy. *@
 @* Open on load, so it is read before anything is rolled, and collapsible because it is not needed
-   twice. Measured rather than guessed: with this expanded the dice pad starts at y=908 in the
+   twice. Measured rather than guessed: with this expanded the dice pad starts at y=967 in the
    1000x900 window the AppImage opens at, which puts the primary action below the fold. Collapsed,
    the pad comes back up to y=657 and into view. Nothing here is remembered between sessions, by
    design, so it reopens each time, which is the right default for advice named "before you start". *@
@@ -235,6 +235,63 @@ else
        face, five degrees of freedom, and a face at p = 0.20 gives a noncentrality of about 0.5
        against a critical value of 11.07. It goes undetected the large majority of the time, while
        one honest log in twenty trips the 0.05 threshold anyway. *@
+    @* HOW TO THROW IT.
+       ================
+       Asked for directly: surface, height, what to do when the die goes off the table. The app had
+       nothing on any of it, which is a gap in the one part of the ceremony the app cannot do for you.
+
+       The load-bearing claim comes from casino craps, where both dice must strike the far wall and
+       that wall is lined with rubber pyramids. The rule exists to destroy whatever the thrower set
+       up, which is exactly the property wanted here, and it is a published rule rather than a
+       recollection. See the README for the reference.
+
+       The off-the-table rule is the part people get wrong, and it is the same principle as never
+       re-rolling a log for looking wrong: a re-throw is free, and CHOOSING to re-throw after seeing
+       the value is not. So the rule is fixed in advance and applied before the face is read.
+
+       Deliberately no height in centimetres. The observable is tumbling and a bounce, and a number
+       would be invented precision. *@
+    <details class="runbook">
+        <summary>How to throw it, and what to do when it goes off the table</summary>
+        <p class="hint">
+            <strong>A hard flat surface, and make it hit something.</strong> A table rather than
+            carpet, which absorbs the bounce and lets a die settle without turning over. Then throw it
+            against something: a book stood on edge, the inside of a box lid, the wall behind the
+            table. Casino craps requires both dice to strike the far wall, and that wall is lined with
+            rubber pyramids, for exactly this reason: the bounce wrecks whatever the thrower set up. It
+            is the one dice convention that exists to make a throw less controllable, so it is worth
+            copying.
+        </p>
+        <p class="hint">
+            <strong>The test is tumbling, not a height.</strong> It should turn over several times and
+            bounce at least once. What defeats a throw is sliding it, spinning it flat like a top, or
+            dropping it from an inch, any of which can carry the starting face all the way through. If
+            you would rather not think about it: shake it in an opaque cup and tip it out. That
+            guarantees the tumbling and has the side benefit that you cannot see the die until it has
+            landed.
+        </p>
+        <p class="hint">
+            <strong>Decide the off-the-table rule now, before the first throw.</strong> The rule:
+            if the die leaves the surface, lands leaning against something rather than flat, or cannot
+            be read cleanly, that throw does not count, and you throw again and record only the second
+            one.
+        </p>
+        <p class="hint">
+            Fixing it in advance is the whole point, because the danger is not the re-throw. A throw
+            that ends up on the floor is not connected to the number it would have shown, so
+            discarding it costs nothing. Choosing to discard a roll <em>after</em> reading a number you
+            did not like is a different act, and it narrows the set your seed came from in exactly the
+            way re-rolling a whole log does. So apply the rule before you read the face, and never
+            discard a roll you have already recorded.
+        </p>
+        <p class="hint">
+            <strong>Press the button after each throw, before the next one.</strong> Then the counter
+            and the throws cannot drift apart, and an interruption cannot quietly cost you a roll. A
+            log one roll short still produces a perfectly convincing seed phrase for a different
+            wallet.
+        </p>
+    </details>
+
     <details class="runbook">
         <summary>Are ordinary dice good enough, and when to suspect one</summary>
         <p class="hint">
@@ -277,14 +334,34 @@ else
             <li>it is translucent and shows a bubble, an inclusion or a filled hole</li>
             <li>it is hollow, foam, wood, oversized or a promotional giveaway</li>
         </ul>
+        @* THE FLOAT TEST, DEMOTED.
+           ========================
+           This said "the test that works is physical: dissolve salt in warm water until a die floats
+           ... that finds a loaded die in a minute". Two things are wrong with that, and the first is
+           the practical one: many dice do not float in saturated brine at all. In the comparison at
+           gnomestew.com, "Testing The Float Test", 4 of 22 dice floated. Saturated brine is about
+           1.20 g/cm3 and acrylic dice sit around there, so "keep adding salt" can be a dead end, and
+           telling someone to keep going until it works is worse than telling them it might not.
+
+           The second is that the test measures where the centre of mass is, which is related to but
+           not the same as which face lands upward. The same comparison found the float test's
+           predictions unsupported by rolling. That part is weak evidence in itself: 100 rolls of a
+           d20 is 5 expected per face, which has almost no power, so it does not refute the test
+           either. Reported here as what it is rather than adopted as a conclusion.
+
+           So the wording keeps the test as a way to catch a grossly weighted die, says it often
+           cannot be run, and stops calling it "the test that works". *@
         <p class="hint">
-            A new die costs less than the time spent testing an old one. If you do want to test, the
-            test that works is physical: dissolve salt in warm water until a die floats, which takes
-            more salt than you expect, then spin it with a finger a dozen times and note which face
-            ends up on top. A fair die shows a mix; a weighted one keeps the same face up, because the
-            weight settles to the bottom. That finds a loaded die in a minute. It cannot see a 1% pip
-            effect, and neither can anything else you can do at a table, which is the point: the bias
-            you can find is the one that matters and the one you cannot find does not.
+            A new die costs less than the time spent testing an old one. If you want to try anyway,
+            floating one in saturated salt water and spinning it will show up a grossly weighted die:
+            the weight settles to the bottom, so the same face keeps surfacing. Two caveats, both
+            worth having before you start. <strong>Many dice do not float</strong>, whatever you do: brine tops out
+            near the density of the plastic, and one comparison managed it with 4 dice out of 22. And
+            it measures where the mass sits rather than which face lands upward, which is related but
+            not the same thing. It is a way to catch a weight glued inside a novelty die, not a
+            fairness measurement, and nothing you can do at a table measures the 1% pip effect. That
+            is the point: the bias you can find is the one that matters, and the one you cannot find
+            does not.
         </p>
         <p class="hint">
             Two things matter more than which die it is. <strong>Throw it so it tumbles</strong>:

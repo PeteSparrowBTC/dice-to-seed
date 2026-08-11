@@ -149,14 +149,44 @@ to diagnose.
    surface, if it is translucent with a bubble or a filled hole, or if it is hollow, foam, wood,
    oversized or a giveaway. A new die costs less than testing an old one.
 
-   If you do want to test one, do it physically: dissolve salt in warm water until a die floats,
-   spin it with a finger a dozen times, and see whether the same face keeps coming up on top. A
-   weighted die will, because the weight settles to the bottom. That takes a minute and finds the
-   bias that matters.
+   If you want to try a test anyway: floating a die in saturated salt water and spinning it shows up
+   a grossly weighted one, because the weight settles to the bottom and the same face keeps
+   surfacing. Two caveats worth knowing before you start mixing brine. **Many dice never float**,
+   whatever you do, since saturated brine is about the density of the plastic; one published
+   comparison got 4 of 22 dice to float. And it measures where the mass sits rather than which face
+   lands upward, which is related but not the same. It catches a weight glued into a novelty die. It
+   is not a fairness measurement, and nothing you can do at a table measures the 1% pip effect.
 
-   Two things matter more than which die it is. Throw it so it **tumbles**, since sliding it or
-   dropping it flat from an inch can carry the starting face through. And **use one die**, thrown
-   repeatedly, so the order is the order you threw them in.
+### How to throw it
+
+The app cannot do this part for you, so it is worth getting right once.
+
+1. **A hard flat surface, and make the die hit something.** A table rather than carpet, which
+   absorbs the bounce and lets a die settle without turning over. Throw it against a book stood on
+   edge, the inside of a box lid, or the wall behind the table. Casino craps requires both dice to
+   strike the far wall, and that wall is lined with rubber pyramids, for exactly this reason: the
+   bounce destroys whatever the thrower set up. It is the one dice convention designed to make a
+   throw less controllable, so copy it.
+2. **The test is tumbling, not a height in centimetres.** The die should turn over several times and
+   bounce at least once. What defeats a throw is sliding it, spinning it flat like a top, or dropping
+   it from an inch: any of those can carry the starting face straight through. Simplest reliable
+   method: shake it in an opaque cup and tip it out, which guarantees the tumbling and means you
+   cannot see the die before it lands.
+3. **Fix the off-the-table rule before the first throw.** If the die leaves the surface, lands leaning
+   against something rather than flat, or cannot be read cleanly, that throw does not count: throw
+   again and record only the second one.
+
+   Decide it in advance because the danger is not the re-throw. A die that ends up on the floor is
+   not connected to the number it would have shown, so discarding it costs nothing. Choosing to
+   discard a roll *after* reading a number you did not like is a different act, and it narrows the set
+   your seed came from in the same way re-rolling a whole log does. Apply the rule before you read the
+   face, and never discard a roll you have already recorded.
+4. **Press the button after each throw, before the next one**, so the counter and your throws cannot
+   drift apart. A log one roll short still produces a perfectly convincing seed phrase, for a
+   different wallet.
+
+   Two things matter more than which die it is. **How you throw it**, which is the section below,
+   and **using one die**, thrown repeatedly, so the order is the order you threw them in.
 
    An earlier version of this said to rotate several dice, so that a bad one touched only its share of
    the log. That was mitigating the wrong risk. It hedged manufacturing bias, worth about a bit in a
