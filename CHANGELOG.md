@@ -3,6 +3,52 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## 1.3.6
+
+The same words from the same rolls as 1.3.5. Three things 1.3.5 got wrong or left out, two of them
+found by running it on Tails rather than reasoning about it.
+
+### The zip had no published hash
+
+- `SHA256SUMS` covered the AppImage only, so the artifact whose entire purpose is verification was
+  itself unverifiable: anyone wanting to check the zip before extracting had nothing to check
+  against. It now covers both files, which meant building the bundle before the checksums rather
+  than after.
+- Since a downloader usually takes one and not the other, the docs give
+  `sha256sum -c --ignore-missing SHA256SUMS`. Without that flag the file you deliberately did not
+  download is reported as a failure.
+
+### "Double-click start-here.sh" was wrong
+
+- GNOME Files opens an executable `.sh` in the **text editor** on a double-click. The instructions
+  now say to right-click and choose **Run as a Program**, which is what actually works and what was
+  confirmed on a real session. Properties and "Executable as Program" stays as the fallback for when
+  that entry is missing from the menu.
+
+### The AppImage in the zip is deliberately not executable
+
+- Confirmed on Tails: Archive Manager restores the modes a zip stores, so 1.3.5's AppImage arrived
+  ready to double-click and ran with no chmod step at all. That reads as a convenience and is a hole.
+  Double-clicking the app was easier than right-clicking the checker, so the fastest route into the
+  application was the one that skipped the verification the bundle exists to provide.
+- It is now stored 644, and `start-here.sh` sets the bit itself after the hash matches. Bypassing
+  the check still works through Properties, which is a deliberate act rather than an accident, and
+  `READ-THIS-FIRST.txt` says the app is switched off until it has been checked so that a click on it
+  doing nothing reads as intended rather than broken.
+- `build-bundle.sh` asserts **both** modes, the launcher executable and the AppImage not, and fails
+  the build if either is wrong. Asserting only one would have missed the defect that matters more.
+
+### Field notes
+
+- `docs/tails-platform-notes.md` had "GNOME Files does not launch binaries on double-click" at the
+  top of its troubleshooting list. **That is wrong for Tails 7** and is corrected, with the date and
+  the Nautilus version: an AppImage carrying its bit launches on a double-click. The claim was
+  sending people to a terminal to diagnose a problem they did not have. Scripts are the genuine
+  exception and now have their own entry.
+- The manifest lookup for the GUI tools is recorded: `zenity` 4.1.90, `file-roller` 44.5, `7zip`
+  25.01, `nautilus` 48.3, `gnome-console` 48.0.1, and **no `unzip` or `zip` at all**, so any
+  instruction containing the word `unzip` is wrong for this platform.
+
 ## 1.3.5
 
 The same words from the same rolls as 1.3.4. A second release artifact, for the person who is

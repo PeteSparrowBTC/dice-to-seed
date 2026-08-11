@@ -108,11 +108,6 @@ jobs:
           ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run \
             AppDir "dice-to-seed-$(cat VERSION)-x86_64.AppImage"
 
-      - name: Assemble the release files
-        run: |
-          sha256sum dice-to-seed-*-x86_64.AppImage | tee SHA256SUMS
-          ls -lh dice-to-seed-*-x86_64.AppImage
-
       # The second artifact, for the person who was handed a stick rather than the person reading
       # this file. Same AppImage, plus its fingerprint, a checker that refuses to launch a file
       # that does not match, and instructions written for someone who does not use a terminal.
@@ -124,11 +119,24 @@ jobs:
       #
       # The loose AppImage and SHA256SUMS stay, for anyone verifying independently or scripting
       # against them. The release notes say which of the two to take.
+      #
+      # Built BEFORE the checksums, so the zip can be covered by them. In 1.3.5 it was built after
+      # and the zip therefore shipped with no published hash of its own: anyone wanting to check it
+      # before extracting had nothing to check against, which is a poor look on the artifact whose
+      # entire purpose is verification.
       - name: Assemble and verify the Tails bundle
         run: |
           chmod +x packaging/tails-bundle/build-bundle.sh
           packaging/tails-bundle/build-bundle.sh \
             "$(ls dice-to-seed-*-x86_64.AppImage | head -1)" "$(cat VERSION)" .
+
+      - name: Assemble the release files
+        run: |
+          # Both artifacts, so either one can be verified on its own. A downloader who took only
+          # the zip runs `sha256sum -c --ignore-missing SHA256SUMS`, which checks what is present
+          # rather than reporting the file they deliberately did not download as missing.
+          sha256sum dice-to-seed-*-x86_64.AppImage dice-to-seed-*-tails.zip | tee SHA256SUMS
+          ls -lh dice-to-seed-*-x86_64.AppImage dice-to-seed-*-tails.zip
 
       - name: Publish the release
         uses: softprops/action-gh-release@v2

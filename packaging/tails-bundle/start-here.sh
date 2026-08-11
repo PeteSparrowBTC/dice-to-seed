@@ -32,14 +32,24 @@
 # hand and then launch by hand, at which point the verification is the step that gets skipped.
 # Launching here means the only route to the app is the one that checks it first.
 #
-# THE EXECUTABLE BIT
-# ==================
-# This script needs its own executable bit to be double-clickable, which is the same obstacle the
-# AppImage has, and Tails has no unzip: extraction goes through Archive Manager or 7zip, and
-# whether either restores the stored mode is unverified. So the instructions tell the user to set
-# it on this one file, which is a step they already had to perform on the AppImage. Nothing here
-# assumes the bit survived. If it did, they skip a step; if not, they do it once instead of once
-# per release.
+# THE EXECUTABLE BIT, AND WHY THE APPIMAGE ARRIVES WITHOUT ONE
+# ============================================================
+# Settled on a real Tails session rather than reasoned about: Archive Manager restores the modes
+# stored in the zip, so this script arrives runnable. Tails has no unzip command, so extraction is
+# the GUI path or 7z, and the GUI path preserves the bit.
+#
+# That is also why the AppImage is stored 644. If it arrived at 755 it would open on a double-click,
+# which is easier than right-clicking this script, so the quickest way into the app would be the way
+# that skips the check. The chmod below is what makes it runnable, and it happens only after the
+# hash matches. Bypassing that needs a deliberate trip through Properties.
+#
+# The instructions still explain how to set the bit on this file, for an extractor that drops modes.
+# Nothing here depends on the archive carrying them.
+#
+# GNOME Files opens an executable .sh in the text editor on a double-click, so the instructions say
+# to right-click and choose "Run as a Program". A binary is different: an AppImage with its bit set
+# launches on a double-click on nautilus 48.3, which is the behaviour this bundle deliberately
+# withholds until the check has run.
 
 set -u
 

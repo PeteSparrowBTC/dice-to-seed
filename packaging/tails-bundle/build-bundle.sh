@@ -62,8 +62,16 @@ if grep -q "@VERSION@\|@SHA256@" "$work/READ-THIS-FIRST.txt"; then
     exit 1
 fi
 
-chmod 755 "$work/start-here.sh" "$work/$appimage_name"
-chmod 644 "$work/SHA256SUMS" "$work/READ-THIS-FIRST.txt"
+# The AppImage is deliberately NOT executable, and this is the least obvious decision in the
+# bundle. Archive Manager on Tails restores stored modes, confirmed on a real session, so an
+# AppImage stored 755 arrives ready to double-click. That reads as a convenience and is a hole:
+# double-clicking the app is then easier than right-clicking start-here.sh, so the fastest route
+# to the application is the one that skips the check, and the check is what this artifact exists
+# for. At 644 the app cannot run until start-here.sh has verified it and set the bit. Anyone who
+# wants to bypass that can still tick Properties, which is a deliberate act rather than an
+# accident.
+chmod 755 "$work/start-here.sh"
+chmod 644 "$work/$appimage_name" "$work/SHA256SUMS" "$work/READ-THIS-FIRST.txt"
 
 mkdir -p "$outdir"
 outdir="$(cd "$outdir" && pwd)"
@@ -77,12 +85,18 @@ command -v zipinfo >/dev/null || { echo "::error::zipinfo is needed to verify th
 echo "--- stored modes"
 zipinfo "${outdir}/${bundle_name}.zip"
 
-for executable in "start-here.sh" "$appimage_name"; do
-    if ! zipinfo "${outdir}/${bundle_name}.zip" | grep -qE "^-rwxr-xr-x.* ${bundle_name}/${executable//./\\.}$"; then
-        echo "::error::${executable} is not stored as executable in the zip, so extracting it cannot produce a runnable file."
-        exit 1
-    fi
-done
+# Both directions matter, and asserting only one of them would miss the defect that matters more.
+# The launcher has to arrive runnable, or nothing can be started at all. The AppImage has to arrive
+# NOT runnable, or it can be started without being checked.
+if ! zipinfo "${outdir}/${bundle_name}.zip" | grep -qE "^-rwxr-xr-x.* ${bundle_name}/start-here\.sh$"; then
+    echo "::error::start-here.sh is not stored as executable, so extracting it cannot produce a runnable file."
+    exit 1
+fi
+
+if ! zipinfo "${outdir}/${bundle_name}.zip" | grep -qE "^-rw-r--r--.* ${bundle_name}/${appimage_name//./\\.}$"; then
+    echo "::error::The AppImage is stored as executable, so it can be launched without being checked first."
+    exit 1
+fi
 
 # ---------------------------------------------------------------------------------------------
 # Assertion 2: the checker refuses a file that does not match, and accepts one that does.

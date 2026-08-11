@@ -50,9 +50,15 @@ check to run before the ceremony on a networked machine, not on Tails.
 `start-here.sh`, which checks the app against its fingerprint and refuses to open it if they
 disagree. Copy the zip to the stick as it is.
 
-At the Tails machine: extract it in the Files window, drag the extracted folder into Home, and
-double-click `start-here.sh`. If nothing happens, right-click it, choose Properties, and turn on
-"Executable as Program", which is the same step the bare AppImage needs and for the same reason.
+At the Tails machine: extract it in the Files window, drag the extracted folder into Home, then
+right-click `start-here.sh` and choose **Run as a Program**. Not a double-click: GNOME Files opens an
+executable script in the text editor instead of running it. If "Run as a Program" is missing from the
+menu, the file needs Properties and "Executable as Program" first.
+
+The AppImage inside the zip is **deliberately not executable**, so clicking it directly does nothing.
+Archive Manager restores the modes the zip stores, confirmed on a real session, which means an
+AppImage shipped as executable would open on a double-click and the quickest route into the app would
+be the one that skips the check. `start-here.sh` sets the bit itself once the hash matches.
 
 This exists because the verification the rest of this document asks for was impossible to perform
 where it matters. Offline there is no release page to read and no documentation on the stick, so
@@ -70,8 +76,13 @@ One file, no server, no port, no browser to configure. Download the AppImage fro
 `SHA256SUMS`, check it, and put it on the stick:
 
 ```bash
-sha256sum -c SHA256SUMS
+sha256sum -c SHA256SUMS            # both artifacts
+sha256sum -c --ignore-missing SHA256SUMS   # if you took only one of them
 ```
+
+`SHA256SUMS` covers the AppImage and the zip, so `--ignore-missing` is the form to use when you
+downloaded one and not the other. Without it, the file you deliberately did not fetch is reported as
+a failure.
 
 **Tails does not make that check redundant, and the reason is specific to this app.** Tails decides
 whether your seed can get out: it keeps nothing, it runs in RAM, and with the network off there is

@@ -75,16 +75,19 @@ narrows the set your seed comes from.
 
 **If the person doing this is not you, take `dice-to-seed-<version>-tails.zip` instead.** It is the
 same app with its fingerprint, instructions for someone who does not use a terminal, and a
-`start-here.sh` that checks the app before opening it and refuses if it does not match. Extract it
-in the Files window, copy the folder into Home, double-click `start-here.sh`. Verify the download
-yourself, as below, before handing the stick over: the check inside the zip proves the file was not
-damaged or altered, not that the download was genuine.
+`start-here.sh` that checks the app before opening it and refuses if it does not match. Extract it in
+the Files window, copy the folder into Home, then right-click `start-here.sh` and choose "Run as a
+Program". The AppImage in the zip is deliberately not executable, so the checker is the only way to
+start it. Verify the download yourself, as below, before handing the stick over: the check inside the
+zip proves the file was not damaged or altered, not that the download was genuine.
 
-Before booting Tails, download the AppImage from the
-[releases page](https://github.com/PeteSparrowBTC/dice-to-seed/releases) and check it:
+Before booting Tails, download from the
+[releases page](https://github.com/PeteSparrowBTC/dice-to-seed/releases) and check what you took.
+`SHA256SUMS` covers both the AppImage and the zip:
 
 ```bash
-sha256sum -c SHA256SUMS
+sha256sum -c SHA256SUMS                    # both
+sha256sum -c --ignore-missing SHA256SUMS   # only the one you downloaded
 ```
 
 Do this even though you will run it on Tails. The two protect different things: Tails decides whether

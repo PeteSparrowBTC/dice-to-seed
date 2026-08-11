@@ -58,13 +58,14 @@ from the CI dependency report on this repository's own build.
 When the AppImage appears to do nothing on Tails, the cause has so far never been a missing
 dependency. In order of likelihood:
 
-1. **GNOME Files does not launch binaries on double-click.** It does nothing and says nothing.
-   The GUI route is right-click, **Properties**, turn on **Executable as Program**, then
-   right-click again and choose **Run as a Program**. Both labels verified against Nautilus
-   48.3, which is the version in Tails 7.10.1. Without the permission set, **Run as a Program**
-   is not in the menu at all, which is what makes this look like a broken download.
-2. **The executable bit is gone**, because the file crossed a FAT or exFAT stick, or came from
-   Windows. `chmod +x`.
+1. **The executable bit is gone**, because the file crossed a FAT or exFAT stick, or came from
+   Windows. This is the usual cause. The GUI route is right-click, **Properties**, turn on
+   **Executable as Program**. Both labels verified against Nautilus 48.3, the version in Tails
+   7.10.1. Without the permission set, **Run as a Program** is not in the menu at all, which is
+   what makes this look like a broken download.
+2. **It is a script rather than a binary.** GNOME Files opens an executable `.sh` in the text
+   editor when double-clicked, so scripts need right-click and **Run as a Program**. Binaries do
+   not: see the correction below.
 3. **The USB may be mounted `noexec`.** Copy the AppImage to `~` first; that removes causes 2
    and 3 together.
 4. **A pre-flight check in `AppRun` that is itself broken.** This actually happened: the check
@@ -73,6 +74,48 @@ dependency. In order of likelihood:
    supplied, and the script refused to start on a system where the library was installed all
    along. `AppRun` now warns rather than blocking, and CI prints the real `NEEDED` entries on
    every build. A guard that can produce a false negative is worse than no guard.
+
+### Corrected on 2026-08-11: a double-click does launch an AppImage
+
+The list above used to begin with "GNOME Files does not launch binaries on double-click. It does
+nothing and says nothing." **That was wrong**, and it was corrected by running it rather than by
+reasoning about it.
+
+On a Tails session with Nautilus 48.3, an AppImage extracted from the release zip launched on a
+plain double-click, with no terminal and no visit to Properties. The reason it worked is the
+executable bit: the zip stores Unix modes and **Archive Manager restores them**, so the file arrived
+already runnable. The old claim was true of some GNOME versions and is not true of this one, and it
+was sending people to a terminal to diagnose a problem they did not have.
+
+What GNOME Files will not do on a double-click is run a **script**: an executable `.sh` opens in the
+text editor instead, which is why the bundle's instructions say to right-click `start-here.sh` and
+choose **Run as a Program**.
+
+Two consequences for the bundle, both now load-bearing:
+
+- Nothing in it needs a `chmod` step when it is extracted through Archive Manager.
+- The AppImage is therefore stored **644, deliberately not executable**. If it arrived runnable, a
+  double-click on the app would be easier than a right-click on the checker, so the quickest route
+  into the application would be the one that skips verification. `start-here.sh` sets the bit itself,
+  after the hash matches. `build-bundle.sh` asserts both modes and fails the build if either is
+  wrong.
+
+### What the manifest says about the GUI tools
+
+| | present in 7.10.1? | version |
+| --- | --- | --- |
+| `zenity` | yes | 4.1.90-1 |
+| `file-roller`, Archive Manager | yes | 44.5-1 |
+| `7zip` | yes | 25.01+dfsg-1~deb13u2 |
+| `nautilus` | yes | 48.3-2 |
+| `gnome-console` | yes | 48.0.1-2+b1 |
+| **`unzip`** | **no** | |
+| **`zip`** | **no** | |
+
+`unzip` being absent is the one that catches people: extraction is the GUI path or `7z`, and any
+instruction containing the word `unzip` is wrong for this platform. `zenity` being present is what
+lets `start-here.sh` report a failed check at all, since a script started from the file manager has
+no terminal and anything it prints goes nowhere.
 
 ## Browser notes, kept for a route no longer shipped
 

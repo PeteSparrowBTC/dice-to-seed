@@ -21,15 +21,23 @@ Programs are usually not allowed to run from a USB stick, so this is not optiona
 Copy the whole folder, not just the app: the three files have to stay together.
 
 
-STEP 2. OPEN start-here.sh BY DOUBLE-CLICKING IT
+STEP 2. RIGHT-CLICK start-here.sh AND CHOOSE "RUN AS A PROGRAM"
 
-If a window appears, go to step 3.
+A window appears. Go to step 3.
 
-If nothing happens at all, the file needs permission to run:
+Do not double-click this file. Double-clicking opens it in a text editor and shows you
+the instructions it is written in, which is confusing and does nothing.
+
+If "Run as a Program" is not in the menu, the file needs permission to run first:
 
   1. Right-click start-here.sh and choose Properties
   2. Turn on "Executable as Program"
-  3. Close the window and double-click start-here.sh again
+  3. Close the window, right-click again, and choose "Run as a Program"
+
+
+The app will not open if you click it directly, and that is on purpose. It is switched off
+until start-here.sh has checked it. Going through start-here.sh is the whole point: it is
+what turns the app on.
 
 
 STEP 3. READ THE WINDOW THAT APPEARS
