@@ -80,6 +80,13 @@ Before booting Tails, download the AppImage from the
 sha256sum -c SHA256SUMS
 ```
 
+Do this even though you will run it on Tails. The two protect different things: Tails decides whether
+your seed can get out, and the checksum decides whether the program deriving it is the one published
+here. A tampered build needs no network to hurt you, only words its author can also compute, and an
+offline session runs it faithfully. The check catches a corrupted download or a stick altered
+afterwards; it is not a signature, since the hash file travels with the file it describes, so for
+anything stronger compare the hash against the public build log of the tagged release.
+
 Copy it to the stick. On Tails, no terminal is needed:
 
 1. Open the stick in Files and copy the AppImage into your Home folder. Copy it off the stick

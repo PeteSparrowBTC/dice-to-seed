@@ -72,7 +72,10 @@ review, not from a branch.
   deleted, and a bare filename tells its owner nothing about which release they are holding
 - `SHA256SUMS`
 
-An AppImage is an opaque blob and the checksum is all a downloader can check it against. A
+An AppImage is an opaque blob, and the checksum is what a downloader can check it against without
+building it: intact, not truncated, not altered on the stick. It is not a signature, and it travels
+with the file it describes, so it does not establish that neither was substituted. The build log of
+the tagged run prints the same hash and is a second place to look. A
 `wwwroot` zip used to ship alongside it, described as the same program in a form that can be
 inspected. That claim did not hold up: the markup and the stylesheet are readable, and the
 derivation is compiled to WebAssembly in both artifacts. Reading this app means reading the

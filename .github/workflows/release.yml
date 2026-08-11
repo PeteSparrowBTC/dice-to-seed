@@ -129,10 +129,18 @@ jobs:
             sha256sum -c SHA256SUMS
             ```
 
-            An AppImage is an opaque blob and the checksum is the only thing you can check it
-            against. To read the app rather than run it, read the source: the conversion is a
-            few hundred lines and the suite carries the published Coldcard and SeedSigner
-            vectors. There is also a demo build in the browser, linked from the README.
+            Do this even though you will run it on Tails. Tails decides whether your seed can
+            get out; the checksum decides whether the program deriving it is the one published
+            here, and a tampered build needs no network to hurt you: it only needs to show you
+            words its author can also compute. What the check proves is that the file is intact
+            and was not altered on the stick. What it does not prove, since the hash file travels
+            with the file it describes and there is no signature, is that neither was substituted.
+            For that, compare against the hash printed in this release's public build log.
+
+            To read the app rather than run it, read the source: the conversion is a few hundred
+            lines and the suite carries the published Coldcard and SeedSigner vectors. The demo
+            build in the browser is for trying it, not for reading it, because the derivation is
+            compiled to WebAssembly there as it is here.
 
             ## On Tails
 

@@ -50,6 +50,24 @@ One file, no server, no port, no browser to configure. Download the AppImage fro
 sha256sum -c SHA256SUMS
 ```
 
+**Tails does not make that check redundant, and the reason is specific to this app.** Tails decides
+whether your seed can get out: it keeps nothing, it runs in RAM, and with the network off there is
+nowhere for anything to go. The checksum decides something else, which is whether the program
+deriving your seed is the one this project published. A tampered build of this app does not need a
+network to hurt you. It only needs to show you twelve words its author can also compute, and you
+would then write them on paper and fund them. An offline amnesic session runs that faithfully and
+forgets it perfectly.
+
+What the check does prove: the file is intact, the download was not truncated, and nothing altered
+it on the stick afterwards.
+
+What it does not prove, said plainly because the opposite is easy to assume: the AppImage and
+`SHA256SUMS` come from the same page over the same connection, so anyone able to substitute one can
+substitute the other. There is no signature. To get past that you need the hash from somewhere else:
+the build log of the tagged release run is public and prints the hash at the moment the file was
+made, from a commit you can read. Comparing against that costs a minute and is a different thing to
+have to compromise.
+
 On Tails, no terminal is needed:
 
 1. Open the stick in **Files** and copy the AppImage into your **Home** folder. Copy it off the

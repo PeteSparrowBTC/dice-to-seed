@@ -3,6 +3,36 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## 1.3.3
+
+The same words from the same rolls as 1.3.2. Two claims corrected, both of them overclaims in the
+same direction: a check described as stronger than it is.
+
+### The demo is for trying the app, not for reading it
+
+- The banner said "a hosted copy, for trying the app and reading the code". You cannot read the code
+  there. The derivation compiles to WebAssembly, so the page shows what the app does and not how it
+  does it, and reading it means reading the source. This is the same overclaim that got
+  `dice-to-seed-wwwroot.zip` dropped in 1.2.0, made again about the page that replaced it.
+- The workflow comment that described the deployment as existing "to demonstrate and to be read" is
+  corrected in the same terms.
+
+### What the checksum proves, and what it does not
+
+- **Tails does not make the checksum redundant**, and the docs now say why rather than leaving it to
+  be assumed. The two protect different things: Tails decides whether your seed can get out, while
+  the checksum decides whether the program deriving it is the one published here. A tampered build
+  of this app needs no network at all. It only needs to show you twelve words its author can also
+  compute, and an offline amnesic session runs that faithfully and forgets it perfectly.
+- Said plainly instead of implied: the check catches a corrupted or truncated download and a stick
+  altered afterwards. It is **not a signature**, and `SHA256SUMS` travels with the file it
+  describes, so anyone able to substitute one can substitute the other. For that, compare against
+  the hash printed in the tagged run's public build log, which is a separate thing to have to
+  compromise.
+- `VERSIONING.md` said the checksum was "all a downloader can check it against", which was the same
+  overclaim in the place that documents the release. Corrected there and in the release notes
+  template.
+
 ## 1.3.2
 
 The same words from the same rolls as 1.3.1. One visible defect, present in every release so far,

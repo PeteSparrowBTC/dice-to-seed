@@ -9,7 +9,13 @@
 # depends on the served files being the ones in this repository, and a visitor cannot know that
 # a server has not swapped them.
 #
-# So this deployment exists to demonstrate and to be read, not to be used. The app itself
+# So this deployment exists to be tried, not to be used and not to be read. "To be read" was
+# claimed here and in the banner, and it was never true: the derivation compiles to WebAssembly, so
+# a browser shows what the app does and not how. Reading it means reading the source. That is the
+# same overclaim that got dice-to-seed-wwwroot.zip dropped in 1.2.0, made again about the page that
+# replaced it.
+#
+# The app itself
 # detects that it is served from something other than 127.0.0.1 or localhost and shows a red
 # banner saying so, above the input, before anything can be entered. The decision lives in
 # DiceToSeed.Core/ServingOrigin.cs and ServingOriginTests covers it, including the hosts a naive
