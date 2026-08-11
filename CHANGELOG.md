@@ -3,6 +3,42 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## 1.3.7
+
+The same words from the same rolls as 1.3.6. **One die, thrown repeatedly**, is now the
+recommendation everywhere, and the advice it replaced was mitigating the wrong risk.
+
+### The ordering trap, with its arithmetic
+
+- 1.3.2 added "rotate several dice if you have them, so a bad one touches only its share of the log".
+  That hedged manufacturing bias, which the same page measures at about **one bit in a hundred and
+  fifty-five**, by introducing an ordering question worth **a third of the log**. The mitigation cost
+  more than the thing it mitigated, which is exactly the trade this app exists to catch. It is gone.
+- **Five identical dice landed in a heap hold 12.9 bits only if you can say which die is which.** If
+  you cannot, what you recorded is the set of faces rather than a sequence, and there are 252 of
+  those: 8.0 bits, a 38% loss. A 60-roll log thrown that way carries **95.7 bits against a target of
+  128**, while the counter reads 60 and the words look exactly as convincing. Nothing downstream can
+  detect it, which is why it is a warning rather than a check.
+- Throwing a handful at once stays legitimate, and the conditions are stated: dice you can tell apart,
+  a fixed reading order every time, and never sorted into ascending order, which is the same mistake
+  performed on purpose.
+- The README carried "four identical dice lose about a third of their entropy" with no number behind
+  it. The figure was right; it now comes from `RollEntropy` and a test holds it at 32 to 34%.
+
+### Where it says so
+
+- The headline in "Before you start" is now "Roll one die 60 times for twelve words", carrying the
+  recommendation at the top level for the cost of one word rather than a fourth hint above the pad.
+- `READ-THIS-FIRST.txt` in the Tails bundle explains it without arithmetic, since its reader is
+  someone who does not use a terminal: one die means the order is the order you threw them in.
+
+### Under it
+
+- Seven new tests, 157 total. They pin the multiset counts against values small enough to check by
+  hand (one die 6, two dice 21, four 126, five 252), the 38% and 33% losses, the 95.7-bit consequence,
+  and that a single die loses exactly zero, which is the sanity check that the advice and the
+  arithmetic agree.
+
 ## 1.3.6
 
 The same words from the same rolls as 1.3.5. Three things 1.3.5 got wrong or left out, two of them

@@ -122,6 +122,47 @@ public static class RollEntropy
     /// <summary>The conservative floor: min-entropy under the pessimistic bias model, in bits.</summary>
     public static double PessimisticBits(int rollCount) => rollCount * MinBitsPerBiasedRoll;
 
+    /// <summary>
+    /// How many distinguishable results a throw of several dice at once has when the order of the
+    /// dice is NOT established: the number of multisets of that size over six faces, C(n+5, 5).
+    ///
+    /// This is the arithmetic behind recommending a single die. Throwing five at once and recording
+    /// what they show is only worth 6^5 = 7776 outcomes if you can say which die is which. If you
+    /// cannot, because they are identical and settled in a heap, the result you actually recorded is
+    /// the multiset, and there are 252 of those. The log still counts five rolls and still produces a
+    /// perfectly plausible seed, which is why nothing downstream can catch it.
+    ///
+    /// Computed stepwise rather than as a factorial ratio: the accumulator after step i is exactly
+    /// C(n+i, i), so every division is exact and there is no overflow at any realistic dice count.
+    /// </summary>
+    public static long UnorderedOutcomes(int diceThrown) =>
+        Enumerable.Range(1, 5).Aggregate(1L, (total, i) => total * (diceThrown + i) / i);
+
+    /// <summary>Entropy of one throw of several dice when their order is established, in bits.</summary>
+    public static double OrderedThrowBits(int diceThrown) => diceThrown * BitsPerFairRoll;
+
+    /// <summary>Entropy of one throw of several dice when their order is not established, in bits.</summary>
+    public static double UnorderedThrowBits(int diceThrown) => Math.Log2(UnorderedOutcomes(diceThrown));
+
+    /// <summary>
+    /// The fraction of a throw's entropy that losing the order costs. Zero for a single die, which
+    /// is the point: with one die thrown repeatedly the question cannot arise, and the sequence is
+    /// simply the order the throws happened in.
+    /// </summary>
+    public static double FractionLostWithoutOrder(int diceThrown) =>
+        diceThrown <= 1
+            ? 0
+            : 1 - UnorderedThrowBits(diceThrown) / OrderedThrowBits(diceThrown);
+
+    /// <summary>
+    /// What a whole log is worth when it was produced by throwing <paramref name="diceThrown"/> dice
+    /// at a time and the order within each throw was not established.
+    /// </summary>
+    public static double BitsWithoutOrder(int rollCount, int diceThrown) =>
+        diceThrown <= 1
+            ? FairBits(rollCount)
+            : rollCount / (double)diceThrown * UnorderedThrowBits(diceThrown);
+
     /// <summary>128 bits behind twelve words, 256 behind twenty-four.</summary>
     public static int TargetBitsFor(WordCount words) => (int)DiceRolls.StrengthFor(words);
 

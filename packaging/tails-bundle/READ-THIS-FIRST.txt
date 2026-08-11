@@ -76,8 +76,14 @@ The fingerprint should be:
 
 WHEN YOU ARE USING THE APP
 
-Roll a real die and press the button showing the face you rolled. The app never
-rolls anything for you and has no way to invent a number.
+Use one die. Throw it, read the face, press the button showing that face, and repeat.
+The app never rolls anything for you and has no way to invent a number.
+
+One die rather than a handful, because with one die the order is simply the order you
+threw them in. If you throw five identical dice at once and cannot tell which is which,
+what you have written down is which faces came up rather than in what order, and that
+is worth a third less than it looks. The app cannot tell, and the words it gives you
+will look no different.
 
 Roll 60 times for a twelve word seed, or 111 times for twenty-four.
 

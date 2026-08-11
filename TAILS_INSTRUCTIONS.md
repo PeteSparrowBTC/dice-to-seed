@@ -154,16 +154,29 @@ to diagnose.
    weighted die will, because the weight settles to the bottom. That takes a minute and finds the
    bias that matters.
 
-   Two things matter more than the die. Throw it so it **tumbles**, since sliding it or dropping it
-   flat from an inch can carry the starting face through; and rotate several dice if you have them,
-   so a bad one touches only its share of the log.
+   Two things matter more than which die it is. Throw it so it **tumbles**, since sliding it or
+   dropping it flat from an inch can carry the starting face through. And **use one die**, thrown
+   repeatedly, so the order is the order you threw them in.
+
+   An earlier version of this said to rotate several dice, so that a bad one touched only its share of
+   the log. That was mitigating the wrong risk. It hedged manufacturing bias, worth about a bit in a
+   hundred and fifty-five by the measurement above, and introduced an ordering question worth a third
+   of the log. **Five identical dice landed in a heap hold 12.9 bits only if you can say which die is
+   which.** If you cannot, what you recorded is the set of faces rather than a sequence, and there are
+   252 of those: 8.0 bits, a 38% loss. Sixty rolls thrown that way carry 95.7 bits against a target of
+   128, while the counter reads 60 and the words look exactly as convincing. Nothing can detect it
+   afterwards.
+
+   Throwing a handful at once is legitimate and faster, if the order is real: use dice you can tell
+   apart, read them in a fixed order every time, and never sort them into ascending order, which is
+   the same mistake performed on purpose.
 
    Do not run a statistical test on the rolls you are about to use. At 60 rolls it would miss a
    real 20% bias most of the time while failing one honest log in twenty, and re-rolling a log
    because it failed a test means your seed is drawn from a smaller set than the dice offered,
    which genuinely weakens it. If you want the arithmetic, the chi-squared worksheet in the
    `seed-generation` repository is built for testing a die beforehand, on rolls you throw away.
-1. Roll your dice. **Sixty rolls for twelve words, a hundred and eleven for twenty-four**, if
+1. Roll one die, repeatedly. **Sixty rolls for twelve words, a hundred and eleven for twenty-four**, if
    this is a new seed. The vendor minimums of 50 and 99 still derive, because a seed already made
    with 50 rolls has to be reproducible here, but they are thinner than they look: 50 fair rolls
    carry 129.2 bits against 128, and **99 fair rolls carry 255.9 against 256, so the 24-word

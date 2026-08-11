@@ -142,9 +142,15 @@ encrypted under. So it is not a claim that no generator is involved anywhere.
 Do not re-roll a log because it looks wrong. Fifty 1s is as likely as any other fifty rolls.
 Discarding logs narrows the set your seed is drawn from.
 
-If you throw several dice at once, use dice you can tell apart and read them in the same order
-every time. Four identical dice lose about a third of their entropy, and the roll counter
-cannot detect it.
+**Use one die, thrown repeatedly.** Then the order is the order you threw them in, and there is
+nothing to get wrong. Throwing a handful at once is faster and needs the order to be real: five
+identical dice landed in a heap hold 12.9 bits only if you can say which die is which, and if you
+cannot, what you recorded is the set of faces rather than a sequence. There are 252 of those, which is
+8.0 bits, a 38% loss. A 60-roll log thrown that way carries 95.7 bits against a target of 128, while
+the counter reads 60 and the words look exactly as convincing. Nothing in the app can detect it.
+
+So if you do throw several, use dice you can tell apart, read them in a fixed order every time, and
+never sort them into ascending order, which is the same mistake performed on purpose.
 
 ## Limits
 

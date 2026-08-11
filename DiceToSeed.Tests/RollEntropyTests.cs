@@ -167,6 +167,63 @@ public class RollEntropyTests
     }
 
     /// <summary>
+    /// The multiset count, which is the whole argument for using one die. Checked against values
+    /// small enough to enumerate by hand so the stepwise binomial cannot be quietly wrong.
+    /// </summary>
+    [Theory]
+    [InlineData(1, 6)]     // one die: six outcomes, and nothing to order
+    [InlineData(2, 21)]    // {1,1}..{6,6}: 21 unordered pairs against 36 ordered
+    [InlineData(4, 126)]
+    [InlineData(5, 252)]
+    public void Unordered_outcomes_are_the_multiset_count(int dice, long expected) =>
+        Assert.Equal(expected, RollEntropy.UnorderedOutcomes(dice));
+
+    /// <summary>
+    /// A single die loses nothing to ordering, because the order is the order you threw them in.
+    /// This is the sanity check that the advice and the arithmetic agree.
+    /// </summary>
+    [Fact]
+    public void One_die_cannot_lose_anything_to_ordering()
+    {
+        Assert.Equal(0, RollEntropy.FractionLostWithoutOrder(1));
+        Assert.Equal(RollEntropy.BitsPerFairRoll, RollEntropy.UnorderedThrowBits(1), 12);
+        Assert.Equal(RollEntropy.FairBits(60), RollEntropy.BitsWithoutOrder(60, 1), 12);
+    }
+
+    /// <summary>
+    /// The number the copy quotes: throwing five identical dice at once and recording what they show,
+    /// without establishing which die is which, costs well over a third of the throw.
+    /// </summary>
+    [Fact]
+    public void Five_dice_thrown_together_lose_over_a_third_of_the_throw()
+    {
+        Assert.Equal(12.9, RollEntropy.OrderedThrowBits(5), 1);
+        Assert.Equal(8.0, RollEntropy.UnorderedThrowBits(5), 1);
+        Assert.InRange(RollEntropy.FractionLostWithoutOrder(5), 0.38, 0.39);
+
+        // Four is the count the README quotes as "about a third".
+        Assert.InRange(RollEntropy.FractionLostWithoutOrder(4), 0.32, 0.34);
+    }
+
+    /// <summary>
+    /// And the consequence that matters: a log rolled to the recommended length this way does not
+    /// reach the target it was rolled for, while the counter reads the full count and the words look
+    /// exactly as plausible. Nothing downstream can catch it, which is why it is a warning rather
+    /// than a check.
+    /// </summary>
+    [Fact]
+    public void A_recommended_length_log_thrown_five_at_a_time_falls_below_its_target()
+    {
+        var recommended = RollEntropy.RecommendedRollsFor(WordCount.Twelve);
+        var target = RollEntropy.TargetBitsFor(WordCount.Twelve);
+
+        Assert.True(RollEntropy.FairBits(recommended) > target);
+        Assert.True(RollEntropy.BitsWithoutOrder(recommended, 5) < target,
+            $"{recommended} rolls thrown five at a time without order give {RollEntropy.BitsWithoutOrder(recommended, 5):0.0} bits against {target}.");
+        Assert.Equal(95.7, RollEntropy.BitsWithoutOrder(recommended, 5), 1);
+    }
+
+    /// <summary>
     /// The three models have to be ordered, at every roll count the page shows, or the table is
     /// telling a story the numbers do not support.
     /// </summary>
