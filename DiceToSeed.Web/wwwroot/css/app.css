@@ -17,6 +17,66 @@
 
 * { box-sizing: border-box; }
 
+/* THE BOOT SCREEN, WHICH IS ON SCREEN BEFORE ANY OF THE APP IS.
+   ============================================================
+   Up to 1.3.1 index.html carried the Blazor template's loading ring and this stylesheet had no
+   rule for it at all, because the template's stylesheet was replaced rather than edited. Two
+   <circle> elements with no size, fill or stroke render as a lump: SVG defaults to fill black,
+   and an <svg> with no width collapses to whatever the parent gives it. It was visible in every
+   release, on the demo and in the AppImage, for as long as the runtime took to download.
+
+   Driven by --blazor-load-percentage and --blazor-load-percentage-text, which the runtime sets on
+   the document element as it fetches each file, so the bar reports progress rather than animating
+   regardless. A stalled load therefore looks stalled, which is the useful behaviour. Both have
+   fallbacks: 0% for the width, and an empty string for the caption, since the variables do not
+   exist until the first file lands. */
+.boot {
+    max-width: 22rem;
+    margin: 22vh auto 0;
+    padding: 0 1rem;
+    text-align: center;
+}
+
+.boot-title {
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin: 0 0 1rem;
+}
+
+.boot-bar {
+    height: .35rem;
+    border-radius: .35rem;
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    overflow: hidden;
+}
+
+.boot-bar span {
+    display: block;
+    height: 100%;
+    width: var(--blazor-load-percentage, 0%);
+    background: var(--accent);
+    /* Short, because the value arrives in steps as files complete. Long enough to read as
+       movement, short enough that the bar is never behind the truth by anything noticeable. */
+    transition: width .1s linear;
+}
+
+.boot-note {
+    color: var(--ink-dim);
+    font-size: .875rem;
+    margin: .75rem 0 0;
+}
+
+/* The percentage, appended to the note. Absent until the runtime sets the variable, so the note
+   reads as a plain sentence rather than showing a placeholder that could be mistaken for a
+   stuck value. */
+.boot-note::after {
+    content: var(--blazor-load-percentage-text, "");
+    display: block;
+    font-family: var(--mono);
+    margin-top: .35rem;
+}
+
 body {
     margin: 0;
     background: var(--bg);
@@ -343,6 +403,11 @@ footer code { font-family: var(--mono); word-break: break-all; }
 }
 
 #blazor-error-ui .dismiss { cursor: pointer; position: absolute; right: .75rem; top: .5rem; }
+
+/* The reload link had no rule of its own, so it took the browser's default link colour on a red
+   strip: dark blue, or purple once visited. The same omission as the loading ring, found by the
+   same test, and it only ever showed when something had already gone wrong. */
+#blazor-error-ui .reload { color: #fff; text-decoration: underline; }
 
 /* ---------------------------------------------------------------------------------------
    Mode: seed phrase, or backup key

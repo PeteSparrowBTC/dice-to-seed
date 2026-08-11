@@ -3,6 +3,42 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## 1.3.2
+
+The same words from the same rolls as 1.3.1. One visible defect, present in every release so far,
+and the check that would have caught it.
+
+### The loading screen was a black lump
+
+- `index.html` carried the Blazor template's loading indicator, two SVG circles with class
+  `loading-progress`, while this app **replaced** the template's stylesheet rather than editing it.
+  The rules that size and stroke those circles live in the template's stylesheet, so the markup
+  arrived with none. SVG fills black by default and an `<svg>` with no width collapses to its
+  parent, so what appeared while the runtime downloaded was a dark blob with an empty caption under
+  it. It shipped in 1.0.0 through 1.3.1, on the demo and in the AppImage.
+- Replaced rather than restored: a determinate bar, the app's name, and one line saying the app
+  makes no network call. Fewer rules than reinstating the ring, and it is markup this repository
+  owns instead of template leftovers.
+- **The percentage is real.** The runtime sets `--blazor-load-percentage` and
+  `--blazor-load-percentage-text` on the document element as each file lands, so the bar reports
+  progress rather than animating regardless, and a load that stalls looks stalled. That matters more
+  than it sounds: a blank or spinning window in a tool that derives keys invites a reload halfway
+  through.
+- The reload link in the error strip had the same omission and no rule of its own, so it took the
+  browser's default link colour on a red background. It only ever showed when something had already
+  gone wrong.
+
+### A test for the class of defect, not the instance
+
+- `MarkupStyleTests` asserts that **every class `index.html` uses has at least one rule in
+  `app.css`**. That is the exact shape of this bug, which no compiler can see because markup and
+  stylesheets are copied rather than checked against each other. It found the reload link as well as
+  the ring.
+- It carries the usual two companions: a proof that the matcher would have rejected the shipped
+  markup, and a check that the scan reaches the files at all rather than passing on an empty set.
+  Confirmed to fail, naming the offending class, by removing one rule.
+- 150 tests.
+
 ## 1.3.1
 
 The same words from the same rolls as 1.3.0. One claim on the page had no number behind it, and
