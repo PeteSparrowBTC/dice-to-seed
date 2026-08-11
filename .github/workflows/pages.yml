@@ -15,6 +15,12 @@
 # same overclaim that got dice-to-seed-wwwroot.zip dropped in 1.2.0, made again about the page that
 # replaced it.
 #
+# The reasoning stays in this comment and does NOT go in the banner. It was briefly spelled out
+# there, in 1.3.3, and it made a warning about losing a wallet share space with an aside about
+# WebAssembly. The banner has one job, which is to stop a real roll log being typed into a web page,
+# and every sentence that is not that job competes with it. Say what the page is for, then the
+# hazard, then what to do instead. Explanations belong here and in the README.
+#
 # The app itself
 # detects that it is served from something other than 127.0.0.1 or localhost and shows a red
 # banner saying so, above the input, before anything can be entered. The decision lives in

@@ -3,6 +3,18 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## 1.3.4
+
+The same words from the same rolls as 1.3.3. The demo banner is shorter.
+
+- 1.3.3 corrected the banner's claim that the hosted copy was a way to read the code, and then
+  explained itself: two sentences about WebAssembly and where the source lives. **That explanation is
+  gone.** The banner's one job is to stop a real roll log being typed into a web page, and a warning
+  about losing a wallet should not share space with an aside about how the app is compiled. It now
+  says what the page is for, then the hazard, then what to do instead.
+- The reasoning stays in the `pages.yml` comment, where the person editing the banner reads it, with
+  a note not to put it back.
+
 ## 1.3.3
 
 The same words from the same rolls as 1.3.2. Two claims corrected, both of them overclaims in the
