@@ -3,6 +3,50 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## 1.3.5
+
+The same words from the same rolls as 1.3.4. A second release artifact, for the person who is
+handed a USB stick rather than the person who reads this file.
+
+### `dice-to-seed-<version>-tails.zip`
+
+- The instruction to check the SHA-256 was one nobody could follow where it mattered. At an offline
+  Tails machine there is no release page to read and no documentation on the stick, so the check
+  existed for whoever had a terminal and a second screen. The zip carries the AppImage, its
+  `SHA256SUMS`, `READ-THIS-FIRST.txt` written for someone who does not use a terminal, and
+  `start-here.sh`, which checks the app against its fingerprint and **refuses to open it** if they
+  disagree.
+- Extract in the Files window, copy the folder into Home, double-click `start-here.sh`. No terminal
+  at any point. If double-clicking does nothing, Properties and "Executable as Program" fixes it,
+  which is the same single step the bare AppImage already needed.
+- **Results go through `zenity`, not stdout.** A script launched from a file manager has no terminal,
+  so a failure printed to stderr is a failure nobody sees, which is worse than no check because it
+  teaches the user that silence means success. Tails ships zenity 4.1.90, confirmed in the 7.10.1
+  package manifest rather than assumed, and the script falls back to stderr where it is absent.
+- The checker launches the app on success, deliberately. Telling someone to verify by hand and then
+  launch by hand makes verification the step that gets skipped; this way the only route to the app
+  is the one that checks it first.
+- **What it does not claim.** `SHA256SUMS` travels in the same folder as the app it describes, so
+  whoever could replace one could replace all three. The check proves the file was not damaged,
+  half-copied or altered on the stick; it cannot prove the download was genuine, and whoever
+  prepared the stick is who is being trusted for that. Both the script's own dialog and
+  `READ-THIS-FIRST.txt` say so in plain words.
+- The loose AppImage and `SHA256SUMS` still ship, for verifying by hand or scripting against, and
+  the release notes now say which of the two to take.
+
+### The bundle is built and tested on every pull request
+
+- `packaging/tails-bundle/build-bundle.sh` is called by both `ci.yml` and `release.yml`, so the
+  artifact a pull request exercises and the artifact a release publishes cannot drift. Assembling it
+  only on a tag would mean its verification step was first exercised by whoever downloaded it.
+- It asserts that the zip **stores** the executable bit, since that is a property of the zipping
+  tool rather than a certainty, and it feeds the checker a corrupted AppImage and a missing
+  fingerprint and fails the build if either is accepted. A verification that cannot fail is
+  decoration.
+- What it deliberately does not assert: that the extractor on Tails **restores** that bit. Tails has
+  no `unzip`, extraction goes through Archive Manager or 7zip, and the answer is unverified, so the
+  instructions tell the user how to set the bit and nothing depends on the archive carrying it.
+
 ## 1.3.4
 
 The same words from the same rolls as 1.3.3. The demo banner is shorter.

@@ -1,0 +1,94 @@
+dice to seed @VERSION@
+Turning dice rolls into a seed phrase, on an offline Tails machine.
+
+This file is written for someone who does not use a terminal. Follow it in order.
+Nothing here needs the internet, and nothing you do here is sent anywhere.
+
+
+WHAT IS IN THIS FOLDER
+
+  dice-to-seed-@VERSION@-x86_64.AppImage    the app
+  SHA256SUMS                                 a fingerprint of the app
+  start-here.sh                              checks the fingerprint, then opens the app
+  READ-THIS-FIRST.txt                        this file
+
+
+STEP 1. COPY THIS WHOLE FOLDER INTO YOUR HOME FOLDER
+
+Open the Files window, drag this folder into Home, and work from the copy.
+
+Programs are usually not allowed to run from a USB stick, so this is not optional.
+Copy the whole folder, not just the app: the three files have to stay together.
+
+
+STEP 2. OPEN start-here.sh BY DOUBLE-CLICKING IT
+
+If a window appears, go to step 3.
+
+If nothing happens at all, the file needs permission to run:
+
+  1. Right-click start-here.sh and choose Properties
+  2. Turn on "Executable as Program"
+  3. Close the window and double-click start-here.sh again
+
+
+STEP 3. READ THE WINDOW THAT APPEARS
+
+If it says the app has been checked, press Start and the app opens. That is all.
+
+If it says DO NOT USE THIS FILE, then stop. The app on this stick is not the file
+that was packaged with these instructions. It may have been damaged while copying,
+or changed by something else. Delete it and ask the person who gave you this stick
+for a fresh copy. Do not enter any dice rolls into it.
+
+
+WHAT THE CHECK DOES AND DOES NOT TELL YOU
+
+It tells you the app is exactly the file that was packaged with these instructions:
+not damaged, not half-copied, not altered on the stick afterwards.
+
+It does not tell you the download itself was genuine. The fingerprint travels in
+this same folder, so anyone able to replace the app could have replaced the
+fingerprint too. For that part you are trusting whoever gave you this stick and
+told you it was safe. That is worth knowing rather than assuming.
+
+
+IF YOU WOULD RATHER CHECK IT YOURSELF
+
+Open Terminal, and type these two lines. The second one prints one line ending in
+OK if all is well.
+
+  cd ~/dice-to-seed-@VERSION@-tails
+  sha256sum -c SHA256SUMS
+
+The fingerprint should be:
+
+  @SHA256@
+
+
+WHEN YOU ARE USING THE APP
+
+Roll a real die and press the button showing the face you rolled. The app never
+rolls anything for you and has no way to invent a number.
+
+Roll 60 times for a twelve word seed, or 111 times for twenty-four.
+
+Write the words down on paper. Never re-roll your dice because the numbers look
+wrong: any sequence is as likely as any other, and starting again because a run
+looked odd makes the result weaker rather than stronger.
+
+
+WHEN YOU ARE FINISHED
+
+Shut Tails down. It keeps nothing, so the app, this folder and everything you typed
+are gone when the machine turns off. Your seed exists on the paper and nowhere else.
+
+Destroy the paper you wrote the dice rolls on, if you wrote them down. Those
+numbers are the seed itself, before any of the maths, and anyone who has them has
+the wallet.
+
+
+ONE WARNING
+
+There is a copy of this app on a website. It is there for looking at, not for use.
+Never type real dice rolls into it. Use this offline copy for anything real.

@@ -113,15 +113,45 @@ jobs:
           sha256sum dice-to-seed-*-x86_64.AppImage | tee SHA256SUMS
           ls -lh dice-to-seed-*-x86_64.AppImage
 
+      # The second artifact, for the person who was handed a stick rather than the person reading
+      # this file. Same AppImage, plus its fingerprint, a checker that refuses to launch a file
+      # that does not match, and instructions written for someone who does not use a terminal.
+      #
+      # It exists because the verification the documentation asks for was impossible to perform at
+      # the machine where it matters: on Tails, offline, there is no release page to read and no
+      # documentation on the stick. Instructions that cannot be followed where they are needed are
+      # not instructions.
+      #
+      # The loose AppImage and SHA256SUMS stay, for anyone verifying independently or scripting
+      # against them. The release notes say which of the two to take.
+      - name: Assemble and verify the Tails bundle
+        run: |
+          chmod +x packaging/tails-bundle/build-bundle.sh
+          packaging/tails-bundle/build-bundle.sh \
+            "$(ls dice-to-seed-*-x86_64.AppImage | head -1)" "$(cat VERSION)" .
+
       - name: Publish the release
         uses: softprops/action-gh-release@v2
         with:
           files: |
+            dice-to-seed-*-tails.zip
             dice-to-seed-*-x86_64.AppImage
             SHA256SUMS
           body: |
             Converts a log of six-sided dice rolls into a BIP-39 seed phrase, offline, as a
             second implementation to check a hardware wallet against.
+
+            ## Which file to download
+
+            **`dice-to-seed-*-tails.zip`** if you are going to use this rather than inspect it,
+            and especially if you do not want to touch a terminal. It holds the AppImage, its
+            SHA-256, and instructions written for someone standing at an offline Tails machine
+            with no other documentation. Extract it in the Files window, copy the folder into
+            Home, and double-click `start-here.sh`: it checks the app against its fingerprint and
+            refuses to open it if they do not match.
+
+            The loose AppImage and `SHA256SUMS` below are the same app, for verifying by hand or
+            scripting against.
 
             ## Verify before you run it
 

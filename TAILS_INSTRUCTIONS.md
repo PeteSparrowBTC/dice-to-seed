@@ -42,6 +42,29 @@ check to run before the ceremony on a networked machine, not on Tails.
 
 ## Running it
 
+### If someone else will be doing the ceremony, take the zip
+
+`dice-to-seed-<version>-tails.zip` on the
+[releases page](https://github.com/PeteSparrowBTC/dice-to-seed/releases) holds the AppImage, its
+`SHA256SUMS`, `READ-THIS-FIRST.txt` written for someone who does not use a terminal, and
+`start-here.sh`, which checks the app against its fingerprint and refuses to open it if they
+disagree. Copy the zip to the stick as it is.
+
+At the Tails machine: extract it in the Files window, drag the extracted folder into Home, and
+double-click `start-here.sh`. If nothing happens, right-click it, choose Properties, and turn on
+"Executable as Program", which is the same step the bare AppImage needs and for the same reason.
+
+This exists because the verification the rest of this document asks for was impossible to perform
+where it matters. Offline there is no release page to read and no documentation on the stick, so
+"check the SHA-256" was an instruction nobody at that machine could follow.
+
+Its honest limit, which `READ-THIS-FIRST.txt` states in as many words: the fingerprint travels in
+the same folder as the app, so the check proves the file was not damaged or altered, and cannot
+prove the download was genuine. Whoever prepared the stick is who is being trusted for that. Do
+the build log cross-check below yourself, before you hand the stick over.
+
+### If you are doing it yourself
+
 One file, no server, no port, no browser to configure. Download the AppImage from the
 [releases page](https://github.com/PeteSparrowBTC/dice-to-seed/releases) along with
 `SHA256SUMS`, check it, and put it on the stick:

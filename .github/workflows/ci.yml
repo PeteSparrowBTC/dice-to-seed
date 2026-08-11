@@ -174,6 +174,20 @@ jobs:
           ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run AppDir dice-to-seed-slim-x86_64.AppImage
           sha256sum dice-to-seed-slim-x86_64.AppImage | tee dice-to-seed-slim-x86_64.AppImage.sha256
 
+      # The Tails bundle is built here as well as at release time, from the same script, because
+      # it carries a verification step and a verification step that has never been tested is
+      # decoration. build-bundle.sh asserts that the zip stores the executable bit and that the
+      # checker refuses a corrupted AppImage, a missing fingerprint and nothing else. If the zip
+      # were only assembled on a tag, both would first be exercised by whoever downloaded it.
+      #
+      # The name is deliberately the slim AppImage's, not a release name: this zip is a per-run
+      # artifact for review and must not be mistaken for a published one.
+      - name: Assemble and verify the Tails bundle
+        run: |
+          chmod +x packaging/tails-bundle/build-bundle.sh
+          packaging/tails-bundle/build-bundle.sh \
+            dice-to-seed-slim-x86_64.AppImage "$(cat VERSION)-ci" bundle
+
       - name: Upload the AppImage
         uses: actions/upload-artifact@v4
         with:
@@ -181,6 +195,7 @@ jobs:
           path: |
             dice-to-seed-slim-x86_64.AppImage
             dice-to-seed-slim-x86_64.AppImage.sha256
+            bundle/*.zip
           if-no-files-found: error
 
       - name: Report what was produced

@@ -73,6 +73,13 @@ narrows the set your seed comes from.
 
 ## Use
 
+**If the person doing this is not you, take `dice-to-seed-<version>-tails.zip` instead.** It is the
+same app with its fingerprint, instructions for someone who does not use a terminal, and a
+`start-here.sh` that checks the app before opening it and refuses if it does not match. Extract it
+in the Files window, copy the folder into Home, double-click `start-here.sh`. Verify the download
+yourself, as below, before handing the stick over: the check inside the zip proves the file was not
+damaged or altered, not that the download was genuine.
+
 Before booting Tails, download the AppImage from the
 [releases page](https://github.com/PeteSparrowBTC/dice-to-seed/releases) and check it:
 
