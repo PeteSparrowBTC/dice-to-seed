@@ -3,6 +3,45 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## 1.3.10
+
+The same words from the same rolls as 1.3.9. A review asked what was missing, and the answer was
+the test behind the rule that protects the backup key.
+
+### The switching rule moved out of the view and into Core
+
+- Rule 9's first clause is "switching mode clears the roll log". It was implemented correctly and
+  **tested nowhere**: the hazard it protects against is asserted by `BackupKeyTests`, while the
+  protection itself was four lines inside a 1267-line Razor component that nothing would have
+  noticed the removal of. For a property this load bearing that is the wrong arrangement.
+- `DiceToSeed.Core/ModeSwitch.cs` now owns the decision, and `DerivationMode` moved with it.
+  `Apply` returns the mode to be in and the log that survives the transition, which is nothing
+  whenever the mode changed, so the page assigns both from one call and cannot end up in the other
+  mode with a log still recorded.
+- Twelve new tests, 172 total. The invariant is checked over every combination of modes and several
+  logs rather than the interesting one: **no path through `Apply` changes mode and keeps rolls.**
+  The other half is checked too, since it would make the app unusable if it broke: pressing the
+  mode you are already in keeps the log, and the confirmation is raised only when there is really
+  something to lose. An app that asks when nothing is recorded trains the user to dismiss the
+  question, and then it gets dismissed the once it matters.
+
+### A guard that matched its own documentation
+
+- The test asserting the page routes through `ModeSwitch` first checked whether `Derive.razor`
+  contained the string `ModeSwitch.Apply`. It passed with the call deleted, because the XML doc
+  comment one line above says `see cref="ModeSwitch.Apply"`. It now matches the assignment,
+  `(mode, rolls) = ModeSwitch.Apply(`, and was confirmed to fail with the clearing removed and pass
+  with it restored.
+- Third time this shape of mistake has appeared here, after the favicon's `xmlns` and the loading
+  ring, so it is written down in the test: assert the thing that does the work, not the words
+  describing it.
+
+### Verified in a browser, since this touched live UI
+
+Ten rolls recorded, then: pressing the mode already in effect kept all ten and raised no
+confirmation; requesting the other mode raised the confirmation and changed nothing yet; cancelling
+kept all ten; confirming landed in the other mode with the counter at zero.
+
 ## 1.3.9
 
 The same words from the same rolls as 1.3.8. The salt water test, done properly: whether it will

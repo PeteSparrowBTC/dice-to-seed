@@ -931,11 +931,9 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
     /// which derivation runs and what the result is, and it is rendered on the page throughout
     /// rather than being something the user has to remember choosing.
     /// </summary>
-    enum DerivationMode
-    {
-        SeedPhrase,
-        BackupKey,
-    }
+    @* DerivationMode and the switching rule live in DiceToSeed.Core/ModeSwitch.cs, not here.
+       They were here, and the rule that one roll log must never produce both a seed and a key was
+       four lines of view code that no test would have noticed the removal of. See ModeSwitchTests. *@
 
     // The whole roll log: one character per roll, appended only by RecordRoll. It lives here
     // and dies with the tab; nothing is stored anywhere.
@@ -1203,19 +1201,13 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
     /// </summary>
     void RequestMode(DerivationMode requested)
     {
-        if (requested == mode)
+        if (ModeSwitch.RequiresConfirmation(mode, requested, rolls.Length))
         {
-            pendingMode = null;
+            pendingMode = requested;
             return;
         }
 
-        if (rolls.Length == 0)
-        {
-            EnterMode(requested);
-            return;
-        }
-
-        pendingMode = requested;
+        EnterMode(requested);
     }
 
     void ConfirmModeSwitch()
@@ -1226,11 +1218,16 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
 
     void CancelModeSwitch() => pendingMode = null;
 
+    /// <summary>
+    /// Applies a mode, and the clearing decision is not made here: <see cref="ModeSwitch.Apply"/>
+    /// returns the log that survives the transition, which is nothing whenever the mode changed.
+    /// Assigning both from one call is deliberate, so that the mode cannot end up changed while a
+    /// log from the other purpose is still recorded.
+    /// </summary>
     void EnterMode(DerivationMode requested)
     {
-        mode = requested;
+        (mode, rolls) = ModeSwitch.Apply(mode, requested, rolls);
         pendingMode = null;
-        rolls = string.Empty;
         ClearResults();
     }
 
