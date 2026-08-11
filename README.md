@@ -62,10 +62,25 @@ than because dice are like that.
 So the question is provenance, not fairness. A die becomes badly biased because it was made that
 way or because it is damaged, and no statistic computed from your rolls will tell you which die
 produced them. Use a different die if it is not yours, is chipped, worn or scuffed on one face,
-rocks on a flat surface, or is hollow, foam, wood or a giveaway. To test one, float it in
-saturated salt water and spin it: a weighted die keeps bringing the same face up.
+rocks on a flat surface, or is hollow, foam, wood or a giveaway.
+
+To test one, float it in saturated salt water and spin it: a weighted die keeps bringing the same
+face up, because the weight settles to the bottom. Whether it floats at all is decided by the
+plastic, and the margin is thinner than the recipe admits. Brine saturates at 1.20 g/cm³, about 26%
+by weight or 357 g per litre. A cheap opaque board-game die is ABS or polystyrene at 1.02 to 1.05 and
+floats easily; a translucent acrylic die is 1.19 and floats by one percent, mostly submerged and
+settling ambiguously; a casino die is cellulose acetate and sinks. The published comparison that
+floated only 4 dice out of 22 was testing acrylic d20s, the marginal case. It also measures where the
+mass sits rather than which face lands upward, so it catches a weight glued into a novelty die and is
+not a fairness measurement.
 [seed-generation has the numbers](https://github.com/PeteSparrowBTC/seed-generation/blob/main/docs/dice.md#your-dice-bias-and-what-it-costs)
 and [how to test a die you are unsure of](https://github.com/PeteSparrowBTC/seed-generation/blob/main/docs/dice.md#testing-your-own-dice).
+
+**Counting rolls cannot substitute for looking at the die.** Over 60 rolls a face that comes up one
+time in five is expected 12 times against a fair 10, and the standard deviation of that count is 2.9,
+so the excess is 0.7 deviations. Three deviations clear takes 1,125 rolls; for the bias real dice
+actually have, 262,223. Weldon's dataset is 315,672 rolls, which is not a coincidence: that is what
+the measurement costs.
 
 Never run the test on the rolls you are about to use. At 60 rolls it would miss a real 20% bias
 most of the time while failing one honest log in twenty, and re-rolling because a log failed

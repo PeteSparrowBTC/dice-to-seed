@@ -123,6 +123,45 @@ public static class RollEntropy
     public static double PessimisticBits(int rollCount) => rollCount * MinBitsPerBiasedRoll;
 
     /// <summary>
+    /// The expected number of times one particular face appears in a log of this length.
+    /// </summary>
+    public static double ExpectedFaceCount(int rollCount) => rollCount * FairFaceProbability;
+
+    /// <summary>
+    /// The standard deviation of that count, from the binomial: sqrt(n p (1-p)).
+    /// </summary>
+    public static double FaceCountDeviation(int rollCount) =>
+        Math.Sqrt(rollCount * FairFaceProbability * (1 - FairFaceProbability));
+
+    /// <summary>
+    /// How far a biased face sticks out of the noise in a log of this length, measured in standard
+    /// deviations of the fair count.
+    ///
+    /// This is the number that settles whether a rolling test can substitute for looking at the die,
+    /// and it is elementary rather than a power table, so a reader can check it. At the recommended
+    /// sixty rolls, the pessimistic die's most likely face is expected twelve times against a fair
+    /// ten, an excess of two, while the standard deviation of that count is 2.9. The thing being
+    /// looked for is smaller than the noise it has to be seen against.
+    /// </summary>
+    public static double BiasSignalInDeviations(int rollCount, double biasedFaceProbability) =>
+        rollCount * (biasedFaceProbability - FairFaceProbability) / FaceCountDeviation(rollCount);
+
+    /// <summary>
+    /// How many rolls it would take for that excess to stand a given number of deviations clear of
+    /// the noise. Inverts <see cref="BiasSignalInDeviations"/>, which grows as the square root of the
+    /// roll count, so the answer is large: about eleven hundred rolls for three deviations on a face
+    /// that comes up one time in five. That is the honest reason this app tells you to inspect the
+    /// die rather than test your log.
+    /// </summary>
+    public static int RollsForSignalInDeviations(double deviations, double biasedFaceProbability)
+    {
+        var excessPerRoll = biasedFaceProbability - FairFaceProbability;
+        var noisePerRoll = Math.Sqrt(FairFaceProbability * (1 - FairFaceProbability));
+
+        return (int)Math.Ceiling(Math.Pow(deviations * noisePerRoll / excessPerRoll, 2));
+    }
+
+    /// <summary>
     /// How many distinguishable results a throw of several dice at once has when the order of the
     /// dice is NOT established: the number of multisets of that size over six faces, C(n+5, 5).
     ///

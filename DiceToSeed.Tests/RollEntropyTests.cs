@@ -167,6 +167,67 @@ public class RollEntropyTests
     }
 
     /// <summary>
+    /// Why a rolling test cannot replace looking at the die, as elementary arithmetic rather than a
+    /// power table, so that a reader can check it with a calculator.
+    ///
+    /// At the recommended sixty rolls, the pessimistic die's most likely face is expected twelve
+    /// times against a fair ten. The standard deviation of that count is 2.9, so the excess of two
+    /// is under one deviation: the thing being looked for is smaller than the noise it must be seen
+    /// against.
+    /// </summary>
+    [Fact]
+    public void At_sixty_rolls_a_twenty_percent_bias_is_under_one_deviation()
+    {
+        Assert.Equal(10, RollEntropy.ExpectedFaceCount(60), 6);
+        Assert.Equal(2.9, RollEntropy.FaceCountDeviation(60), 1);
+
+        var signal = RollEntropy.BiasSignalInDeviations(60, RollEntropy.PessimisticFaceProbability);
+
+        Assert.True(signal < 1, $"The excess stands {signal:0.00} deviations clear, which would make a rolling test worth running.");
+        Assert.Equal(0.7, signal, 1);
+    }
+
+    /// <summary>
+    /// And what it would take instead. The signal grows as the square root of the roll count, so
+    /// three deviations needs about eleven hundred rolls, which is nobody's ceremony. This is the
+    /// number behind telling people to inspect the die rather than test their log.
+    /// </summary>
+    [Fact]
+    public void Three_deviations_would_need_about_eleven_hundred_rolls()
+    {
+        var needed = RollEntropy.RollsForSignalInDeviations(3, RollEntropy.PessimisticFaceProbability);
+
+        Assert.InRange(needed, 1000, 1200);
+
+        // Round trip: at that count the signal really does reach three deviations, and one roll
+        // fewer does not, so the inversion is not approximately right in a way that hides an error.
+        Assert.True(RollEntropy.BiasSignalInDeviations(needed, RollEntropy.PessimisticFaceProbability) >= 3);
+        Assert.True(RollEntropy.BiasSignalInDeviations(needed - 1, RollEntropy.PessimisticFaceProbability) < 3);
+    }
+
+    /// <summary>
+    /// The neatest fact in this file, and it arrived by getting an assertion wrong: detecting the
+    /// bias Weldon measured takes about 262,000 rolls, and Weldon's dataset is 315,672 rolls.
+    ///
+    /// That is not a coincidence, it is the same calculation from the other end. The reason the only
+    /// solid measurement of ordinary dice bias comes from a Victorian throwing dice a quarter of a
+    /// million times is that a quarter of a million rolls is what the measurement costs. Nobody can
+    /// check their own die by rolling it, and this is the number that says so.
+    /// </summary>
+    [Fact]
+    public void Detecting_the_measured_bias_needs_about_as_many_rolls_as_Weldon_threw()
+    {
+        var needed = RollEntropy.RollsForSignalInDeviations(3, RollEntropy.MeasuredTopFaceProbability);
+
+        Assert.InRange(needed, 250_000, 275_000);
+
+        // Within the same order of magnitude as the dataset the figure came from, and below it, which
+        // is why Weldon's count was enough to see the effect at all.
+        Assert.True(needed < RollEntropy.WeldonRollCount,
+            $"{needed} rolls needed against Weldon's {RollEntropy.WeldonRollCount}, so his data could not have shown it.");
+    }
+
+    /// <summary>
     /// The multiset count, which is the whole argument for using one die. Checked against values
     /// small enough to enumerate by hand so the stepwise binomial cannot be quietly wrong.
     /// </summary>

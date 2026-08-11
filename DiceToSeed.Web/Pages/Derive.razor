@@ -354,14 +354,54 @@ else
         <p class="hint">
             A new die costs less than the time spent testing an old one. If you want to try anyway,
             floating one in saturated salt water and spinning it will show up a grossly weighted die:
-            the weight settles to the bottom, so the same face keeps surfacing. Two caveats, both
-            worth having before you start. <strong>Many dice do not float</strong>, whatever you do: brine tops out
-            near the density of the plastic, and one comparison managed it with 4 dice out of 22. And
-            it measures where the mass sits rather than which face lands upward, which is related but
-            not the same thing. It is a way to catch a weight glued inside a novelty die, not a
-            fairness measurement, and nothing you can do at a table measures the 1% pip effect. That
-            is the point: the bias you can find is the one that matters, and the one you cannot find
-            does not.
+            the weight settles to the bottom, so the same face keeps surfacing. Whether it floats at
+            all is decided by the plastic, and the margin is thinner than the instructions usually
+            admit. Saturated brine is 1.20 g/cm³, at about 26% salt by weight, which is 357 g of salt
+            per litre and more than most people expect. A cheap opaque board-game die is ABS or
+            polystyrene at 1.02 to 1.05, so it floats easily. A translucent acrylic die is 1.19, which
+            floats by one percent, sits almost entirely submerged and settles slowly and ambiguously.
+            A casino die is cellulose acetate and heavier still, so it simply sinks. The comparison
+            that got 4 dice out of 22 to float was testing acrylic d20s, which is exactly the marginal
+            case.
+        </p>
+        <p class="hint">
+            And it measures where the mass sits rather than which face lands upward, which is related
+            but not the same. So it is a way to catch a weight glued into a novelty die, not a fairness
+            measurement.
+        </p>
+        @* WHY NOT JUST ROLL AND COUNT: the arithmetic, because this is the first thing everyone
+           reaches for and it is hopeless at any count a person will actually roll. Elementary rather
+           than a power table, so it can be checked with a calculator, and every figure comes from
+           RollEntropy and is pinned by RollEntropyTests.
+
+           The Weldon coincidence at the end is not decoration. It arrived from getting a test
+           assertion wrong, and it is the whole argument in one sentence: the only solid measurement
+           of ordinary dice bias comes from a Victorian throwing dice 315,672 times because that is
+           roughly what the measurement costs. *@
+        <p class="hint">
+            <strong>Counting your own rolls cannot substitute.</strong> Over
+            @RecommendedRolls rolls, a face that comes up one time in five is expected
+            @RollEntropy.ExpectedFaceCount(RecommendedRolls).ToString("0")
+            × 1.2 = @((RollEntropy.ExpectedFaceCount(RecommendedRolls) * 1.2).ToString("0")) times
+            against a fair @RollEntropy.ExpectedFaceCount(RecommendedRolls).ToString("0"), an excess of
+            @((RollEntropy.ExpectedFaceCount(RecommendedRolls) * 0.2).ToString("0")). The standard
+            deviation of that count is
+            @RollEntropy.FaceCountDeviation(RecommendedRolls).ToString("0.0"), so the thing you are
+            looking for is
+            @RollEntropy.BiasSignalInDeviations(RecommendedRolls, RollEntropy.PessimisticFaceProbability).ToString("0.0")
+            deviations: smaller than the noise it has to be seen against. Getting it three deviations
+            clear takes
+            @RollEntropy.RollsForSignalInDeviations(3, RollEntropy.PessimisticFaceProbability).ToString("N0")
+            rolls.
+        </p>
+        <p class="hint">
+            For the bias real dice actually have, the same sum gives
+            @RollEntropy.RollsForSignalInDeviations(3, RollEntropy.MeasuredTopFaceProbability).ToString("N0")
+            rolls. Weldon's dataset is @RollEntropy.WeldonRollCount.ToString("N0") rolls, and that is
+            not a coincidence: the reason the only solid measurement of ordinary dice bias comes from
+            somebody throwing dice a quarter of a million times is that a quarter of a million rolls is
+            what the measurement costs. You cannot check your die by rolling it, which is why this
+            section is about looking at it.
         </p>
         <p class="hint">
             Two things matter more than which die it is. <strong>Throw it so it tumbles</strong>:

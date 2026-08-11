@@ -149,13 +149,33 @@ to diagnose.
    surface, if it is translucent with a bubble or a filled hole, or if it is hollow, foam, wood,
    oversized or a giveaway. A new die costs less than testing an old one.
 
-   If you want to try a test anyway: floating a die in saturated salt water and spinning it shows up
-   a grossly weighted one, because the weight settles to the bottom and the same face keeps
-   surfacing. Two caveats worth knowing before you start mixing brine. **Many dice never float**,
-   whatever you do, since saturated brine is about the density of the plastic; one published
-   comparison got 4 of 22 dice to float. And it measures where the mass sits rather than which face
-   lands upward, which is related but not the same. It catches a weight glued into a novelty die. It
-   is not a fairness measurement, and nothing you can do at a table measures the 1% pip effect.
+   **The salt water test, and whether it will work on your die.** Floating a die in saturated brine
+   and spinning it shows up a grossly weighted one: the weight settles to the bottom, so the same
+   face keeps surfacing. Whether it floats at all is decided by the plastic, and the margin is
+   thinner than the recipe usually admits:
+
+   | | density | in brine at 1.20 g/cm³ |
+   | --- | --- | --- |
+   | cheap opaque board-game die, ABS or polystyrene | 1.02 to 1.05 | floats easily |
+   | translucent acrylic die, the usual RPG dice | 1.19 | floats by 1%, mostly submerged, settles slowly and ambiguously |
+   | casino precision die, cellulose acetate | heavier | sinks |
+
+   Saturated is about 26% salt by weight, which is 357 g per litre of water: more than most people
+   expect, and the reason "keep adding salt" is in every set of instructions. The published comparison
+   that managed to float only 4 dice out of 22 was testing acrylic d20s, which is precisely the
+   marginal row. For a cheap d6 the test usually works.
+
+   What it does not do is measure which face lands upward. It tells you where the mass sits, which is
+   related but not the same, so treat it as a way to catch a weight glued into a novelty die rather
+   than as a fairness measurement.
+
+   **And counting your own rolls cannot substitute for looking at the die.** Over 60 rolls, a face
+   that comes up one time in five is expected 12 times against a fair 10. The standard deviation of
+   that count is 2.9, so the excess of 2 is 0.7 deviations: smaller than the noise it has to be seen
+   against. Three deviations clear would take 1,125 rolls, and for the bias real dice actually have,
+   262,223. Weldon's dataset is 315,672 rolls, which is not a coincidence: the only solid measurement
+   of ordinary dice bias comes from somebody throwing dice a quarter of a million times because that
+   is what the measurement costs.
 
 ### How to throw it
 

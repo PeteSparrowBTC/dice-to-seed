@@ -3,6 +3,50 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## 1.3.9
+
+The same words from the same rolls as 1.3.8. The salt water test, done properly: whether it will
+work on your die is decided by which plastic it is, and 1.3.8 imported a d20 result into a d6 tool.
+
+### Whether the die floats at all
+
+- 1.3.8 said "many dice never float", from a comparison that got 4 of 22 to float. Those were
+  **acrylic d20s**, and this is a d6 tool, so the result was quoted more broadly than it holds.
+- Saturated brine is **1.20 g/cm³**, at about 26% salt by weight, which is 357 g per litre and more
+  than most people expect. Against that:
+
+  | | density | in brine |
+  | --- | --- | --- |
+  | cheap opaque board-game die, ABS or polystyrene | 1.02 to 1.05 | floats easily |
+  | translucent acrylic die, the usual RPG dice | 1.19 | floats by 1%, mostly submerged, settles ambiguously |
+  | casino precision die, cellulose acetate | heavier | sinks |
+
+- So for a cheap d6, which is what this app is for, the test usually works. The 4-of-22 result is the
+  acrylic row, which sits within one percent of neutral buoyancy, and that also explains why it gives
+  mushy answers rather than clear ones: a nearly neutrally buoyant die has almost no righting torque.
+- What it does not do is unchanged: it tells you where the mass sits, not which face lands upward.
+
+### Why counting your own rolls cannot substitute
+
+Elementary arithmetic rather than a power table, so it can be checked with a calculator, and now
+computed in `RollEntropy` rather than asserted.
+
+- Over 60 rolls a face at one in five is expected **12 times against a fair 10**. The standard
+  deviation of that count is **2.9**, so the excess of 2 is **0.7 deviations**: smaller than the noise
+  it has to be seen against.
+- Three deviations clear takes **1,125 rolls**. For the bias real dice actually have, **262,223**.
+- **Weldon's dataset is 315,672 rolls**, and that is not a coincidence: it is the same calculation from
+  the other end. The only solid measurement of ordinary dice bias comes from a Victorian throwing dice
+  a quarter of a million times because a quarter of a million rolls is what the measurement costs.
+  That single fact is the argument for inspecting the die instead, and it arrived from an assertion of
+  mine that was wrong by a factor of four.
+
+### Under it
+
+- Three new tests, 160 total: the 0.7-deviation signal at 60 rolls, the 1,125-roll figure with a round
+  trip so the inversion cannot be quietly off by one, and the 262,223 figure checked against Weldon's
+  count.
+
 ## 1.3.8
 
 The same words from the same rolls as 1.3.7. How to actually throw the die, which the app had said
