@@ -1,5 +1,5 @@
 #!/bin/sh
-# Blocks pushes that would move main directly.
+# Blocks pushes that would move main directly, and warns before a release tag.
 #
 # This is the client-side half of the guard. This repository is public, so the
 # authoritative rule is a server-side branch protection on main ("Require a
@@ -26,6 +26,21 @@ while read -r _local_ref _local_sha remote_ref _remote_sha; do
             echo "  main should only move through a merged pull request:" >&2
             echo "    git switch -c my-branch && git push -u origin my-branch && gh pr create" >&2
             BLOCKED=1
+            ;;
+        refs/tags/v*)
+            # A version tag IS a release: .github/workflows/release.yml builds the
+            # AppImage, checksums it and publishes a GitHub Release on tag push, and
+            # that artifact is what people check a hardware wallet's seed against.
+            # Not blocked outright, because tagging is a legitimate release step;
+            # this is a deliberate speed bump so it is never done by reflex.
+            #
+            # Ported from slip39-backup, where the same hazard exists and was
+            # covered first. A guard that lives in one of two repositories with the
+            # same release mechanism is half a guard.
+            echo "! Pushing release tag ${remote_ref#refs/tags/}: this PUBLISHES a release." >&2
+            echo "  The AppImage it builds is what people run to derive real seed words." >&2
+            echo "  Ensure the release commit is already on main via a merged PR," >&2
+            echo "  and that VERSION, Cargo.toml and CHANGELOG.md agree with the tag." >&2
             ;;
     esac
 done
