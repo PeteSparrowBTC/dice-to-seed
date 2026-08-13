@@ -21,6 +21,12 @@ and 8 below are the two that carry those properties, and neither is negotiable.
   request instead.
 - **Never merge a pull request.** Not `gh pr merge`, not the REST API, not the web UI.
   Opening the PR is the agent's job; merging is the human's.
+- **A version tag is a release.** `.github/workflows/release.yml` builds the AppImage,
+  checksums it and publishes a GitHub Release on `v*` tag push, and that artifact is what
+  somebody runs to derive the words they check a hardware wallet against. Push a tag only
+  when explicitly asked, and only once the release commit is on main through a merged pull
+  request, with `VERSION`, `Cargo.toml` and `CHANGELOG.md` already agreeing with it.
+  Pushing the tag is the last step of a release, not the first.
 - Pushing feature branches (`git push -u origin <branch>`) is safe and expected.
 
 ### The three mechanisms, and what each actually does
@@ -28,7 +34,7 @@ and 8 below are the two that carry those properties, and neither is negotiable.
 | mechanism | what it actually does |
 | --- | --- |
 | GitHub branch protection on `main` | **The real enforcement.** Server-side, survives a reclone, applies to every client and to the web UI. Requires setup once per repo (below). |
-| `.githooks/pre-push` | **Blocks locally**, so a mistake fails before the network round-trip and prints the way out. Opt in per clone: `git config core.hooksPath .githooks`. Bypassable with `--no-verify`, by design. |
+| `.githooks/pre-push` | **Blocks locally**, so a mistake fails before the network round-trip and prints the way out. Also warns, without blocking, before a `v*` tag push, because that publishes a release. Opt in per clone: `git config core.hooksPath .githooks`. Bypassable with `--no-verify`, by design. |
 | `.claude/settings.json` deny rules | Stops an agent from issuing the common main-targeting push and merge commands, plus the `gh api` verbs that could remove the protection itself. Matching is prefix-based and cannot cover every spelling, so it is a backstop for judgement, not a replacement. |
 
 Deliberately **not** used: an `on: push` workflow that "prevents" direct pushes. Such a
