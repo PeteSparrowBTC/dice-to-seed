@@ -106,6 +106,24 @@ public class MarkupStyleTests
         Assert.Contains("boot", classes);
     }
 
+    /// <summary>
+    /// Anchors have to be styled, and this is not hypothetical: the app had no links at all until the
+    /// roll sheet needed one, so there was no rule for them, and the first one rendered in the
+    /// browser's default rgb(0, 0, 238) on a near-black page. Unreadable, and invisible to the class
+    /// check above, because an element selector is not a class.
+    ///
+    /// Third instance of one shape of bug: markup whose styling was assumed rather than written. The
+    /// loading ring and the error strip's reload link were the other two.
+    /// </summary>
+    [Fact]
+    public void Anchors_are_styled()
+    {
+        var stylesheet = ReadWebFile("wwwroot/css/app.css");
+
+        Assert.Matches(@"(?m)^a\s*\{", stylesheet);
+        Assert.Matches(@"(?m)^a\s*\{[^}]*color:", stylesheet);
+    }
+
     static IEnumerable<string> ClassesUsedInMarkup() =>
         Regex.Matches(ReadWebFile("wwwroot/index.html"), @"class=""(?<names>[^""]+)""")
             .SelectMany(match => match.Groups["names"].Value.Split(' ', StringSplitOptions.RemoveEmptyEntries))

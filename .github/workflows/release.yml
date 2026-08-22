@@ -142,12 +142,12 @@ jobs:
           packaging/tails-bundle/build-bundle.sh \
             "$(ls dice-to-seed-*-x86_64.AppImage | head -1)" "$(cat VERSION)" .
 
-      # The printable roll sheet, shipped as a release asset so it is not something only a reader of
-      # the repository can find. It is printed on a networked machine during preparation, because an
-      # amnesic offline session is the wrong place to be arranging a printer, and it is blank, so it
-      # carries nothing until somebody writes on it.
+      # The printable roll sheet, shipped as a release asset as well as being served by the app, so
+      # it can be reached by a link rather than by finding a file in a repository. It is printed on a
+      # networked machine during preparation, because an amnesic offline session is the wrong place to
+      # be arranging a printer, and it is blank, so it carries nothing until somebody writes on it.
       - name: Include the printable roll sheet
-        run: cp printable/roll-sheet.html roll-sheet.html
+        run: cp DiceToSeed.Web/wwwroot/roll-sheet.html roll-sheet.html
 
       - name: Assemble the release files
         run: |

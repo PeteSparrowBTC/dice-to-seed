@@ -81,7 +81,7 @@ public class RollRowTests
     /// The printed sheet and the screen must number their rows identically, or the comparison the
     /// sheet exists for becomes an exercise in counting, which is the mistake being hunted.
     ///
-    /// So the sheet's row labels are read out of printable/roll-sheet.html and checked against the
+    /// So the sheet's row labels are read out of the served roll-sheet.html and checked against the
     /// arithmetic the page uses. Change the grouping to fives and this fails, which is the point: the
     /// paper cannot be reprinted by everyone who already has a copy in a drawer.
     /// </summary>
@@ -120,8 +120,35 @@ public class RollRowTests
         Assert.Contains("not a backup", sheet, StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// The sheet is only useful if it can be reached, so the page has to link to it, and the link has
+    /// to be relative.
+    ///
+    /// Relative matters twice over. It resolves against the base tag, which is "/" in the AppImage and
+    /// "/dice-to-seed/" on Pages, so one href works in both. And an absolute link would be an external
+    /// reference in an app that must load with the network disconnected, which the published-app guard
+    /// would reject at build time.
+    /// </summary>
+    [Fact]
+    public void The_page_links_to_the_sheet_with_a_relative_href()
+    {
+        var page = File.ReadAllText(Path.Combine(RepositoryRoot().FullName, "DiceToSeed.Web", "Pages", "Derive.razor"));
+
+        Assert.Matches(@"href=""roll-sheet\.html""", page);
+        Assert.DoesNotMatch(@"href=""https?://[^""]*roll-sheet", page);
+    }
+
+    /// <summary>
+    /// And it has to sit where the build publishes it, or the link is a 404 in the AppImage and on the
+    /// demo alike. Reading it from wwwroot in every test here is what pins that; this states it.
+    /// </summary>
+    [Fact]
+    public void The_sheet_lives_in_the_published_folder() =>
+        Assert.True(File.Exists(Path.Combine(
+            RepositoryRoot().FullName, "DiceToSeed.Web", "wwwroot", "roll-sheet.html")));
+
     static string Sheet() =>
-        File.ReadAllText(Path.Combine(RepositoryRoot().FullName, "printable", "roll-sheet.html"));
+        File.ReadAllText(Path.Combine(RepositoryRoot().FullName, "DiceToSeed.Web", "wwwroot", "roll-sheet.html"));
 
     static DirectoryInfo RepositoryRoot()
     {

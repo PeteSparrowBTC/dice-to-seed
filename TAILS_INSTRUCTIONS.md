@@ -12,10 +12,11 @@ anything.** Everything has to be on the stick before you boot. Assemble this lis
 networked machine first:
 
 - A USB stick with the AppImage on it, downloaded and checked **before** you boot Tails
-- **A printed roll sheet**, from `printable/roll-sheet.html` in the repository. Open it in any
-  browser and print one page per log you are going to make. It has to be printed beforehand:
-  Tails is amnesic and arranging a printer while holding a seed is not a thing you want to be
-  doing. The sheet is blank, so it carries nothing until you write on it.
+- **A printed roll sheet**, one page per log you are going to make. The app serves it at
+  `roll-sheet.html`, so it is a link on the demo, a file in the AppImage, and
+  `DiceToSeed.Web/wwwroot/roll-sheet.html` in the repository. Print it beforehand: Tails is amnesic,
+  and arranging a printer while holding a seed is not a thing you want to be doing. The sheet is
+  blank, so it carries nothing until you write on it.
 - Tails, booted, with networking off
 - Your dice, and paper
 

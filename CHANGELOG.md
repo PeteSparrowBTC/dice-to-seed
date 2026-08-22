@@ -3,6 +3,35 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## 1.4.1
+
+The same words from the same rolls as 1.4.0. The roll sheet is now a link rather than a file path in
+a repository.
+
+### Served by the app
+
+- `roll-sheet.html` moved into the app's `wwwroot`, so it is published with everything else. That
+  makes it a link on the demo, a file inside the AppImage, and one copy rather than two that can
+  drift.
+- The page links to it twice: from the dice pad, where somebody who has not started yet will see it,
+  and from the comparison hint that appears once rolls are recorded. The href is relative, so it
+  resolves against the base tag and one link works at `/` in the AppImage and `/dice-to-seed/` on
+  Pages. A test asserts it is relative, because an absolute one would be an external reference in an
+  app that has to load with the network disconnected.
+- Still a release asset, covered by `SHA256SUMS`, for anyone who would rather download than browse.
+
+### Links had no styling at all
+
+- The app had never had a link, so `app.css` had no rule for one, and the first anchor rendered in
+  the browser's default `rgb(0, 0, 238)` on a near-black page. Found by reading the computed style
+  rather than by looking at the markup, which is the only way this kind of defect shows up.
+- Links now draw from `--accent` and keep their underline, since colour alone is not a link.
+  Measured: 11.5:1 against the page background, where the standard asks for 4.5:1.
+- `MarkupStyleTests` gained a guard, in the file that exists for exactly this failure. Its existing
+  check compares classes against the stylesheet, and an element selector is not a class, so it could
+  not have caught this. **Third instance of one shape of bug**, after the loading ring and the error
+  strip's reload link: markup whose styling was assumed rather than written.
+
 ## 1.4.0
 
 The same words from the same rolls as 1.3.10. A printable roll sheet, and the reason the paper exists
