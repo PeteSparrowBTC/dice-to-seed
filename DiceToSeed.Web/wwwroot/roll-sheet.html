@@ -45,7 +45,9 @@
 
     # any Chromium will do; the page's own @page rule sets the margins
     google-chrome --headless --disable-gpu --no-pdf-header-footer       --print-to-pdf=DiceToSeed.Web/wwwroot/roll-sheet.pdf       DiceToSeed.Web/wwwroot/roll-sheet.html
-    sha256sum DiceToSeed.Web/wwwroot/roll-sheet.html | cut -d' ' -f1       > DiceToSeed.Web/wwwroot/roll-sheet.pdf.source-sha256
+    # tr strips CR first: the recorded hash is of the content, not of whatever line endings your
+    # checkout uses, or this passes on one platform and fails on the other
+    tr -d '' < DiceToSeed.Web/wwwroot/roll-sheet.html | sha256sum | cut -d' ' -f1       > DiceToSeed.Web/wwwroot/roll-sheet.pdf.source-sha256
 
   PRINTING
   One A4 or Letter page, portrait. Black on white with no filled backgrounds, so it costs almost no

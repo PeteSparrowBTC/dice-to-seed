@@ -22,6 +22,12 @@ The same words from the same rolls as 1.4.1. The roll sheet as a PDF as well.
 - Asserted to be one page, on A4, from the page tree and the media box in the file itself. One page is
   the point of the layout work: a grid split across a break is useless, and a second sheet holding
   nine empty boxes is somebody wondering what they missed.
+- The staleness guard hashed the file's raw bytes at first, which made it a hash of the checkout as
+  much as of the sheet: git writes CRLF into a Windows working tree and LF into a Linux one, so it
+  passed locally and failed on the runner with two different digests. It now normalises line endings
+  before hashing, which is what it should have done from the start, since line endings cannot change
+  what prints. The documented command normalises too, or it would disagree with the test on one of the
+  two platforms.
 - `.gitattributes` marks `*.pdf` and `*.png` binary explicitly. Content detection would have handled
   it, but a blanket text rule in the sibling `tails-appimage` repository stripped a byte from a PNG
   earlier in this project's life, and the fix there was to name binaries rather than hope.
