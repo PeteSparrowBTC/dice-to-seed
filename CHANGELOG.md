@@ -3,6 +3,29 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## 1.4.2
+
+The same words from the same rolls as 1.4.1. The roll sheet as a PDF as well.
+
+### A PDF as well, committed
+
+- `roll-sheet.pdf`, generated from the HTML and committed rather than built in CI. It is a blank
+  sheet, so there is nothing in it to leak, and a PDF is the one format everybody can open and print
+  without wondering whether their browser will scale it. Both ship with every release and both are
+  served by the app, so the sheet is reachable as a file or as markup you can read first.
+- Generated at A4 with the sheet's own `@page` margins and **no header or footer**: a printed URL and
+  date on a sheet that says destroy me is the opposite of what it says.
+- Committing a derived artifact costs one thing, which is that it can go stale silently. So the HTML's
+  SHA-256 is recorded beside the PDF, and a test compares it against the file as it stands: edit the
+  sheet without regenerating and the suite fails, naming the command to run. Verified by editing the
+  HTML and watching it go red. The regeneration command lives in the comment at the top of the sheet.
+- Asserted to be one page, on A4, from the page tree and the media box in the file itself. One page is
+  the point of the layout work: a grid split across a break is useless, and a second sheet holding
+  nine empty boxes is somebody wondering what they missed.
+- `.gitattributes` marks `*.pdf` and `*.png` binary explicitly. Content detection would have handled
+  it, but a blanket text rule in the sibling `tails-appimage` repository stripped a byte from a PNG
+  earlier in this project's life, and the fix there was to name binaries rather than hope.
+
 ## 1.4.1
 
 The same words from the same rolls as 1.4.0. The roll sheet is now a link rather than a file path in

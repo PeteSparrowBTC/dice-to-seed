@@ -147,20 +147,21 @@ jobs:
       # networked machine during preparation, because an amnesic offline session is the wrong place to
       # be arranging a printer, and it is blank, so it carries nothing until somebody writes on it.
       - name: Include the printable roll sheet
-        run: cp DiceToSeed.Web/wwwroot/roll-sheet.html roll-sheet.html
+        run: cp DiceToSeed.Web/wwwroot/roll-sheet.html DiceToSeed.Web/wwwroot/roll-sheet.pdf .
 
       - name: Assemble the release files
         run: |
           # Both artifacts, so either one can be verified on its own. A downloader who took only
           # the zip runs `sha256sum -c --ignore-missing SHA256SUMS`, which checks what is present
           # rather than reporting the file they deliberately did not download as missing.
-          sha256sum dice-to-seed-*-x86_64.AppImage dice-to-seed-*-tails.zip roll-sheet.html | tee SHA256SUMS
-          ls -lh dice-to-seed-*-x86_64.AppImage dice-to-seed-*-tails.zip roll-sheet.html
+          sha256sum dice-to-seed-*-x86_64.AppImage dice-to-seed-*-tails.zip roll-sheet.pdf roll-sheet.html | tee SHA256SUMS
+          ls -lh dice-to-seed-*-x86_64.AppImage dice-to-seed-*-tails.zip roll-sheet.pdf roll-sheet.html
 
       - name: Publish the release
         uses: softprops/action-gh-release@v2
         with:
           files: |
+            roll-sheet.pdf
             roll-sheet.html
             dice-to-seed-*-tails.zip
             dice-to-seed-*-x86_64.AppImage
@@ -181,7 +182,9 @@ jobs:
             The loose AppImage and `SHA256SUMS` below are the same app, for verifying by hand or
             scripting against.
 
-            **`roll-sheet.html`** is a blank page to print and write your rolls on, before you boot.
+            **`roll-sheet.pdf`** is a blank page to print and write your rolls on, before you boot.
+            `roll-sheet.html` is the same sheet as readable markup, if you would rather see what you
+            are printing.
             Comparing it against the screen is the only check here that catches pressing the wrong
             button: every other one compares your log against a second tool, and two tools given the
             same wrong log agree perfectly. Destroy it afterwards, it is the wallet in plain text.

@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using DiceToSeed.Core;
 
@@ -146,6 +148,59 @@ public class RollRowTests
     public void The_sheet_lives_in_the_published_folder() =>
         Assert.True(File.Exists(Path.Combine(
             RepositoryRoot().FullName, "DiceToSeed.Web", "wwwroot", "roll-sheet.html")));
+
+    /// <summary>
+    /// The PDF is a committed binary generated from the HTML, which buys a file anybody can open and
+    /// costs the one thing a derived artifact always costs: it can go stale without anybody noticing.
+    ///
+    /// So the HTML's SHA-256 is recorded beside the PDF at generation time, and this compares it
+    /// against the file as it stands. Edit the sheet without regenerating and the suite fails with the
+    /// command to run, rather than a printed page quietly disagreeing with the screen it is meant to
+    /// be checked against.
+    /// </summary>
+    [Fact]
+    public void The_pdf_is_not_stale()
+    {
+        var recorded = File.ReadAllText(Path.Combine(
+            RepositoryRoot().FullName, "DiceToSeed.Web", "wwwroot", "roll-sheet.pdf.source-sha256")).Trim();
+
+        var actual = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(Path.Combine(
+            RepositoryRoot().FullName, "DiceToSeed.Web", "wwwroot", "roll-sheet.html"))));
+
+        Assert.True(recorded == actual,
+            "roll-sheet.html has changed and roll-sheet.pdf was not regenerated, so the printed sheet " +
+            "and the screen can now disagree. Regenerate it, then update " +
+            "wwwroot/roll-sheet.pdf.source-sha256 with the new hash. The command is in the comment at " +
+            $"the top of roll-sheet.html. Recorded {recorded}, found {actual}.");
+    }
+
+    /// <summary>
+    /// And that it is a PDF, of one page, on A4. One page is the whole point of the layout work: the
+    /// grid is useless split across a page break, and a second sheet of nine empty boxes is somebody
+    /// wondering what they missed.
+    /// </summary>
+    [Fact]
+    public void The_pdf_is_a_single_a4_page()
+    {
+        var pdf = File.ReadAllBytes(Path.Combine(
+            RepositoryRoot().FullName, "DiceToSeed.Web", "wwwroot", "roll-sheet.pdf"));
+
+        Assert.StartsWith("%PDF-", Encoding.Latin1.GetString(pdf, 0, 5));
+
+        var text = Encoding.Latin1.GetString(pdf);
+
+        // The page tree's count, which is where a second page would show up.
+        var count = Regex.Match(text, @"/Type\s*/Pages.*?/Count\s+(?<n>\d+)", RegexOptions.Singleline);
+        Assert.True(count.Success, "Could not find the page tree in the PDF.");
+        Assert.Equal("1", count.Groups["n"].Value);
+
+        // A4 is 595 x 842 points. Checked loosely, because the exact value carries rounding from the
+        // renderer, and the thing worth catching is Letter or a custom size, not a fraction of a point.
+        var box = Regex.Match(text, @"/MediaBox\s*\[\s*0\s+0\s+(?<w>[\d.]+)\s+(?<h>[\d.]+)");
+        Assert.True(box.Success, "Could not find the page size in the PDF.");
+        Assert.InRange(double.Parse(box.Groups["w"].Value), 594, 597);
+        Assert.InRange(double.Parse(box.Groups["h"].Value), 841, 844);
+    }
 
     static string Sheet() =>
         File.ReadAllText(Path.Combine(RepositoryRoot().FullName, "DiceToSeed.Web", "wwwroot", "roll-sheet.html"));

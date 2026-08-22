@@ -21,3 +21,9 @@
 DiceToSeed.Tests/Vectors/** text eol=lf
 packaging/tauri-appimage/AppRun text eol=lf
 packaging/tauri-appimage/*.desktop text eol=lf
+
+# The printable roll sheet is a committed binary, generated from roll-sheet.html. Marked explicitly
+# rather than left to content detection: a blanket text rule elsewhere in this project once stripped a
+# byte from a PNG and left it undecodable, and the fix was to name binaries rather than hope.
+*.pdf binary
+*.png binary

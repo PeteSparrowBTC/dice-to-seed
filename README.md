@@ -30,9 +30,10 @@ keeps nothing, and write the words on paper.
 ## What you need
 
 - One die, and paper for the words
-- A printed roll sheet. Open
-  [the sheet](https://petesparrowbtc.github.io/dice-to-seed/roll-sheet.html) and print one page per
-  log, before you boot. The app serves it too, so it is also in the AppImage and in the repository at
+- A printed roll sheet, one page per log, printed before you boot:
+  [PDF](DiceToSeed.Web/wwwroot/roll-sheet.pdf) to hand over as a file, or
+  [the same sheet as HTML](DiceToSeed.Web/wwwroot/roll-sheet.html) if you would rather read what you
+  are printing. Both are also served by the app, and both ship with every release. The app serves it too, so it is also in the AppImage and in the repository at
   [`DiceToSeed.Web/wwwroot/roll-sheet.html`](DiceToSeed.Web/wwwroot/roll-sheet.html). It is blank, so
   it carries nothing until you write on it, and it is the only thing that can catch a mis-press
 - Tails, with the network off

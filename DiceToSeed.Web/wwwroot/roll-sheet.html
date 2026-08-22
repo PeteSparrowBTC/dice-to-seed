@@ -37,6 +37,16 @@
   prints correctly if script runs, which is a poor trade for a piece of paper. RollRowTests asserts
   that the row numbers here are the ones the app shows on screen, so the two cannot drift apart.
 
+  THE PDF BESIDE THIS FILE
+  roll-sheet.pdf is generated from this file and committed, so the sheet can be handed over as one
+  file that opens anywhere. It is a derived artifact, which means it can go stale: RollRowTests
+  compares this file's SHA-256 against the value recorded in roll-sheet.pdf.source-sha256 and fails
+  if they part company. If you edit this file, regenerate the PDF and update that hash:
+
+    # any Chromium will do; the page's own @page rule sets the margins
+    google-chrome --headless --disable-gpu --no-pdf-header-footer       --print-to-pdf=DiceToSeed.Web/wwwroot/roll-sheet.pdf       DiceToSeed.Web/wwwroot/roll-sheet.html
+    sha256sum DiceToSeed.Web/wwwroot/roll-sheet.html | cut -d' ' -f1       > DiceToSeed.Web/wwwroot/roll-sheet.pdf.source-sha256
+
   PRINTING
   One A4 or Letter page, portrait. Black on white with no filled backgrounds, so it costs almost no
   toner and stays legible on the worst printer in the house.
