@@ -164,8 +164,15 @@ public class RollRowTests
         var recorded = File.ReadAllText(Path.Combine(
             RepositoryRoot().FullName, "DiceToSeed.Web", "wwwroot", "roll-sheet.pdf.source-sha256")).Trim();
 
-        var actual = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(Path.Combine(
-            RepositoryRoot().FullName, "DiceToSeed.Web", "wwwroot", "roll-sheet.html"))));
+        // Line endings are normalised before hashing. A raw hash of the file is a hash of the
+        // checkout as much as of the sheet: git writes CRLF into a Windows working tree and LF into a
+        // Linux one, so the first version of this guard passed locally and failed on the runner. Line
+        // endings cannot change what prints, so they must not change the hash.
+        var html = File.ReadAllText(Path.Combine(
+            RepositoryRoot().FullName, "DiceToSeed.Web", "wwwroot", "roll-sheet.html"));
+
+        var actual = Convert.ToHexStringLower(
+            SHA256.HashData(Encoding.UTF8.GetBytes(html.Replace("\r\n", "\n"))));
 
         Assert.True(recorded == actual,
             "roll-sheet.html has changed and roll-sheet.pdf was not regenerated, so the printed sheet " +
