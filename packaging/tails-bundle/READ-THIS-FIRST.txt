@@ -76,8 +76,22 @@ The fingerprint should be:
 
 WHEN YOU ARE USING THE APP
 
-Use one die. Throw it, read the face, press the button showing that face, and repeat.
-The app never rolls anything for you and has no way to invent a number.
+Use one die. Throw it, write the number on the paper sheet, then press the button
+showing that face. The app never rolls anything for you and has no way to invent a
+number.
+
+The sheet is a printed page of empty boxes, which whoever gave you this stick should
+have given you as well. If you do not have one, any blank paper works: rule ten boxes
+per row and number the rows 1, 11, 21, and so on, which is how the app shows them.
+
+Write every throw on the sheet as you go, and when you have finished, compare the sheet
+against the screen before you press Derive. The app shows your throws in rows of ten,
+numbered the same as the rows on the sheet, so read one row at a time.
+
+That comparison is the only way to catch pressing the wrong button. Nothing else can:
+every other check in this app compares your numbers against a second program, and two
+programs given the same wrong number agree perfectly and give you a wallet that is not
+yours.
 
 One die rather than a handful, because with one die the order is simply the order you
 threw them in. If you throw five identical dice at once and cannot tell which is which,
@@ -124,9 +138,10 @@ WHEN YOU ARE FINISHED
 Shut Tails down. It keeps nothing, so the app, this folder and everything you typed
 are gone when the machine turns off. Your seed exists on the paper and nowhere else.
 
-Destroy the paper you wrote the dice rolls on, if you wrote them down. Those
-numbers are the seed itself, before any of the maths, and anyone who has them has
-the wallet.
+Destroy the sheet you wrote the dice rolls on. Burn it, or shred it and separate the
+pieces. Those numbers are the seed itself, before any of the maths, so anyone who
+reads them has the wallet. The sheet is not a spare copy and it is not a backup: your
+backup is the words, on their own sheet, which you keep.
 
 
 ONE WARNING

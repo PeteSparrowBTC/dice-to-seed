@@ -635,3 +635,40 @@ details.prestart[open] > summary::before { content: "▾"; }
 
 details.prestart > summary h2 { margin: .6rem 0; }
 details.prestart > summary:hover h2 { color: var(--accent); }
+
+/* The recorded rolls in rows of ten, for checking against a handwritten sheet. A second view of the
+   value in the block above, which stays the exact preimage rendered character for character.
+
+   The row number is generated content on a data attribute rather than a text node, the same device
+   the backup key groups use, so selecting this block yields digits and never the numbering. Learnt
+   the hard way there: user-select:none stops a mouse selecting the number and leaves it in the DOM,
+   so a keyboard copy still picks it up. */
+.roll-rows {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1.1rem;
+    background: #0f1115;
+    border: 1px solid var(--panel-edge);
+    border-radius: .4rem;
+    padding: .9rem 1rem .8rem;
+    margin: .6rem 0 0;
+}
+
+.roll-row {
+    font-family: var(--mono);
+    font-size: 1.15rem;
+    letter-spacing: .14em;
+    position: relative;
+    padding-top: .85rem;
+}
+
+.roll-row::before {
+    content: attr(data-index);
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-family: var(--sans);
+    font-size: .7rem;
+    letter-spacing: normal;
+    color: var(--ink-dim);
+}

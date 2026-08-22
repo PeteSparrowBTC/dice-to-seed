@@ -109,6 +109,30 @@ public sealed record DiceRollLog
     public string Preimage => Digits;
 
     /// <summary>
+    /// The log broken into rows of ten for reading aloud and for checking against a handwritten
+    /// sheet. Each entry is the position of its first roll and the ten digits that follow.
+    ///
+    /// This exists because of the one error nothing else in the method can catch. Every check the
+    /// app offers compares the log against another implementation of the conversion, so a mis-press
+    /// is invisible to all of them: two tools handed the same wrong log agree perfectly, the counter
+    /// still reads the full count, and the words are valid BIP-39 for a wallet the dice did not make.
+    /// The only defence is comparing the recorded log against an independent note of what the dice
+    /// showed, and comparing sixty undifferentiated digits is itself an exercise in losing your
+    /// place. Rows of ten make the comparison possible.
+    ///
+    /// Ten because that is how people count, and because the recommended lengths are sixty and a
+    /// hundred and eleven, so the position of a row is easy to hold in your head. A short final row
+    /// is returned as it is rather than padded.
+    ///
+    /// It lives here rather than in the page for the same reason <c>KeyHexGroups</c> does: the
+    /// grouping is part of how the value gets checked, not a decoration applied on the way out.
+    /// </summary>
+    public IReadOnlyList<(int FirstRoll, string Digits)> RowsOfTen =>
+        Enumerable.Range(0, (Count + 9) / 10)
+            .Select(row => (row * 10 + 1, Digits.Substring(row * 10, Math.Min(10, Count - row * 10))))
+            .ToList();
+
+    /// <summary>
     /// The length rule. The message says why a longer word count does not rescue a short log,
     /// because that is the first thing someone reaches for when told 50 rolls are needed.
     /// </summary>

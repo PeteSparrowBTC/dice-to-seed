@@ -6,13 +6,25 @@
 #
 # What a release contains, and why each part:
 #
+#   dice-to-seed-<version>-tails.zip
+#                                  the app plus its fingerprint, a checker that refuses to open a
+#                                  file that does not match, and instructions for someone who does
+#                                  not use a terminal. What to take if you are going to use this.
 #   dice-to-seed-<version>-x86_64.AppImage
-#                                  the whole app. One file, no server, no port, no browser to
+#                                  the whole app, loose. One file, no server, no port, no browser to
 #                                  configure. Verified to run on Tails from the file manager. The
 #                                  version is in the name because the AppImage is the file that
 #                                  survives on somebody's USB stick, long after SHA256SUMS is gone.
-#   SHA256SUMS                     because an AppImage is an opaque blob and a checksum is the
-#                                  only thing a downloader can check it against.
+#   roll-sheet.html                a blank sheet to print and write dice rolls on, so the recorded
+#                                  log can be compared against what the dice actually showed. That
+#                                  comparison is the only check here that can catch a mis-press:
+#                                  every other one compares the log against a second implementation
+#                                  of the conversion, and two of those given the same wrong log
+#                                  agree perfectly.
+#   SHA256SUMS                     covering all three. It proves a file is intact and unaltered on
+#                                  the stick. It is not a signature and it travels with the files it
+#                                  describes, so it cannot establish that none of them was
+#                                  substituted; the tagged run's build log prints the same hashes.
 #
 # A dice-to-seed-wwwroot.zip used to ship alongside, for running the same app behind
 # `python3 -m http.server` in a browser. It was dropped once the AppImage was confirmed working
@@ -130,18 +142,26 @@ jobs:
           packaging/tails-bundle/build-bundle.sh \
             "$(ls dice-to-seed-*-x86_64.AppImage | head -1)" "$(cat VERSION)" .
 
+      # The printable roll sheet, shipped as a release asset so it is not something only a reader of
+      # the repository can find. It is printed on a networked machine during preparation, because an
+      # amnesic offline session is the wrong place to be arranging a printer, and it is blank, so it
+      # carries nothing until somebody writes on it.
+      - name: Include the printable roll sheet
+        run: cp printable/roll-sheet.html roll-sheet.html
+
       - name: Assemble the release files
         run: |
           # Both artifacts, so either one can be verified on its own. A downloader who took only
           # the zip runs `sha256sum -c --ignore-missing SHA256SUMS`, which checks what is present
           # rather than reporting the file they deliberately did not download as missing.
-          sha256sum dice-to-seed-*-x86_64.AppImage dice-to-seed-*-tails.zip | tee SHA256SUMS
-          ls -lh dice-to-seed-*-x86_64.AppImage dice-to-seed-*-tails.zip
+          sha256sum dice-to-seed-*-x86_64.AppImage dice-to-seed-*-tails.zip roll-sheet.html | tee SHA256SUMS
+          ls -lh dice-to-seed-*-x86_64.AppImage dice-to-seed-*-tails.zip roll-sheet.html
 
       - name: Publish the release
         uses: softprops/action-gh-release@v2
         with:
           files: |
+            roll-sheet.html
             dice-to-seed-*-tails.zip
             dice-to-seed-*-x86_64.AppImage
             SHA256SUMS
@@ -160,6 +180,11 @@ jobs:
 
             The loose AppImage and `SHA256SUMS` below are the same app, for verifying by hand or
             scripting against.
+
+            **`roll-sheet.html`** is a blank page to print and write your rolls on, before you boot.
+            Comparing it against the screen is the only check here that catches pressing the wrong
+            button: every other one compares your log against a second tool, and two tools given the
+            same wrong log agree perfectly. Destroy it afterwards, it is the wallet in plain text.
 
             ## Verify before you run it
 

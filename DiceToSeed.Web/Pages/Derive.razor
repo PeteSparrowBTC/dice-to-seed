@@ -548,6 +548,40 @@ else
             No separator, no trailing newline, nothing appended. Compare this string character
             for character with what any other tool is hashing.
         </p>
+
+        @* CHECKING THE RECORDED LOG AGAINST THE PAPER.
+           ===========================================
+           The exact preimage above is untouched and stays that way: rule 4 requires it rendered
+           character for character, and this is a second view of the same value, never a replacement.
+
+           Why it is here at all. Every verification this app offers compares the log against another
+           implementation of the conversion, which means none of them can see a mis-press. Press 4
+           where the die showed 5 and both tools agree perfectly, the counter still reads sixty, and
+           the words are valid BIP-39 for a wallet your dice did not make. The only defence is an
+           independent note of what the dice showed, and the app was asking people to keep one (in
+           TAILS_INSTRUCTIONS) without ever asking them to compare it, which is the cost of a second
+           plaintext copy of the seed with none of the benefit.
+
+           Rows of ten because comparing sixty undifferentiated digits is itself an exercise in losing
+           your place, which is the error being hunted. The row numbers are CSS generated content on a
+           data attribute, the same device the backup key uses, so selecting this block copies digits
+           and never the numbering. *@
+        @if (LivePreimage.Length > 0 && ParsedLog.IsSuccess)
+        {
+            <div class="roll-rows" aria-label="Recorded rolls in rows of ten">
+                @foreach (var row in ParsedLog.Value.RowsOfTen)
+                {
+                    <span class="roll-row" data-index="@row.FirstRoll">@row.Digits</span>
+                }
+            </div>
+            <p class="hint">
+                <strong>Check these against your paper before pressing Derive.</strong> A mis-pressed
+                button is the one mistake nothing else here can find: every other check compares your
+                log against a second tool, and two tools given the same wrong log agree perfectly. The
+                repository has a sheet to print for this, ruled in the same rows of ten. Then destroy
+                the paper: it is the wallet in plain text, and it is not a backup.
+            </p>
+        }
     </div>
 
     <button class="derive" disabled="@(!CanDerive)" @onclick="RunDerivation">Derive</button>

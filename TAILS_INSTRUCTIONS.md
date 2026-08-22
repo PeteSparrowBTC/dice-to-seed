@@ -12,6 +12,10 @@ anything.** Everything has to be on the stick before you boot. Assemble this lis
 networked machine first:
 
 - A USB stick with the AppImage on it, downloaded and checked **before** you boot Tails
+- **A printed roll sheet**, from `printable/roll-sheet.html` in the repository. Open it in any
+  browser and print one page per log you are going to make. It has to be printed beforehand:
+  Tails is amnesic and arranging a printer while holding a seed is not a thing you want to be
+  doing. The sheet is blank, so it carries nothing until you write on it.
 - Tails, booted, with networking off
 - Your dice, and paper
 
@@ -231,7 +235,10 @@ The app cannot do this part for you, so it is worth getting right once.
    with 50 rolls has to be reproducible here, but they are thinner than they look: 50 fair rolls
    carry 129.2 bits against 128, and **99 fair rolls carry 255.9 against 256, so the 24-word
    minimum does not reach its target even with a perfect die.** The extra rolls cost minutes and
-   settle it. Roll them one at a time and write each result down as you go. Whatever comes up is
+   settle it. Roll them one at a time and write each result on the printed sheet as you go, because
+   that written record is the only thing that can catch a mis-press: every other check in this
+   document compares your log against a second implementation of the same conversion, and two tools
+   given the same wrong log agree perfectly. Whatever comes up is
    your log: never re-roll it because it looks too orderly. Six 6s in a row is exactly as likely
    as any other six rolls.
 2. Record each roll in the app by pressing the button showing the face you rolled. The keys 1
@@ -243,7 +250,11 @@ The app cannot do this part for you, so it is worth getting right once.
    perfectly plausible seed phrase.
 4. Read the preimage the app shows. It is the exact string being hashed. This is the value you
    compare against any other tool.
-5. Press Derive, and write the words on paper. There is no copy button, and that is friction
+5. **Compare the sheet against the screen, before you press Derive.** The app shows your rolls in
+   rows of ten, numbered the same as the rows on the sheet, so this is a row-by-row read rather than
+   a hunt through sixty digits. It is the step the sheet exists for: skip it and you have paid the
+   cost of a second plaintext copy of your seed and collected none of the benefit.
+6. Press Derive, and write the words on paper. There is no copy button, and that is friction
    rather than a safeguard: any text on the page can be selected and copied with the keyboard,
    so the absence of a button prevents nothing. What the app does guarantee is that it never
    writes to the clipboard itself, so nothing lands there unless you put it there. On an offline

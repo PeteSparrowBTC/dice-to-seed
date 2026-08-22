@@ -29,7 +29,10 @@ keeps nothing, and write the words on paper.
 
 ## What you need
 
-- Dice and paper
+- One die, and paper for the words
+- A printed roll sheet: [`printable/roll-sheet.html`](printable/roll-sheet.html), opened in any
+  browser and printed before you boot. It is blank, so it carries nothing until you write on it,
+  and it is the only thing that can catch a mis-press
 - Tails, with the network off
 - A USB stick
 

@@ -3,6 +3,66 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## 1.4.0
+
+The same words from the same rolls as 1.3.10. A printable roll sheet, and the reason the paper exists
+at all, which turned out to be sharper than "keep a record".
+
+### The one error nothing else here can catch
+
+- Every check this app offers compares the roll log against another implementation of the conversion.
+  **None of them can see a mis-press.** Press 4 where the die showed 5 and both tools agree perfectly,
+  the counter still reads sixty, `sha256sum` matches, Coleman agrees, `rolls12.py` agrees, and the
+  words are valid BIP-39 for a wallet the dice never made. An independent note of what the dice showed
+  is the only defence, and that is the whole argument for paper.
+- The app was in the worst position on this: `TAILS_INSTRUCTIONS.md` said "write each result down as
+  you go" with no reason given, the bundle's instructions said to destroy the paper "if you wrote them
+  down", and the page said nothing at all. So it asked for a second plaintext copy of the seed and
+  never asked for the comparison that would justify it. **Now the comparison is a numbered step**,
+  placed immediately before Derive, in all three.
+
+### `printable/roll-sheet.html`
+
+- One page, printed on an ordinary machine before booting, because an amnesic offline session is the
+  wrong place to be arranging a printer. Plain HTML, no script and no external reference, so it opens
+  in any browser and can be read end to end in a minute. Blank, so it carries nothing until somebody
+  writes on it.
+- **Rows of ten, numbered by the position of the first roll**, matching the app exactly, so the
+  comparison is a row-by-row read rather than a hunt through sixty undifferentiated digits, which is
+  the very mistake being looked for. `RollRowTests` reads the row labels out of the sheet and asserts
+  they equal the arithmetic the page uses, and it fails if either drifts, because everyone already
+  holding a printed copy cannot reprint it.
+- **It says destroy twice, in the largest type on the page**, and says why: a filled-in sheet is the
+  seed in plain text, it is the one artifact that survives the shutdown erasing everything else, and
+  it sits beside another sheet that looks equally important and is meant to be kept forever. It also
+  says plainly that it is not a backup, because somebody keeping it as one has an unprotected copy of
+  the wallet.
+- **Deliberately no place to write which wallet it is.** No name, no date, no label, no amount. A found
+  sheet of digits is bad; one that also says whose it is and when is worse. The two purpose tick boxes
+  are the exception, and they earn it: rolling for a seed and for a backup key means two sheets, and
+  one log used for both makes the key derivable from the wallet it protects.
+- Heavier rules after rolls 50 and 60, with a legend saying what they mark. They were originally at 50
+  and 110, which is not a count anyone stops at, and unlabelled: an unexplained line on a form is a
+  question rather than an aid.
+- Measured at print width rather than eyeballed: 240mm of content against 275mm on A4 and 254mm on
+  Letter, so it fits both with room.
+
+### On screen
+
+- The recorded log is now also shown in **rows of ten with the position of each row**, beside the exact
+  preimage, which is untouched and still rendered character for character as rule 4 requires. Row
+  numbers are CSS generated content on a data attribute, the same device the backup key groups use, so
+  selecting the block copies digits and never the numbering.
+- `DiceRollLog.RowsOfTen` holds the grouping, tested to reassemble into exactly the preimage at every
+  length from 1 to 120, so what is being checked is provably what is being hashed.
+
+### Shipped rather than repository-only
+
+- `roll-sheet.html` is a release asset, covered by `SHA256SUMS` with the other files, and the release
+  notes say what it is for. The workflow's inventory of what a release contains was two files out of
+  date and still carried the "only thing a downloader can check it against" line that 1.3.3 corrected
+  everywhere else.
+
 ## 1.3.10
 
 The same words from the same rolls as 1.3.9. A review asked what was missing, and the answer was
