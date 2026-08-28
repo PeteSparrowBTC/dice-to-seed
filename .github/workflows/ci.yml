@@ -120,7 +120,9 @@ jobs:
             librsvg2-dev \
             patchelf \
             build-essential \
-            file
+            file \
+            xvfb \
+            xdotool
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
@@ -144,14 +146,21 @@ jobs:
             src-tauri/target
           key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.toml') }}
 
-      - name: Install the Tauri CLI
-        run: cargo install tauri-cli --version "^2.0" --locked
-
-      # --no-bundle: Tauri's own bundler copies the whole WebKitGTK and GTK stack in,
-      # producing 83 MB. Tails ships those libraries, verified in its package manifest, so the
-      # AppImage is assembled below instead and comes out at about 11 MB.
-      - name: Build the application
-        run: cargo tauri build --no-bundle
+      # Plain cargo, and no tauri-cli. Ported from slip39-backup, which reached this conclusion
+      # first and wrote down why: for this configuration the CLI would run a beforeBuildCommand
+      # (there is none in tauri.conf.json), check that frontendDist exists (build.rs already fails
+      # without it), invoke cargo, and then bundle, which is exactly what --no-bundle existed to
+      # switch off. So it reduces to cargo build --release.
+      #
+      # Measured before removing it, from the 2026-08-22 run: `cargo install tauri-cli --locked` took
+      # 5m24s of a 9m job, and recompiled every run, because the cargo cache covers the registry and
+      # the target directory but not ~/.cargo/bin. Sixty percent of the job spent compiling a tool
+      # that then only called cargo.
+      #
+      # It also removes a dependency from the supply chain of an artifact people run against real
+      # money, and makes CI run the command a person runs locally.
+      - name: Build the shell
+        run: cargo build --release --manifest-path src-tauri/Cargo.toml
 
       # The same binary, packaged our way: no bundled WebKitGTK, because Tails ships it and
       # bundling a browser engine we know is present triples the size. Built in the same run as
@@ -187,6 +196,54 @@ jobs:
           chmod +x packaging/tails-bundle/build-bundle.sh
           packaging/tails-bundle/build-bundle.sh \
             dice-to-seed-slim-x86_64.AppImage "$(cat VERSION)-ci" bundle
+
+      # Proves the artifact runs, which matters more than usual here: this is the first build without
+      # the Tauri CLI, and "it compiled" is not the same claim as "it opens a window". A Tauri binary
+      # that cannot find a webview stays alive with no window at all, so a process-is-alive check
+      # would pass on exactly the failure worth catching. Ported from slip39-backup.
+      #
+      # WHAT THIS DOES NOT PROVE: that Blazor started inside the webview. A CSP that blocked
+      # wasm-unsafe-eval would pass this step and leave an empty window, and the title comes from
+      # tauri.conf.json rather than from anything the app renders. So this covers the AppImage
+      # mounting, the shell starting, and GTK and WebKitGTK initialising against the library set.
+      # What the page does inside it is covered by the suite and by running it on real Tails.
+      - name: Smoke test the AppImage under xvfb
+        run: |
+          set -euo pipefail
+          APPIMAGE=$(ls dice-to-seed-*x86_64.AppImage | head -1)
+          chmod +x "$APPIMAGE"
+
+          Xvfb :99 -screen 0 1280x1024x24 >/dev/null 2>&1 &
+          XVFB_PID=$!
+          export DISPLAY=:99
+          sleep 2
+
+          ./"$APPIMAGE" --appimage-extract-and-run &
+          APP_PID=$!
+
+          FOUND=""
+          for _ in $(seq 1 30); do
+            if xdotool search --name "dice to seed" >/dev/null 2>&1; then
+              FOUND=yes
+              break
+            fi
+            kill -0 "$APP_PID" 2>/dev/null || break
+            sleep 1
+          done
+
+          if ! kill -0 "$APP_PID" 2>/dev/null; then
+            echo "::error::the AppImage exited on its own before a window appeared"
+            kill "$XVFB_PID" 2>/dev/null || true
+            exit 1
+          fi
+          if [ -z "$FOUND" ]; then
+            echo "::error::no window titled 'dice to seed' appeared within 30 seconds"
+            kill "$APP_PID" "$XVFB_PID" 2>/dev/null || true
+            exit 1
+          fi
+
+          echo "A window appeared and the process is still running"
+          kill "$APP_PID" "$XVFB_PID" 2>/dev/null || true
 
       - name: Upload the AppImage
         uses: actions/upload-artifact@v4

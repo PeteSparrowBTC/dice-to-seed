@@ -3,6 +3,54 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## 1.4.3
+
+The same words from the same rolls as 1.4.2. One sheet per word count, and the release stops
+compiling a build tool it was not using.
+
+### Two sheets, one per word count
+
+- The single sheet had to say "sixty boxes for twelve words, a hundred and eleven for twenty-four"
+  and then explain which of two heavier lines applied to whom. That legend read: "The heavier lines
+  fall after 50 and 60 rolls: the minimum, and what a new twelve-word seed should have. For
+  twenty-four words, fill every box." It made no sense, and the fix is not better wording but a sheet
+  that only ever mentions the count you are actually rolling.
+- `roll-sheet-12-words` has sixty boxes with a heavier rule after 50, the vendor minimum.
+  `roll-sheet-24-words` has a hundred and eleven, with a heavier box edge after 99, since that count
+  lands mid-row and no row rule can mark it. Each says in one line what its own numbers mean.
+- Both as PDF and as HTML, all four served by the app and shipped with every release. **The page links
+  whichever matches the word count you have selected**, because the app already knows which sheet you
+  need and making the reader choose would hand back a decision it had already made.
+- Measured at print width: 194.6mm for twelve words, 244mm for twenty-four, against 254mm on Letter.
+- The prose is deliberately identical between them. Nine tests cover the pair: row numbering against
+  the app's own arithmetic, a box for every roll and none spare, the greyed tail on the 24-word sheet,
+  no script and no external reference, the destroy and not-a-backup lines, one A4 page each, and both
+  staleness hashes.
+
+### The release stops compiling the Tauri CLI
+
+- `cargo install tauri-cli --locked` took **5m24s of a 9m job** and recompiled every run, because the
+  cargo cache covers the registry and the target directory but not `~/.cargo/bin`. Sixty percent of
+  the job spent building a tool that then only called cargo.
+- Dropped, in favour of `cargo build --release`. Ported from `slip39-backup`, which worked this out
+  first: for this configuration the CLI would run a `beforeBuildCommand` (there is none), check that
+  `frontendDist` exists (`build.rs` already fails without it), invoke cargo, and then bundle, which is
+  exactly what `--no-bundle` existed to switch off. `bundle.active` is now `false` to match, so nobody
+  running the CLI by hand gets the 83MB bundle by surprise.
+- It also removes a dependency from the supply chain of an artifact people run against real money, and
+  makes CI run the command a person runs locally.
+
+### And a check that the artifact still runs
+
+- Since this is the first build without the CLI, "it compiled" is not the claim that matters. Both
+  workflows now **run the AppImage under xvfb and wait for a window titled "dice to seed"**, gating
+  the release the way the test suite does. A Tauri binary that cannot find a webview stays alive with
+  no window at all, so a process-is-alive check would pass on exactly the failure worth catching.
+- What it does not prove, stated in the step itself: that Blazor started inside the webview. The title
+  comes from `tauri.conf.json`, not from anything the page renders, so a CSP that blocked
+  `wasm-unsafe-eval` would pass this and leave an empty window. Ported from `slip39-backup`, including
+  that caveat.
+
 ## 1.4.2
 
 The same words from the same rolls as 1.4.1. The roll sheet as a PDF as well.

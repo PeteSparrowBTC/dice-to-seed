@@ -81,8 +81,10 @@ showing that face. The app never rolls anything for you and has no way to invent
 number.
 
 The sheet is a printed page of empty boxes, which whoever gave you this stick should
-have given you as well. If you do not have one, any blank paper works: rule ten boxes
-per row and number the rows 1, 11, 21, and so on, which is how the app shows them.
+have given you as well. There are two, one with sixty boxes for a twelve word seed and
+one with a hundred and eleven for twenty-four, so check you have the right one. If you
+do not have either, any blank paper works: rule ten boxes per row and number the rows
+1, 11, 21, and so on, which is how the app shows them.
 
 Write every throw on the sheet as you go, and when you have finished, compare the sheet
 against the screen before you press Derive. The app shows your throws in rows of ten,

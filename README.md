@@ -30,12 +30,15 @@ keeps nothing, and write the words on paper.
 ## What you need
 
 - One die, and paper for the words
-- A printed roll sheet, one page per log, printed before you boot:
-  [PDF](DiceToSeed.Web/wwwroot/roll-sheet.pdf) to hand over as a file, or
-  [the same sheet as HTML](DiceToSeed.Web/wwwroot/roll-sheet.html) if you would rather read what you
-  are printing. Both are also served by the app, and both ship with every release. The app serves it too, so it is also in the AppImage and in the repository at
-  [`DiceToSeed.Web/wwwroot/roll-sheet.html`](DiceToSeed.Web/wwwroot/roll-sheet.html). It is blank, so
-  it carries nothing until you write on it, and it is the only thing that can catch a mis-press
+- A printed roll sheet, one page per log, printed before you boot. One per word count, so the sheet
+  only ever mentions the number of throws you are actually making:
+  [twelve words](DiceToSeed.Web/wwwroot/roll-sheet-12-words.pdf) (sixty boxes) or
+  [twenty-four](DiceToSeed.Web/wwwroot/roll-sheet-24-words.pdf) (a hundred and eleven). The
+  [`.html`](DiceToSeed.Web/wwwroot/roll-sheet-12-words.html) versions are the same sheets as readable
+  markup. All four are served by the app, so they are links on the demo and files in the AppImage, and
+  they ship with every release. The page links whichever matches the word count you have selected. The
+  sheets are blank, so they carry nothing until you write on them, and comparing one against the screen
+  is the only thing that can catch a mis-press
 - Tails, with the network off
 - A USB stick
 

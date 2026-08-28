@@ -524,8 +524,8 @@ else
             Roll a real die, read the face, press the matching button. The keys 1 to 6 do the
             same thing, and Backspace undoes the last roll. Nothing here rolls for you: every
             value comes off your dice, which is the entire point of the app. Write each throw on
-            <a href="roll-sheet.html" target="_blank" rel="noopener">the printed sheet</a>
-            (<a href="roll-sheet.pdf" target="_blank" rel="noopener">PDF</a>) as well: comparing it
+            <a href="@(SheetBaseName).html" target="_blank" rel="noopener">the printed sheet</a>
+            (<a href="@(SheetBaseName).pdf" target="_blank" rel="noopener">PDF</a>) as well: comparing it
             against the screen at the end is the only thing that catches a mis-press.
         </p>
     </div>
@@ -581,8 +581,8 @@ else
                 <strong>Check these against your paper before pressing Derive.</strong> A mis-pressed
                 button is the one mistake nothing else here can find: every other check compares your
                 log against a second tool, and two tools given the same wrong log agree perfectly.
-                <a href="roll-sheet.html" target="_blank" rel="noopener">Print the sheet</a>
-                (<a href="roll-sheet.pdf" target="_blank" rel="noopener">PDF</a>), ruled in these same
+                <a href="@(SheetBaseName).html" target="_blank" rel="noopener">Print the sheet</a>
+                (<a href="@(SheetBaseName).pdf" target="_blank" rel="noopener">PDF</a>), ruled in these same
                 rows of ten, before you start. Then destroy the paper: it is the wallet in
                 plain text, and it is not a backup.
             </p>
@@ -1111,6 +1111,15 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
     // terminal with nothing to substitute. Before any rolls exist they name what belongs there
     // rather than showing a made-up log, which someone could run and then wonder why the words
     // disagree with the app.
+    /// <summary>
+    /// The printed sheet for the word count in effect. There are two, sixty boxes and a hundred and
+    /// eleven, because one sheet covering both had to say which of two heavier lines applied to whom,
+    /// and that sentence was confusing. The page already knows which count you are rolling, so it
+    /// links the right sheet rather than handing over a choice it has already made.
+    /// </summary>
+    string SheetBaseName =>
+        wordCount == WordCount.Twelve ? "roll-sheet-12-words" : "roll-sheet-24-words";
+
     string RollsForCommands => LivePreimage.Length > 0 ? LivePreimage : "YOUR-ROLLS-GO-HERE";
 
     // 16 for twelve words, 32 for twenty-four. The runbook's Python slices to this, and stating it
