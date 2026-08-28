@@ -180,21 +180,18 @@ never sort them into ascending order, which is the same mistake performed on pur
 
 The app cannot do this part, so it is the part worth reading once.
 
-**Throw it inside a box, standing on a table.** A shoe box is the right size. The walls give the die
-something to bounce off and keep it on the surface, which is the off-the-table case removed rather
-than adjudicated, and over a hundred and eleven throws that is worth having. Put the box on a table
-rather than on carpet or your lap: a thin base on something soft absorbs the bounce and lets a die
-settle without turning over, which is the failure the walls are there to prevent. Casino craps
-requires both dice to strike the far wall, and that wall is lined with rubber pyramids, for exactly
-this reason: the bounce destroys whatever the thrower set up, which is the property you want and the
+**Throw it inside a box.** A shoe box on a table is enough. The walls bounce the die, and they keep
+it off the floor. Not on carpet and not on your lap: something soft under a thin base absorbs the
+bounce, and a die that does not turn over can keep the face it started on. Casino craps requires
+both dice to strike the far wall, and that wall is lined with rubber pyramids, for exactly this
+reason: the bounce destroys whatever the thrower set up, which is the property you want and the
 reason [dice control](https://en.wikipedia.org/wiki/Dice_control) is hard at a real table. Without a
 box, throw against a book stood on edge or the wall.
 
 **The test is tumbling, not a height.** Several turns and at least one bounce. Sliding it, spinning it
-flat, or dropping it from an inch can carry the starting face straight through. Room to travel is the
-only thing the box has to supply, which is why a shoe box and not a tin: in something too small the
-die lands, wobbles and stops on the face it started on. The most reliable method is the box with its
-lid on, or an opaque cup: shake and tip out, which guarantees tumbling and means you cannot see the
+flat, or dropping it from an inch can carry the starting face straight through. Use a shoe box rather
+than a tin, because in something too small the die lands, wobbles and stops. The surest method is the
+box with its lid on, or an opaque cup: shake and tip out, so it has to tumble and you cannot see the
 die before it lands.
 
 **Fix the off-the-table rule before the first throw.** If it leaves the surface, lands leaning rather
@@ -202,11 +199,8 @@ than flat, or cannot be read cleanly, that throw does not count: throw again and
 one. Decide it in advance, because the danger is not the re-throw. A die on the floor is unconnected to
 the number it would have shown, so discarding it costs nothing; choosing to discard a roll after
 reading a number you did not like is a different act, and narrows the set your seed came from. Apply
-the rule before you read the face.
-
-In a box the leaning clause does more of the work than the off-the-surface one, because there is now a
-wall for the die to rest against. That is the trade the box makes, and it is a good one: a leaning die
-is in front of you and unmistakable, where a die on the floor is a throw you have to reconstruct.
+the rule before you read the face. In a box the leaning half of that rule is the half you will use,
+since there is a wall there to lean on.
 
 **Press the button after each throw**, before the next, so the counter and the throws cannot drift
 apart. A log one roll short produces a perfectly convincing seed phrase for a different wallet.

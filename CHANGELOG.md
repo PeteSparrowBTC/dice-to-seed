@@ -52,25 +52,21 @@ throwing advice names a container to throw into rather than a wall to aim at.
 
 ### Throw the die in a box
 
-- The advice was to throw against a book stood on edge, a box lid or the wall. All three supply a wall
-  to bounce off, and none of them keeps the die on the table. Throwing inside a box does both, so it is
-  now the recommendation, with a shoe box named as the size that works and the book kept as the
-  fallback. It is the craps back wall in miniature, which is where the bounce argument came from in the
-  first place.
-- Two things the box needs, both stated: it goes on a table rather than on carpet or a lap, since
-  something soft under a thin base absorbs the bounce the walls are there to create, and it needs room
-  to travel, which is why a shoe box and not a tin. With the lid on it becomes the opaque cup the copy
-  already recommended, with a bigger floor.
-- What the box costs, also stated: a wall for the die to lean against, so the leaning clause of the
-  discard rule fires more often than the off-the-surface one. A rule that starts firing more often
-  without explanation reads as the method being wrong. The trade is worth taking, because a leaning die
-  is in front of you where a die on the floor is a throw you have to reconstruct.
-- Changed in all four places that carry it: the app's throw disclosure, `README.md`,
-  `TAILS_INSTRUCTIONS.md`, and the plain-language `READ-THIS-FIRST.txt` in the Tails bundle. The two
-  roll sheets are unchanged on purpose: their line reads "off the table or leans against something",
-  which is true either way, and regenerating two PDFs to say the same thing would move a binary for no
-  reader's benefit.
-- Cross-referenced in `bitcoin-backup-framework`, which carries its own copy of the rolling steps.
+- The advice was to throw against a book stood on edge, a box lid or the wall. Each of those bounces
+  the die, and none of them keeps it off the floor. A box does both, so throw into one: a shoe box on
+  a table, with the book left as the fallback. It is the craps back wall in miniature, which is where
+  the bounce argument came from in the first place.
+- Two things the box needs. A hard surface under it, since something soft under a thin base absorbs
+  the bounce, and room for the die to travel, so a shoe box and not a tin. With the lid on it is the
+  opaque cup the copy already recommended, with a bigger floor.
+- What it costs: a wall to lean on, so the leaning half of the discard rule is the half that fires.
+  Said in the copy, because a rule that starts firing more often looks like the method going wrong.
+- Changed in the four places that carry it: the app's throw disclosure, `README.md`,
+  `TAILS_INSTRUCTIONS.md`, and `READ-THIS-FIRST.txt` in the Tails bundle. The two roll sheets are
+  unchanged on purpose: their line reads "off the table or leans against something", true either way,
+  and regenerating two PDFs to say the same thing moves a binary for nothing.
+- The same correction is in `bitcoin-backup-framework`, which carries its own copy of the rolling
+  steps.
 
 ## 1.4.3
 
