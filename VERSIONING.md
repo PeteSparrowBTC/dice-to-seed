@@ -28,6 +28,22 @@ Everything else is smaller than it sounds:
 A useful way to read that table: **almost everything is MINOR or PATCH.** If a change makes you
 reach for MAJOR, stop and check whether you have accidentally altered the conversion.
 
+## The one exception, and why it is written down
+
+3.0.0 is not a MAJOR by that table. It is where this app, slip39-backup and the
+bitcoin-backup-framework document joined a single version line, so that a reader following all
+three in one sitting can take 3.0.0 of each and stop guessing which releases belong together.
+The words did not change, and the 3.0.0 entry in the changelog says so in its first line.
+
+Two consequences worth knowing before the next bump:
+
+- The version number is now shared across three repositories, so a release here can carry a
+  number bumped for something that happened in one of the others. What a release means for THIS
+  app is in its changelog entry, and the derivation claim is always the first line of it.
+- A MAJOR no longer implies by itself that the words changed. If that day ever comes it needs
+  the new name in the release title and the explanation at the top of the notes, exactly as
+  above, and stating it must not be left to the number.
+
 ## Bumping a version
 
 The number is written by hand in **one place**, the `VERSION` file at the repository root, and

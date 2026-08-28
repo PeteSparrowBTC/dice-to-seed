@@ -3,10 +3,21 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
-## Unreleased
+## 3.0.0, 2026-08-28
 
-The same words from the same rolls as 1.4.3. The keyboard entry works without touching the mouse
-first, which is what it was for.
+**The same words from the same rolls as 1.4.3.** That sentence matters more than usual here,
+because in this repository a MAJOR means the opposite of it. The derivation has not changed, and
+a seed verified against 1.4.3 verifies identically against this release.
+
+The number jumps because this app, [slip39-backup](https://github.com/PeteSparrowBTC/slip39-backup)
+and the [bitcoin-backup-framework](https://github.com/PeteSparrowBTC/bitcoin-backup-framework)
+document now share one version line, starting at 3.0.0, so a reader following all three in one
+sitting can take 3.0.0 of each and matching numbers are the whole answer to whether they belong
+together. slip39-backup was already at 2.x, which is why the shared line starts above it. See
+[VERSIONING.md](VERSIONING.md), which records the exception, and
+[issue 42](https://github.com/PeteSparrowBTC/dice-to-seed/issues/42).
+
+The keyboard entry works without touching the mouse first, which is what it was for.
 
 ### Keys 1 to 6 record a roll from the first keystroke
 
