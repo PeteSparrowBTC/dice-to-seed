@@ -188,20 +188,27 @@ to diagnose.
 
 The app cannot do this part for you, so it is worth getting right once.
 
-1. **A hard flat surface, and make the die hit something.** A table rather than carpet, which
-   absorbs the bounce and lets a die settle without turning over. Throw it against a book stood on
-   edge, the inside of a box lid, or the wall behind the table. Casino craps requires both dice to
-   strike the far wall, and that wall is lined with rubber pyramids, for exactly this reason: the
-   bounce destroys whatever the thrower set up. It is the one dice convention designed to make a
-   throw less controllable, so copy it.
+1. **Throw it inside a box, standing on a table.** A shoe box is the right size. The walls give the
+   die something to bounce off and keep it on the surface, so the rule in step 3 mostly stops coming
+   up. Put the box on a table rather than on carpet or your lap: a thin base on something soft
+   absorbs the bounce and lets a die settle without turning over, which is the failure the walls are
+   there to prevent. Casino craps requires both dice to strike the far wall, and that wall is lined
+   with rubber pyramids, for exactly this reason: the bounce destroys whatever the thrower set up. It
+   is the one dice convention designed to make a throw less controllable, so copy it. Without a box,
+   throw against a book stood on edge or the wall behind the table.
 2. **The test is tumbling, not a height in centimetres.** The die should turn over several times and
    bounce at least once. What defeats a throw is sliding it, spinning it flat like a top, or dropping
-   it from an inch: any of those can carry the starting face straight through. Simplest reliable
-   method: shake it in an opaque cup and tip it out, which guarantees the tumbling and means you
-   cannot see the die before it lands.
+   it from an inch: any of those can carry the starting face straight through. Room to travel is the
+   only thing the box has to supply, which is why a shoe box and not a tin: in something too small
+   the die lands, wobbles and stops on the face it started on. Simplest reliable method: put the lid
+   on, shake, and tip the die out, or do the same with an opaque cup. Either guarantees the tumbling
+   and means you cannot see the die before it lands.
 3. **Fix the off-the-table rule before the first throw.** If the die leaves the surface, lands leaning
    against something rather than flat, or cannot be read cleanly, that throw does not count: throw
-   again and record only the second one.
+   again and record only the second one. In a box you will use the leaning clause more often than the
+   off-the-surface one, since there is now a wall for the die to rest against. That is the trade, and
+   it is a good one: a leaning die is in front of you and unmistakable, where a die on the floor is a
+   throw you have to reconstruct.
 
    Decide it in advance because the danger is not the re-throw. A die that ends up on the floor is
    not connected to the number it would have shown, so discarding it costs nothing. Choosing to

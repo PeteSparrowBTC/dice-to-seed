@@ -17,7 +17,8 @@ together. slip39-backup was already at 2.x, which is why the shared line starts 
 [VERSIONING.md](VERSIONING.md), which records the exception, and
 [issue 42](https://github.com/PeteSparrowBTC/dice-to-seed/issues/42).
 
-The keyboard entry works without touching the mouse first, which is what it was for.
+The keyboard entry works without touching the mouse first, which is what it was for, and the
+throwing advice names a container to throw into rather than a wall to aim at.
 
 ### Keys 1 to 6 record a roll from the first keystroke
 
@@ -48,6 +49,28 @@ The keyboard entry works without touching the mouse first, which is what it was 
   perfectly while doing nothing. Six tests pin the wiring, matched against the markup rather than the
   prose describing it, which is the mistake that has produced a self-satisfying guard here three
   times.
+
+### Throw the die in a box
+
+- The advice was to throw against a book stood on edge, a box lid or the wall. All three supply a wall
+  to bounce off, and none of them keeps the die on the table. Throwing inside a box does both, so it is
+  now the recommendation, with a shoe box named as the size that works and the book kept as the
+  fallback. It is the craps back wall in miniature, which is where the bounce argument came from in the
+  first place.
+- Two things the box needs, both stated: it goes on a table rather than on carpet or a lap, since
+  something soft under a thin base absorbs the bounce the walls are there to create, and it needs room
+  to travel, which is why a shoe box and not a tin. With the lid on it becomes the opaque cup the copy
+  already recommended, with a bigger floor.
+- What the box costs, also stated: a wall for the die to lean against, so the leaning clause of the
+  discard rule fires more often than the off-the-surface one. A rule that starts firing more often
+  without explanation reads as the method being wrong. The trade is worth taking, because a leaning die
+  is in front of you where a die on the floor is a throw you have to reconstruct.
+- Changed in all four places that carry it: the app's throw disclosure, `README.md`,
+  `TAILS_INSTRUCTIONS.md`, and the plain-language `READ-THIS-FIRST.txt` in the Tails bundle. The two
+  roll sheets are unchanged on purpose: their line reads "off the table or leans against something",
+  which is true either way, and regenerating two PDFs to say the same thing would move a binary for no
+  reader's benefit.
+- Cross-referenced in `bitcoin-backup-framework`, which carries its own copy of the rolling steps.
 
 ## 1.4.3
 
