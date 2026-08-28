@@ -152,8 +152,11 @@ public class RollRowTests
         var page = File.ReadAllText(Path.Combine(
             RepositoryRoot().FullName, "DiceToSeed.Web", "Pages", "Derive.razor"));
 
-        Assert.Contains(@"href=""@(SheetBaseName).html""", page, StringComparison.Ordinal);
         Assert.Contains(@"href=""@(SheetBaseName).pdf""", page, StringComparison.Ordinal);
+
+        // The PDF only. The HTML is the source the PDF is generated from, not a second link to the
+        // same sheet where one of the two prints worse.
+        Assert.DoesNotContain(@"href=""@(SheetBaseName).html""", page, StringComparison.Ordinal);
         Assert.Contains("roll-sheet-12-words", page, StringComparison.Ordinal);
         Assert.Contains("roll-sheet-24-words", page, StringComparison.Ordinal);
         Assert.DoesNotMatch(@"href=""https?://[^""]*roll-sheet", page);
@@ -164,13 +167,49 @@ public class RollRowTests
     /// the demo alike.
     /// </summary>
     [Theory]
-    [InlineData("roll-sheet-12-words.html")]
     [InlineData("roll-sheet-12-words.pdf")]
-    [InlineData("roll-sheet-24-words.html")]
     [InlineData("roll-sheet-24-words.pdf")]
-    public void Each_sheet_file_lives_in_the_published_folder(string file) =>
+    public void Each_pdf_lives_in_the_published_folder(string file) =>
         Assert.True(File.Exists(Path.Combine(
             RepositoryRoot().FullName, "DiceToSeed.Web", "wwwroot", file)), file + " is missing");
+
+    /// <summary>
+    /// And the HTML is NOT published. It is the source of the PDF, not a second thing to hand someone:
+    /// two links to the same sheet, one of them worse to print from, is a choice nobody needs.
+    /// </summary>
+    [Theory]
+    [InlineData("roll-sheet-12-words.html")]
+    [InlineData("roll-sheet-24-words.html")]
+    public void The_html_source_is_not_served(string file)
+    {
+        Assert.True(File.Exists(Path.Combine(RepositoryRoot().FullName, "printable", file)),
+            file + " is missing from printable/");
+
+        Assert.False(File.Exists(Path.Combine(RepositoryRoot().FullName, "DiceToSeed.Web", "wwwroot", file)),
+            file + " is in wwwroot, so it would be published; the PDF is what ships.");
+    }
+
+    /// <summary>
+    /// The destroy notice is red, and nothing depends on that. #c1121f survives a mono laser as a deep
+    /// grey, and the notice is also the largest and boldest block with the heaviest rule, so a black
+    /// and white print loses the emphasis and keeps the meaning. Colour is never the message here.
+    /// </summary>
+    [Theory]
+    [InlineData("roll-sheet-12-words.html")]
+    [InlineData("roll-sheet-24-words.html")]
+    public void The_destroy_notice_is_coloured_but_does_not_rely_on_colour(string sheet)
+    {
+        var markup = Sheet(sheet);
+
+        Assert.Contains("--danger: #c1121f", markup, StringComparison.Ordinal);
+        Assert.Matches(@"\.destroy \{[^}]*var\(--danger\)", markup);
+
+        // The emphasis that survives a mono print: uppercase, the largest type on the page, and a
+        // heavy rule. If any of these goes, colour becomes load bearing.
+        Assert.Matches(@"\.destroy h1 \{[^}]*text-transform: uppercase", markup);
+        Assert.Matches(@"\.destroy h1 \{[^}]*font-size: 17pt", markup);
+        Assert.Matches(@"\.destroy \{[^}]*border: 3px solid", markup);
+    }
 
     /// <summary>
     /// Each PDF is a committed binary generated from its HTML, which buys a file anybody can open and
@@ -187,8 +226,10 @@ public class RollRowTests
     [InlineData("roll-sheet-24-words")]
     public void Each_pdf_is_not_stale(string name)
     {
+        // The record sits beside the HTML it describes, in printable/, because it is a note about how
+        // the PDF was made rather than something to serve.
         var recorded = File.ReadAllText(Path.Combine(
-            RepositoryRoot().FullName, "DiceToSeed.Web", "wwwroot", name + ".pdf.source-sha256")).Trim();
+            RepositoryRoot().FullName, "printable", name + ".pdf.source-sha256")).Trim();
 
         var actual = Convert.ToHexStringLower(
             SHA256.HashData(Encoding.UTF8.GetBytes(Sheet(name + ".html").Replace("\r\n", "\n"))));
@@ -228,8 +269,13 @@ public class RollRowTests
         Assert.InRange(double.Parse(box.Groups["h"].Value), 841, 844);
     }
 
+    /// <summary>
+    /// The HTML sources live in printable/ and are deliberately not served: they are what the PDFs are
+    /// generated from and what anyone auditing the sheet reads. Publishing both put two links to the
+    /// same page on screen, one of which was strictly worse to print from.
+    /// </summary>
     static string Sheet(string file) =>
-        File.ReadAllText(Path.Combine(RepositoryRoot().FullName, "DiceToSeed.Web", "wwwroot", file));
+        File.ReadAllText(Path.Combine(RepositoryRoot().FullName, "printable", file));
 
     static DirectoryInfo RepositoryRoot()
     {

@@ -33,12 +33,12 @@ keeps nothing, and write the words on paper.
 - A printed roll sheet, one page per log, printed before you boot. One per word count, so the sheet
   only ever mentions the number of throws you are actually making:
   [twelve words](DiceToSeed.Web/wwwroot/roll-sheet-12-words.pdf) (sixty boxes) or
-  [twenty-four](DiceToSeed.Web/wwwroot/roll-sheet-24-words.pdf) (a hundred and eleven). The
-  [`.html`](DiceToSeed.Web/wwwroot/roll-sheet-12-words.html) versions are the same sheets as readable
-  markup. All four are served by the app, so they are links on the demo and files in the AppImage, and
-  they ship with every release. The page links whichever matches the word count you have selected. The
-  sheets are blank, so they carry nothing until you write on them, and comparing one against the screen
-  is the only thing that can catch a mis-press
+  [twenty-four](DiceToSeed.Web/wwwroot/roll-sheet-24-words.pdf) (a hundred and eleven). Both are served
+  by the app, so each is a link on the demo and a file in the AppImage, and both ship with every
+  release; the page links whichever matches the word count you have selected. They are generated from
+  the HTML in [`printable/`](printable/), which stays in the repository to be read rather than served.
+  The sheets are blank, so they carry nothing until you write on them, and comparing one against the
+  screen is the only thing that can catch a mis-press
 - Tails, with the network off
 - A USB stick
 

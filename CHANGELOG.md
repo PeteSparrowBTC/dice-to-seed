@@ -18,9 +18,19 @@ compiling a build tool it was not using.
 - `roll-sheet-12-words` has sixty boxes with a heavier rule after 50, the vendor minimum.
   `roll-sheet-24-words` has a hundred and eleven, with a heavier box edge after 99, since that count
   lands mid-row and no row rule can mark it. Each says in one line what its own numbers mean.
-- Both as PDF and as HTML, all four served by the app and shipped with every release. **The page links
-  whichever matches the word count you have selected**, because the app already knows which sheet you
-  need and making the reader choose would hand back a decision it had already made.
+- **PDF only.** Both PDFs are served by the app and ship with every release, and the page links
+  whichever matches the word count you have selected, because the app already knows which sheet you
+  need and making the reader choose would hand back a decision it had already made. The HTML they are
+  generated from lives in `printable/` and is deliberately not served: it is the source and the thing
+  to read if you want to see what you are printing, and publishing both put two links to the same
+  sheet on screen where one of them printed worse.
+- **The destroy notice is red**, `#c1121f`, along with the footer stamp, and the section dividers are
+  dashed rather than solid so the page stops reading as one long table. Nothing depends on the colour:
+  that red is dark enough to come out of a mono laser as a deep grey, and the notice is also the
+  largest and boldest block with the heaviest rule, so a black and white print loses the emphasis and
+  keeps the meaning. A test pins all three of those properties, because the moment one goes, colour
+  becomes load bearing. The greyed tail on the 24-word sheet gained a dashed edge for the same reason:
+  two signals that a box is not for use.
 - Measured at print width: 194.6mm for twelve words, 244mm for twenty-four, against 254mm on Letter.
 - The prose is deliberately identical between them. Nine tests cover the pair: row numbering against
   the app's own arithmetic, a box for every roll and none spare, the greyed tail on the 24-word sheet,

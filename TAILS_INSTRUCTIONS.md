@@ -14,10 +14,11 @@ networked machine first:
 - A USB stick with the AppImage on it, downloaded and checked **before** you boot Tails
 - **A printed roll sheet**, one page per log you are going to make, and one per word count:
   `roll-sheet-12-words.pdf` has sixty boxes, `roll-sheet-24-words.pdf` has a hundred and eleven. The
-  app serves both, as PDF and as HTML, so each is a link on the demo and a file in the AppImage, and
-  the page links whichever matches the word count you have selected. Print it beforehand: Tails is amnesic,
-  and arranging a printer while holding a seed is not a thing you want to be doing. The sheet is
-  blank, so it carries nothing until you write on it.
+  app serves both, so each is a link on the demo and a file in the AppImage, and the page links
+  whichever matches the word count you have selected. Print it beforehand: Tails is amnesic, and
+  arranging a printer while holding a seed is not a thing you want to be doing. The sheet is blank, so
+  it carries nothing until you write on it. The HTML it is generated from is in `printable/`, for
+  reading rather than printing.
 - Tails, booted, with networking off
 - Your dice, and paper
 
