@@ -3,6 +3,41 @@
 Semantic versioning, with MAJOR reserved for a change that would produce different words for
 the same rolls. See [VERSIONING.md](VERSIONING.md).
 
+## Unreleased
+
+The same words from the same rolls as 1.4.3. The keyboard entry works without touching the mouse
+first, which is what it was for.
+
+### Keys 1 to 6 record a roll from the first keystroke
+
+- The defect, shipped in every release that had the dice pad: pressing 1 to 6 did nothing at all
+  until the pad had been clicked. A key event goes to whatever holds focus and bubbles upward, so a
+  handler only sees keys pressed while focus is inside the element carrying it, and the handler was on
+  the pad. Nothing was focused on load, so the first keystroke went to the document body and vanished.
+  The way to make the keys work was to use the mouse, on a page where fifty to a hundred and eleven
+  presses are the whole job.
+- The `autofocus` attribute was there and did nothing. It is honoured while the browser parses the
+  document, and this page is rendered by WebAssembly after the parse has finished. Removed rather than
+  left as decoration, and focus is now placed on the first render, with scrolling suppressed so the
+  guidance above the pad stays where it was put.
+- The handler moved to the element that wraps the whole page, so it catches keys with focus on any
+  control inside it: a die, a mode button, an open disclosure, Derive. That element is now focusable
+  without joining the tab order, which covers the clicks that focus nothing: clicking a paragraph
+  otherwise blurs to the document body, above the wrapper rather than inside it, and the keys would go
+  quiet again.
+- The same silence had a second route, found by clicking through the running app rather than by
+  reading the code. A control that vanishes or goes disabled while it holds focus does not pass focus
+  on: the browser drops it to the body. Dismissing the mode-switch confirmation removes the button
+  that was clicked, and undoing the last roll disables both roll buttons. All three paths hand focus
+  back to the wrapper, and only those, since taking focus off a button that is still there would cost
+  a keyboard user their place.
+- **The shortcuts are inert while the mode switch is waiting on an answer.** That confirmation is a
+  question about discarding the log, so the log is not accepting rolls and neither is the keyboard.
+- Verified in a browser, because this is the class of defect the suite cannot see: it renders
+  perfectly while doing nothing. Six tests pin the wiring, matched against the markup rather than the
+  prose describing it, which is the mistake that has produced a self-satisfying guard here three
+  times.
+
 ## 1.4.3
 
 The same words from the same rolls as 1.4.2. One sheet per word count, and the release stops

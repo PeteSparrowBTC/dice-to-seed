@@ -441,6 +441,20 @@ footer code { font-family: var(--mono); word-break: break-all; }
     --accent: #5fb3e0;
 }
 
+/* The wrapper carries the keyboard shortcuts, so it is focusable (tabindex="-1") and is focused on
+   load and by any click that focuses nothing else. Without this it draws a ring around the entire
+   page, which reads as a rendering fault rather than as a focus indicator: browsers differ on
+   whether a focus() call counts as keyboard interaction, so the ring can appear before the user has
+   touched anything.
+
+   Suppressing it costs a keyboard user nothing, which is the only reason it is allowed. The element
+   is not in the tab order, so nobody can land here by tabbing; the controls inside it keep their own
+   rings, and the dice pad is still a tab stop with the ring at .dice:focus-visible. */
+.app:focus,
+.app:focus-visible {
+    outline: none;
+}
+
 .modes {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));

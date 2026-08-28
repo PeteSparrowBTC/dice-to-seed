@@ -12,8 +12,32 @@
 @* Everything is wrapped so the mode can recolour the page by redefining --accent on this one
    element. Every control already draws from that variable, so the counter, the focus rings, the
    selected buttons and the Derive button all follow without a second set of rules. The mode is
-   meant to be visible from across the room, not findable by looking for it. *@
-<div class="app @ModeClass">
+   meant to be visible from across the room, not findable by looking for it.
+
+   THE KEYBOARD SHORTCUTS ALSO LIVE HERE, AND THIS IS WHERE THEY HAVE TO LIVE.
+   ==========================================================================
+   Keys 1 to 6 record a roll and Backspace undoes one. A key event is delivered to whatever holds
+   focus and then bubbles to its ancestors, so a handler only ever sees keys pressed while focus is
+   inside the element carrying it. On the dice pad, which is where this handler sat up to 1.4.3,
+   that meant the keys did nothing at all until the pad or one of its buttons had been clicked: a
+   person who reached for the keys first got silence, and the fix for silence was to use the mouse,
+   which is the one thing the shortcuts exist to avoid.
+
+   Two things make it work from the first keystroke instead.
+
+   - The handler sits on the element that wraps the whole page, so it catches keys with focus on
+     any control inside it: a die button, a mode radio, an open disclosure, the Derive button.
+   - tabindex="-1" makes this element focusable without putting it in the tab order, which matters
+     for the clicks that focus nothing. Clicking a paragraph or the background otherwise blurs to
+     the document body, which is above this element rather than inside it, and the keys would go
+     quiet again. With the attribute the browser focuses the nearest focusable ancestor, which is
+     this element, so the shortcuts survive a click anywhere on the page.
+
+   On load nothing is focused at all, so OnAfterRenderAsync focuses this element on the first
+   render. The HTML attribute for that is not usable here: it is honoured while the browser parses
+   the document, and this element does not exist then, since the page is rendered by WebAssembly
+   after the parse has finished. *@
+<div class="app @ModeClass" tabindex="-1" @ref="keyboardScope" @onkeydown="HandleKey">
 
 @if (servedFromElsewhere)
 {
@@ -492,12 +516,14 @@ else
        there is no caret to lose, and the count is exactly what was clicked. *@
     <div class="field">
         <span class="field-label">Record each roll</span>
-        @* Keyboard entry for anyone who would rather not reach for the mouse fifty times:
-           1 to 6 record a roll, Backspace undoes the last. The handler sits on the group so it
-           catches keys whether focus is on the group itself or on one of the buttons, which is
-           where focus lands as soon as anything is clicked. *@
-        <div class="dice" role="group" tabindex="0" autofocus
-             aria-label="Record the face you rolled" @onkeydown="HandleKey">
+        @* Keyboard entry for anyone who would rather not reach for the mouse fifty times: 1 to 6
+           record a roll, Backspace undoes the last. The handler is not here. It is on the element
+           wrapping the whole page, because a handler here only ever sees keys pressed while focus
+           is already inside the pad; the comment there has the detail.
+
+           tabindex stays, so the pad is a tab stop of its own with a focus ring and its label. *@
+        <div class="dice" role="group" tabindex="0"
+             aria-label="Record the face you rolled">
             @foreach (var face in Faces)
             {
                 <button type="button" class="die" @onclick="() => RecordRoll(face)"
@@ -989,6 +1015,10 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
 
     string? error;
 
+    // The element the keyboard shortcuts are bound to: the page wrapper, not the dice pad. See the
+    // comment on it for why, and why this reference exists at all.
+    ElementReference keyboardScope;
+
 
     string host = string.Empty;
     bool servedFromElsewhere;
@@ -1035,6 +1065,37 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
             error = wordList.Error;
     }
 
+    /// <summary>
+    /// Puts focus on the page wrapper as soon as it exists, which is what makes keys 1 to 6 work
+    /// without clicking something first. Only on the first render: refocusing on every render would
+    /// take focus off whatever the user had just tabbed to, and every roll causes a render.
+    /// </summary>
+    /// <remarks>
+    /// preventScroll is true because focus here must not move the page. The guidance above the pad
+    /// is open on load on purpose (CLAUDE.md rule 6 territory: it has to be read before anything is
+    /// rolled), and scrolling a freshly focused element into view would push it off the top.
+    /// </remarks>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await keyboardScope.FocusAsync(preventScroll: true);
+    }
+
+    /// <summary>
+    /// Puts focus back on the wrapper after a render takes away the control that was holding it.
+    /// The browser does not hand that focus to anything: it falls back to the document body, which
+    /// is outside the wrapper, so the shortcuts go dead. That is the original defect reached by a
+    /// second route, and it is reachable twice on this page: dismissing the mode-switch
+    /// confirmation removes the button that was clicked, and undoing the last roll disables both
+    /// roll buttons.
+    /// </summary>
+    /// <remarks>
+    /// Called only where focus is actually about to be lost. Doing it after every click would take
+    /// focus off a button that is still there, which costs a keyboard user their place: they would
+    /// have to tab back to Undo for each roll they wanted to remove.
+    /// </remarks>
+    ValueTask RestoreKeyboardFocus() => keyboardScope.FocusAsync(preventScroll: true);
+
     static readonly IReadOnlyList<int> Faces = [1, 2, 3, 4, 5, 6];
 
     // The rows of the entropy table: the two vendor minimums and the two recommendations, each
@@ -1063,16 +1124,26 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
         ClearResults();
     }
 
-    void UndoLastRoll()
+    /// <summary>
+    /// Both of these can empty the log, which disables the two buttons that do it, and a button that
+    /// goes disabled while focused drops focus out of the page. Hence the await: see
+    /// <see cref="RestoreKeyboardFocus"/>.
+    /// </summary>
+    async Task UndoLastRoll()
     {
         rolls = rolls.Length == 0 ? rolls : rolls[..^1];
         ClearResults();
+
+        if (rolls.Length == 0)
+            await RestoreKeyboardFocus();
     }
 
-    void ClearRolls()
+    async Task ClearRolls()
     {
         rolls = string.Empty;
         ClearResults();
+
+        await RestoreKeyboardFocus();
     }
 
     /// <summary>
@@ -1090,12 +1161,25 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
     /// 1 to 6 record a roll, Backspace undoes the last. Nothing else does anything: there is
     /// no text field on this page, so there is no keystroke to interpret as text.
     /// </summary>
-    void HandleKey(KeyboardEventArgs args)
+    /// <remarks>
+    /// Bound to the page wrapper, so it fires wherever focus is on the page. That is safe here for a
+    /// reason worth stating rather than assuming: every control on this page is a button, a radio or
+    /// a disclosure, and none of them does anything with a digit, so nothing is being taken away
+    /// from the element that has focus. Adding a text field to this page would break that and would
+    /// need this handler scoped again.
+    ///
+    /// The exception is the mode-switch confirmation, which is a question about discarding the log.
+    /// While it is open the log is not accepting rolls, so neither is this.
+    /// </remarks>
+    async Task HandleKey(KeyboardEventArgs args)
     {
+        if (pendingMode is not null)
+            return;
+
         if (args.Key.Length == 1 && args.Key[0] is >= '1' and <= '6')
             RecordRoll(args.Key[0] - '0');
         else if (args.Key == "Backspace")
-            UndoLastRoll();
+            await UndoLastRoll();
     }
 
     // The log can only ever hold digits 1 to 6, because those are the only values the buttons
@@ -1256,13 +1340,24 @@ print(Mnemonic('english').to_mnemonic(e))"</pre>
         EnterMode(requested);
     }
 
-    void ConfirmModeSwitch()
+    /// <summary>
+    /// Either answer removes the banner, and with it the button the user just clicked, so both
+    /// hand focus back to the wrapper rather than letting it fall to the document body.
+    /// </summary>
+    async Task ConfirmModeSwitch()
     {
         if (pendingMode is { } requested)
             EnterMode(requested);
+
+        await RestoreKeyboardFocus();
     }
 
-    void CancelModeSwitch() => pendingMode = null;
+    async Task CancelModeSwitch()
+    {
+        pendingMode = null;
+
+        await RestoreKeyboardFocus();
+    }
 
     /// <summary>
     /// Applies a mode, and the clearing decision is not made here: <see cref="ModeSwitch.Apply"/>
